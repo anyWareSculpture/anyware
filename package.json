@@ -1,0 +1,23 @@
+{
+  "name": "@anyware/gulp-utils",
+  "version": "0.0.0",
+  "description": "Shared gulp utilities for the anyWare project",
+  "main": "gulp-utils.js",
+  "dependencies": {
+    "del": "^1.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://sunjay@github.com/anyWareSculpture/gulp-utils.git"
+  },
+  "author": "anyware",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anyWareSculpture/gulp-utils/issues"
+  },
+  "homepage": "https://github.com/anyWareSculpture/gulp-utils"
+}
