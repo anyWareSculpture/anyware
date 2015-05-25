@@ -20,8 +20,7 @@
     "rewire": "^2.3.3"
   },
   "dependencies": {
-    "mqtt": "^1.1.4",
-    "promise": "^7.0.1"
+    "mqtt": "^1.1.4"
   },
   "scripts": {
     "test": "gulp test"
