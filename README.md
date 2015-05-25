@@ -4,3 +4,4 @@ This repository contains documentation regarding the anyWare coding style and al
 
 [CODING_STYLE.md](CODING_STYLE.md) - Describes the overall coding style to be used in all anyWare projects.
 [CODING_STANDARDS.md](CODING_STANDARDS.md) - Acts as a checklist to use for all code
+[.eslintrc](.eslintrc) - A configuration for [eslint](http://eslint.org) which enforces the coding style
