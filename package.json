@@ -1,6 +1,6 @@
 {
   "name": "@anyware/coding-style",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Coding style standards and lint configurations for anyWare",
   "main": "",
   "scripts": {
