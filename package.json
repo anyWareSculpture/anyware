@@ -1,0 +1,19 @@
+{
+  "name": "@anyware/coding-style",
+  "version": "1.0.0",
+  "description": "Coding style standards and lint configurations for anyWare",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anyWareSculpture/coding-style.git"
+  },
+  "author": "anyware",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anyWareSculpture/coding-style/issues"
+  },
+  "homepage": "https://github.com/anyWareSculpture/coding-style"
+}
