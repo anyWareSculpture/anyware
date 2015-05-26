@@ -271,7 +271,7 @@ export default class StreamingClient extends events.EventEmitter {
 
     let eventType, eventData;
     try {
-      [eventType, eventData] = StreamingClient._getMessageEventEmitParameters(messageType, parsedMessage, metadata);
+      ({eventType, eventData} = StreamingClient._getMessageEventEmitParameters(messageType, parsedMessage, metadata));
     }
     catch (error) {
       if (error instanceof Error) {
@@ -315,23 +315,23 @@ export default class StreamingClient extends events.EventEmitter {
     let eventType;
     let eventData = [];
     if (messageType === MQTT_TOPIC_STATE_UPDATES) {
-      [eventType, eventData] = StreamingClient._getStateUpdateEventData(parsedMessage, metadata);
+      ({eventType, eventData} = StreamingClient._getStateUpdateEventData(parsedMessage, metadata));
     }
     else if (messageType === MQTT_TOPIC_COMMANDS) {
-      [eventType, eventData] = StreamingClient._getCommandEventData(parsedMessage, metadata);
+      ({eventType, eventData} = StreamingClient._getCommandEventData(parsedMessage, metadata));
     }
     else {
       throw new Error("Unrecognized message type received");
     }
 
-    return [eventType, eventData];
+    return {eventType, eventData};
   }
 
   static _getStateUpdateEventData(parsedMessage, metadata) {
     const eventType = StreamingClient.EVENT_STATE_UPDATE;
     const eventData = [parsedMessage, metadata];
 
-    return [eventType, eventData];
+    return {eventType, eventData};
   }
 
   static _getCommandEventData(parsedMessage, metadata) {
@@ -344,7 +344,7 @@ export default class StreamingClient extends events.EventEmitter {
     const configuration = parsedMessage.configuration || {};
     const eventData = [name, configuration, metadata];
 
-    return [eventType, eventData];
+    return {eventType, eventData};
   }
 
   static _extractMessageType(parsedTopic) {
