@@ -49,7 +49,7 @@ gulp.task('submit-coverage', function submitCoverage() {
 
 gulp.task('lint', function lint() {
   return gulp.src(["src/**/*.js", "test/**/*.js"])
-    .pipe(eslint('../.eslintrc'))
+    .pipe(eslint('node_modules/@anyware/coding-style/.eslintrc'))
     .pipe(eslint.format())
     .pipe(eslint.failOnError());
 });
