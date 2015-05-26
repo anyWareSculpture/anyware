@@ -8,7 +8,7 @@ var codecov = require('gulp-codecov.io');
 var runSequence = require('run-sequence');
 var isparta = require('isparta');
 
-var gulpUtils = require('../gulp-utils');
+var gulpUtils = require('@anyware/gulp-utils');
 
 MINIMUM_CODE_COVERAGE = 90;
 
