@@ -4,6 +4,7 @@
   "description": "Shared gulp utilities for the anyWare project",
   "main": "gulp-utils.js",
   "dependencies": {
+    "@anyware/coding-style": "^1.0.2",
     "babel": "^5.4.7",
     "del": "^1.1.1",
     "gulp-codecov.io": "^0.1.2",
