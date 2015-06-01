@@ -6,13 +6,13 @@ var isparta = require('isparta');
 /**
  * Creates a testing task which runs tests and generates code coverage
  * @param gulp - The gulp module
+ * @param {String} taskName - The name of the task
  * @param {String|String[]} filesToCover - The glob or list of globs to cover in code coverage
  * @param {String|String[]} testFiles - The test files to run
  * @param {String} reporter - The reporter to use
  * @param {Number} minimumCodeCoverage - The minimum code coverage required
- * @param {String} [taskName='test'] - The name of the task
  */
-module.exports = function(gulp, filesToCover, testFiles, reporter, minimumCodeCoverage, taskName='test') {
+module.exports = function(gulp, taskName, filesToCover, testFiles, reporter, minimumCodeCoverage) {
   gulp.task(taskName, function(callback) {
     require('babel/register');
     
