@@ -1,5 +1,7 @@
 var path = require('path');
 
+var eslint = require('gulp-eslint');
+
 /**
  * Creates a task for linting files
  */
