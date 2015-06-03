@@ -1,3 +1,4 @@
+var babel = require("gulp-babel");
 var sourcemaps = require("gulp-sourcemaps");
 
 /**
