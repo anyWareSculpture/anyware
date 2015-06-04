@@ -2,7 +2,7 @@
   "name": "@anyware/streaming-client",
   "version": "1.1.0",
   "description": "Streaming Client for abstracting away state updates and commands in the anyWare project",
-  "main": "src/streaming-client.js",
+  "main": "dist/streaming-client.js",
   "browserify": {
     "transform": [
       "babelify"
@@ -29,7 +29,9 @@
     "mqtt": "^1.1.4"
   },
   "scripts": {
-    "test": "gulp test"
+    "test": "gulp test",
+    "build": "gulp build",
+    "postinstall": "npm run build"
   },
   "repository": {
     "type": "git",
