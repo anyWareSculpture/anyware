@@ -17,7 +17,10 @@ module.exports = function(gulp, taskName, filesToCover, testFiles, reporter, min
     require('babel/register');
     
     gulp.src(filesToCover)
-    .pipe(istanbul({ instrumenter: isparta.Instrumenter }))
+    .pipe(istanbul({
+      instrumenter: isparta.Instrumenter,
+      includeUntested: true
+    }))
     .pipe(istanbul.hookRequire())
     .on('finish', function() {
       gulp.src(testFiles, {read: false})
