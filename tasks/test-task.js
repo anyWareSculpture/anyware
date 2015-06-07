@@ -31,7 +31,7 @@ module.exports = function(gulp, taskName, filesToCover, testFiles, reporter, min
           }
         }))
         .on('error', function(error) {
-          console.error("Code coverage is below " + minimumCodeCoverage + "%");
+          throw new Error("Code coverage is below " + minimumCodeCoverage + "%");
         })
         .on('end', callback);
     });
