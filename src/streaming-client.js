@@ -168,7 +168,7 @@ export default class StreamingClient extends events.EventEmitter {
     // Need to append these afterwards so that customMetadata cannot
     // override these properties.
     metadata.from = this._username;
-    metadata.timestamp = (new Date()).toJSON();
+    metadata.timestamp = Date.now();
 
     message.metadata = metadata;
   }
