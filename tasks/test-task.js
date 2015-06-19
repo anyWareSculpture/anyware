@@ -14,30 +14,32 @@ var isparta = require('isparta');
  */
 module.exports = function(gulp, taskName, filesToCover, testFiles, reporter, minimumCodeCoverage) {
   gulp.task(taskName, function(callback) {
-    require('babel/register');
+    require('babel/register')({
+      stage: 0
+    });
     
     gulp.src(filesToCover)
-    .pipe(istanbul({
-      instrumenter: isparta.Instrumenter,
-      includeUntested: true
-    }))
-    .pipe(istanbul.hookRequire())
-    .on('finish', function() {
-      gulp.src(testFiles, {read: false})
-        .pipe(mocha({
-          reporter: reporter
-        }))
-        .pipe(istanbul.writeReports())
-        .pipe(istanbul.enforceThresholds({
-          thresholds: {
-            global: minimumCodeCoverage
-          }
-        }))
-        .on('error', function(error) {
-          throw new Error("Code coverage is below " + minimumCodeCoverage + "%");
-        })
-        .on('end', callback);
-    });
+      .pipe(istanbul({
+        instrumenter: isparta.Instrumenter,
+        includeUntested: true
+      }))
+      .pipe(istanbul.hookRequire())
+      .on('finish', function() {
+        gulp.src(testFiles, {read: false})
+          .pipe(mocha({
+            reporter: reporter
+          }))
+          .pipe(istanbul.writeReports())
+          .pipe(istanbul.enforceThresholds({
+            thresholds: {
+              global: minimumCodeCoverage
+            }
+          }))
+          .on('error', function(error) {
+            throw new Error("Code coverage is below " + minimumCodeCoverage + "%");
+          })
+          .on('end', callback);
+      });
   });
 };
 
