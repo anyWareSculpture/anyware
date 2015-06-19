@@ -44,6 +44,8 @@
     "angular": true
   },
 
+  "parser": "babel-eslint",
+
   "plugins": [
     // e.g. "react" (must run `npm install eslint-plugin-react` first)
   ],
@@ -212,7 +214,7 @@
     // ECMAScript 6 Rules
 
     "no-var": 2, // require let or const instead of var (off by default)
-    "generator-star-spacing": [2, "after"], // enforce the spacing around the * in generator functions (off by default)
+    "generator-star-spacing": [2, "before"], // enforce the spacing around the * in generator functions (off by default)
     "object-shorthand": [2, "methods"], // require method and property shorthand syntax for object literals (off by default)
 
     // Legacy JSHint/JSLint Rules
