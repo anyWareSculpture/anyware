@@ -30,39 +30,40 @@ const DEFAULT_MQTT_CONNECTION_OPTIONS = {
   protocol: DEFAULT_MQTT_PROTOCOL
 };
 
-// Each key is declared as a read-only property on the StreamingClient
-const clientEvents = {
+export default class StreamingClient extends events.EventEmitter {
   /**
    * Fired when the client connects or reconnects to the streaming server
    * @event StreamingClient.EVENT_CONNECT
    */
-  EVENT_CONNECT: "connect",
+  static EVENT_CONNECT = "connect";
+
   /**
    * Fired when the connection is closed or when the connection goes offline for some reason
    * @event StreamingClient.EVENT_DISCONNECT
    */
-  EVENT_DISCONNECT: "disconnect",
+  static EVENT_DISCONNECT = "disconnect";
+
   /**
    * Fired when a state update is received
    * Arguments for handler: [update, metadata]
    * @event StreamingClient.EVENT_STATE_UPDATE
    */
-  EVENT_STATE_UPDATE: "stateupdate",
+  static EVENT_STATE_UPDATE = "stateupdate";
+
   /**
    * Fired when a command is received
    * Arguments for handler: [commandName, commandConfiguration, metadata]
    * @event StreamingClient.EVENT_COMMAND
    */
-  EVENT_COMMAND: "command",
+  static EVENT_COMMAND = "command";
+
   /**
    * Fired when any error occurs
    * Arguments for handler: [error]
    * @event StreamingClient.EVENT_ERROR
    */
-  EVENT_ERROR: "error"
-};
+  static EVENT_ERROR = "error";
 
-export default class StreamingClient extends events.EventEmitter {
   /**
    * Connects to the StreamingServer and then allows you to send and receive
    * the different types of messages it supports.
@@ -351,6 +352,4 @@ export default class StreamingClient extends events.EventEmitter {
     return parsedTopic[MQTT_TOPIC_MESSAGE_TYPE_INDEX];
   }
 }
-
-Object.assign(StreamingClient, clientEvents);
 
