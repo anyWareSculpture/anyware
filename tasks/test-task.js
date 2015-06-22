@@ -21,7 +21,10 @@ module.exports = function(gulp, taskName, filesToCover, testFiles, reporter, min
     gulp.src(filesToCover)
       .pipe(istanbul({
         instrumenter: isparta.Instrumenter,
-        includeUntested: true
+        includeUntested: true,
+        babel: {
+          stage: 0
+        }
       }))
       .pipe(istanbul.hookRequire())
       .on('finish', function() {
