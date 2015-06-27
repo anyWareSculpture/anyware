@@ -23,7 +23,7 @@
     "templateStrings": true, // enable template strings
     "unicodeCodePointEscapes": true, // enable code point escapes
     "globalReturn": true, // allow return statements in the global scope
-    "jsx": false // enable JSX
+    "jsx": true // enable JSX
   },
 
   "env": {
