@@ -8,6 +8,8 @@
     "babel": "^5.4.7",
     "babel-eslint": "^3.1.17",
     "del": "^1.1.1",
+    "eslint": "^0.24.0",
+    "eslint-plugin-react": "^2.6.2",
     "gulp-babel": "^5.1.0",
     "gulp-codecov.io": "^0.1.2",
     "gulp-eslint": "^0.12.0",
