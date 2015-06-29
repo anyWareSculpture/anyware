@@ -1,6 +1,6 @@
 {
   "name": "@anyware/gulp-utils",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Shared gulp utilities for the anyWare project",
   "main": "gulp-utils.js",
   "dependencies": {
