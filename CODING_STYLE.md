@@ -609,13 +609,54 @@ else {
 
 *When two constructs are equivalent, pick one and stick to it. Also, missing `break` bugs are very tedious.*
 
-Alternative for using switch: http://ericleads.com/2012/12/switch-case-considered-harmful/
+##### Alternative for using switch: ([source](http://ericleads.com/2012/12/switch-case-considered-harmful/))
+
+Rather than doing this:
+
+      function processToken (token) {
+        switch (token) {
+          case '{':
+          case '[':
+            handleOpen(token);
+          break;
+          case ']':
+          case '}':
+            handleClose(token);
+          break;
+          default:
+            throw new Error('Invalid token.');
+          break;
+        }
+      }
+
+Use the following syntax:
+
+      var tokenActions = {
+        '{': handleOpen,
+        '[': handleOpen,
+        ']': handleClose,
+        '}': handleClose
+      };
+ 
+      function processToken(token) {
+        if (typeof tokenActions[token] !== 'function') {
+          throw new Error('Invalid token.');
+        }
+        return tokenActions[token](token);
+      }
+
+At first glance, it might seem like this is more complicated syntax, but it has a few advantages:
+
+* It uses the standard curly-bracket blocks used everywhere else in JavaScript.
+* You never have to worry about remembering the break.
+* Method lookup is much more flexible. Using an action object allows you to alter the cases dynamically at runtime. For example, to allow dynamically loaded modules to extend cases, or even swap out some or all of the cases for modal context switching.
+* Method lookup is object-oriented by definition. With switch … case, your code is more procedural.
 
 # for in, for of
 
-- `for in` and `for of` **should not** be used unless you are absolutely confident you are optimizing a super hot function which your JS engine can't optimize by itself. `forEach/map` **should** be used instead.
+- `for in` **should not** be used ever. `for of` **should** be used over `forEach` which **should not** be used. `map` is acceptable when it would make the code more consise and easier to grasp. Avoid using `map` with a very large, complex function passed in. Unless you are optimizing very performance crticial code, this should not be necessary. Even then, rethink your approach.
 
-*When two constructs are equivalent, pick one and stick to it. Also, missing `hasOwnProperty` check bugs are very tedious. `for` loops are very rarely needed in ES6 code where `forEach/map` and arrow functions can achieve almost every conceivable looping pattern and are easier to reason about. In edge cases where optimization is actually needed, it can be helpful though.*
+*Missing `hasOwnProperty` check bugs are very tedious. `for of` loops are easy to reason about and automatically perform many checks and balances that would otherwise be confusing.*
 
 ## Method short notation
 
