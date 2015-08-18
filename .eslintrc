@@ -41,7 +41,8 @@
   },
 
   "globals": {
-    "React": true
+    "React": true,
+    "_": true
   },
 
   "parser": "babel-eslint",
