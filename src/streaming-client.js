@@ -162,14 +162,12 @@ export default class StreamingClient extends events.EventEmitter {
 
   _appendMetadata(message, customMetadata) {
     const metadata = {};
+    metadata.from = this._username;
+    metadata.timestamp = Date.now();
+
     if (customMetadata && Object.keys(customMetadata).length !== 0) {
       Object.assign(metadata, customMetadata);
     }
-
-    // Need to append these afterwards so that customMetadata cannot
-    // override these properties.
-    metadata.from = this._username;
-    metadata.timestamp = Date.now();
 
     message.metadata = metadata;
   }
