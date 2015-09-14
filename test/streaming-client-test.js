@@ -487,22 +487,25 @@ describe('StreamingClient', () => {
     }
   });
 
-  it('should append the expected metadata and not allow custom metadata to override that', () => {
+  it('should allow expected metadata to be overridden by custom metadata', () => {
     const username = "testUser123";
     const client = new StreamingClient({username: username});
     connectClient(client);
 
-    client.sendStateUpdate({a: 1}, {from: "invalid", timestamp: ""});
-    client.sendCommand("commandName", null, {from: "invalid5", timestamp: ""});
-    client.sendCommand("commandName", {b: 2}, {from: "invalid2", timestamp: ""});
+    const customFrom = "customName";
+    const customTimestamp = 12345;
+
+    client.sendStateUpdate({a: 1}, {from: customFrom, timestamp: 12345});
+    client.sendCommand("commandName", null, {from: customFrom, timestamp: customTimestamp});
+    client.sendCommand("commandName2", {b: 2}, {from: customFrom, timestamp: customTimestamp});
 
     expect(mockClient.publish.calledThrice).to.be.true;
 
     for (const [, sentMessage] of mockClient.publish.args) {
       const parsedMessage = JSON.parse(sentMessage);
 
-      expect(parsedMessage.metadata.from).to.equal(username);
-      expect(parsedMessage.metadata.timestamp).to.not.be.empty;
+      expect(parsedMessage.metadata.from).to.equal(customFrom);
+      expect(parsedMessage.metadata.timestamp).to.equal(customTimestamp);
     }
   });
 
