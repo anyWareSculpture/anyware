@@ -601,6 +601,11 @@ else {
 }
 ```
 
+The exception is single-line if/else, which is allowed without braces where it increases readability:
+```js
+if (test) do_something();
+```
+
 *Easier to read and refactor.*
 
 ## switch construct
