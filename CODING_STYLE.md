@@ -11,15 +11,15 @@ Rationale for each instruction is *italic*. Some instructions are under the *pur
 
 - The following constructs **must not** be used, for both performance and critical security reasons.
 
-  - `eval` and similar `new Function`, `setTimeout(string)`, `setInterval(string)`, `setImmediate(string)` (however `setTimeout(function)` etc is perfectly fine).
+  - `eval` and similar `new Function`, `setTimeout(string)`, `setInterval(string)`, `setImmediate(string)` (however `setTimeout(function)` etc is perfectly fine). [no-eval](http://eslint.org/docs/rules/no-eval) [no-implied-eval](http://eslint.org/docs/rules/no-implied-eval) 
 
-  - `with`,
+  - `with` [no-with](http://eslint.org/docs/rules/no-with),
 
-  - `alert` and  `confirm`,
+  - `alert` and  `confirm` [no-alert](http://eslint.org/docs/rules/no-alert),
 
-  - primitive type wrapper constructors (`new Number`, `new String`, `new Boolean`, `new Array`, `new Object`),
+  - primitive type wrapper constructors (`new Number`, `new String`, `new Boolean`, `new Array`, `new Object`) [no-new-wrappers](http://eslint.org/docs/rules/no-new-wrappers) [no-new-func](http://eslint.org/docs/rules/no-new-func) [no-array-constructor](http://eslint.org/docs/rules/no-array-constructor),
 
-  - tabs (they are evil, don't use them).
+  - tabs (they are evil, don't use them) [no-mixed-spaces-and-tabs](http://eslint.org/docs/rules/no-mixed-spaces-and-tabs).
 
 *`eval` and similar prevents runtime optimizations and leaks the execution context. See [How evil is eval?](https://javascriptweblog.wordpress.com/2010/04/19/how-evil-is-eval/).*
 
@@ -335,7 +335,7 @@ t.y = 4;
 
 ## Operators
 
-- Short-hand operators like `+=`-like and `++`-like **must only** be used in for loops. Also, consider refactoring to get rid of the underlying `let`.
+- Short-hand operators like `+=`-like and `++`-like **must only** be used in for loops. Also, consider refactoring to get rid of the underlying `let`. [no-plusplus](http://eslint.org/docs/rules/no-plusplus)
 
 ```js
 let n = 0;
@@ -578,7 +578,7 @@ const id = (x) => x;
 
 ## if/else construct
 
-- `if`/`else if`/`else` **must** be preceded by a newline.
+- `if`/`else if`/`else` **must** be preceded by a newline. [brace-style](http://eslint.org/docs/rules/brace-style)
 ```js
 // bad
 if(...) {
@@ -603,13 +603,13 @@ else {
 
 *Easier to read and refactor.*
 
-# switch construct
+## switch construct
 
 - `switch` construct **should not** be used unless you are absolutely confident you are optimizing a super hot function which your JS engine can't optimize by itself. `if/else if/else` **should** be used instead.
 
 *When two constructs are equivalent, pick one and stick to it. Also, missing `break` bugs are very tedious.*
 
-##### Alternative for using switch: ([source](http://ericleads.com/2012/12/switch-case-considered-harmful/))
+Alternative for using switch: ([source](http://ericleads.com/2012/12/switch-case-considered-harmful/))
 
 Rather than doing this:
 
@@ -652,7 +652,7 @@ At first glance, it might seem like this is more complicated syntax, but it has 
 * Method lookup is much more flexible. Using an action object allows you to alter the cases dynamically at runtime. For example, to allow dynamically loaded modules to extend cases, or even swap out some or all of the cases for modal context switching.
 * Method lookup is object-oriented by definition. With switch … case, your code is more procedural.
 
-# for in, for of
+## for in, for of
 
 - `for in` **should not** be used ever. `for of` **should** be used over `forEach` which **should not** be used. `map` is acceptable when it would make the code more consise and easier to grasp. Avoid using `map` with a very large, complex function passed in. Unless you are optimizing very performance crticial code, this should not be necessary. Even then, rethink your approach.
 
