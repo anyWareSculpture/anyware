@@ -1,0 +1,19 @@
+{
+  "name": "anyware",
+  "version": "1.0.0",
+  "description": "The generic anyWare sculpture library for creating anyWare sculpture applications",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anyWareSculpture/anyware.git"
+  },
+  "author": "anyWare Sculpture Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anyWareSculpture/anyware/issues"
+  },
+  "homepage": "https://github.com/anyWareSculpture/anyware#readme"
+}
