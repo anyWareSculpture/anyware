@@ -39,8 +39,8 @@
  *  o play show sound
  */
 
-const assert = require('assert');
-const _ = require('lodash');
+import assert from 'assert';
+import _ from 'lodash';
 
 import SculptureStore from '../game-logic/sculpture-store';
 import GAMES from '../game-logic/constants/games';

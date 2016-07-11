@@ -1,4 +1,4 @@
-const events = require('events');
+import events from 'events';
 
 import GAMES from './constants/games';
 import HandshakeGameLogic from './logic/handshake-game-logic';

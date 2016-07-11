@@ -1,5 +1,5 @@
-const events = require('events');
-const mqtt = require('mqtt');
+import events from 'events';
+import mqtt from 'mqtt';
 
 const MQTT_EVENT_CONNECT = "connect";
 const MQTT_EVENT_CLOSE = "close";

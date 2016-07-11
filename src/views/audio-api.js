@@ -1,5 +1,5 @@
-const assert = require('assert');
-const path = require('path');
+import assert from 'assert';
+import path from 'path';
 
 let context = null;
 let isNode = false;
