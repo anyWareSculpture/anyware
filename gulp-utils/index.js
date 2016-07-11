@@ -7,7 +7,7 @@ module.exports = {
 };
 
 
-var DISTRIBUTION_DIRECTORY = "dist";
+var DISTRIBUTION_DIRECTORY = "lib";
 
 /**
  * Gets a path relative to the distribution directory

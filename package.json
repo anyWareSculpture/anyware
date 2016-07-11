@@ -20,23 +20,24 @@
   "homepage": "https://github.com/anyWareSculpture/anyware#readme",
   "devDependencies": {
     "babel": "^6.5.2",
-    "babel-preset-es2015": "^6.9.0",
+    "babel-eslint": "^6.1.2",
     "babel-plugin-transform-class-properties": "^6.10.2",
-    "gulp-babel": "^6.1.2",
+    "babel-preset-es2015": "^6.9.0",
     "chai": "^2.3.0",
+    "del": "^2.2.0",
     "eslint": "^0.24.0",
     "eslint-plugin-react": "^2.6.3",
     "gulp": "^3.9.0",
-    "rewire": "^2.3.3",
-    "run-sequence": "^1.1.0",
-    "sinon": "^1.14.1",
-    "del": "^2.2.0",
+    "gulp-babel": "^6.1.2",
     "gulp-codecov.io": "^1.0.1",
     "gulp-eslint": "^1.1.1",
     "gulp-istanbul": "^0.9.0",
     "gulp-mocha": "^2.1.0",
     "gulp-sourcemaps": "^1.5.2",
-    "isparta": "^4.0.0"
+    "isparta": "^4.0.0",
+    "rewire": "^2.3.3",
+    "run-sequence": "^1.1.0",
+    "sinon": "^1.14.1"
   },
   "dependencies": {
     "mqtt": "^1.1.4"

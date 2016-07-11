@@ -118,8 +118,11 @@ export default class LightArray extends TrackedData {
     if (panelId === null) {
       // this code is necessary because there is no Object.values() function
       const stripPanels = this.get(stripId).get("panels");
-      return [for (stripPanelId of stripPanels) stripPanels.get(stripPanelId)];
-    }
+      // Old code
+      // return [for (stripPanelId of stripPanels) stripPanels.get(stripPanelId)];
+      // FIXME: New code, untested
+      return Array.from(stripPanels).map((id) => stripPanels.get(id));
+     }
     else {
       return [this.getPanel(stripId, panelId)];
     }

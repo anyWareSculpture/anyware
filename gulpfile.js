@@ -26,10 +26,13 @@ require('./gulp-utils/tasks/transpile-task')(
   gulp,
   'build', // taskName
   'src/**/*.js', // targetFiles
-  'dist' // destinationDirectory
+  'lib' // destinationDirectory
 );
 
 gulp.task('default', function(callback) {
-  return runSequence('lint', 'test', callback);
+  return runSequence('lint', 'test', 'build', callback);
 });
 
+gulp.task('watch', ['build'], function watch() {
+  gulp.watch('src/**/*.js', ['build']);
+});
