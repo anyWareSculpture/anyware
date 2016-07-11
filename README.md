@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/anyWareSculpture/anyware.svg?branch=master)](https://travis-ci.org/anyWareSculpture/a yware)
+[![Build Status](https://travis-ci.org/anyWareSculpture/anyware.svg?branch=master)](https://travis-ci.org/anyWareSculpture/a yware) [![codecov.io](http://codecov.io/github/anyWareSculpture/anyware/coverage.svg?branch=master)](http://codecov.io/github/anyWareSculpture/anyware?branch=master)
+
 
 
 # anyWare
