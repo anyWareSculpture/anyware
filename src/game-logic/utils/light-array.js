@@ -122,7 +122,7 @@ export default class LightArray extends TrackedData {
       // return [for (stripPanelId of stripPanels) stripPanels.get(stripPanelId)];
       // FIXME: New code, untested
       return Array.from(stripPanels).map((id) => stripPanels.get(id));
-     }
+    }
     else {
       return [this.getPanel(stripId, panelId)];
     }

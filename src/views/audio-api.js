@@ -1,3 +1,5 @@
+/* global XMLHttpRequest, AudioContext, NodeAudioContext */
+
 import assert from 'assert';
 import path from 'path';
 
