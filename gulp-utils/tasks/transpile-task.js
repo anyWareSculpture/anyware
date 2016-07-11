@@ -11,8 +11,8 @@ module.exports = function(gulp, taskName, targetFiles, destinationDirectory) {
     return gulp.src(targetFiles)
       .pipe(sourcemaps.init())
       .pipe(babel({
-        // enables stage 0 experimental features
-        stage: 0
+        presets: ['es2015'],
+        plugins: ['transform-class-properties']
       }))
       .pipe(sourcemaps.write())
       .pipe(gulp.dest(destinationDirectory));

@@ -14,8 +14,9 @@ var isparta = require('isparta');
  */
 module.exports = function(gulp, taskName, filesToCover, testFiles, reporter, minimumCodeCoverage) {
   gulp.task(taskName, function(callback) {
-    require('babel/register')({
-      stage: 0
+    require('babel-core/register')({
+      presets: ['es2015'],
+      plugins: ['transform-class-properties']
     });
     
     gulp.src(filesToCover)
@@ -23,7 +24,8 @@ module.exports = function(gulp, taskName, filesToCover, testFiles, reporter, min
         instrumenter: isparta.Instrumenter,
         includeUntested: true,
         babel: {
-          stage: 0
+          presets: ['es2015'],
+          plugins: ['transform-class-properties']
         }
       }))
       .pipe(istanbul.hookRequire())

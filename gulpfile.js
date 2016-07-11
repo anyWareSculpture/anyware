@@ -1,13 +1,11 @@
 var gulp = require('gulp');
-
 var runSequence = require('run-sequence');
-
-var gulpUtils = require('@anyware/gulp-utils');
+var gulpUtils = require('./gulp-utils');
 
 MINIMUM_CODE_COVERAGE = 90;
 
 // Create shared tasks
-require('@anyware/gulp-utils/tasks/test-task')(
+require('./gulp-utils/tasks/test-task')(
   gulp,
   'test', // taskName
   'src/**/*.js', // filesToCover
@@ -15,16 +13,16 @@ require('@anyware/gulp-utils/tasks/test-task')(
   process.env.TRAVIS ? 'spec' : 'nyan', // reporter
   MINIMUM_CODE_COVERAGE // minimumCodeCoverage
 );
-require('@anyware/gulp-utils/tasks/submit-coverage-task')(
+require('./gulp-utils/tasks/submit-coverage-task')(
   gulp,
   'submit-coverage' // taskName
 );
-require('@anyware/gulp-utils/tasks/lint-task')(
+require('./gulp-utils/tasks/lint-task')(
   gulp,
   'lint', // taskName
   ["src/**/*.js", "test/**/*.js"] // files
 );
-require('@anyware/gulp-utils/tasks/transpile-task')(
+require('./gulp-utils/tasks/transpile-task')(
   gulp,
   'build', // taskName
   'src/**/*.js', // targetFiles
