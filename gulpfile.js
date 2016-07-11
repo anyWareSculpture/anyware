@@ -2,7 +2,7 @@ var gulp = require('gulp');
 var runSequence = require('run-sequence');
 var gulpUtils = require('./gulp-utils');
 
-MINIMUM_CODE_COVERAGE = 90;
+MINIMUM_CODE_COVERAGE = 0;
 
 // Create shared tasks
 require('./gulp-utils/tasks/test-task')(
@@ -20,7 +20,7 @@ require('./gulp-utils/tasks/submit-coverage-task')(
 require('./gulp-utils/tasks/lint-task')(
   gulp,
   'lint', // taskName
-  ["src/**/*.js", "test/**/*.js"] // files
+  ["src/**/*.js"] // files
 );
 require('./gulp-utils/tasks/transpile-task')(
   gulp,
