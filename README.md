@@ -39,3 +39,13 @@ This contains shared views used by multiple anyWare runtimes.
 Example of correct usage:
 
     const AudioView = require('anyware/lib/views/audio-view);
+
+## Development
+
+* Test: ```npm test```
+* Build: ```npm run build```
+
+### Publishing to NPM
+
+Simply run ```./publish```
+
