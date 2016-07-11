@@ -42,10 +42,10 @@
 const assert = require('assert');
 const _ = require('lodash');
 
-const SculptureStore = require('../game-logic/sculpture-store');
-const GAMES = require('../game-logic/constants/games');
-const {TrackedPanels} = require('../game-logic/utils/tracked-panels');
-const Disk = require('../game-logic/utils/disk');
+import SculptureStore from '../game-logic/sculpture-store';
+import GAMES from '../game-logic/constants/games';
+import TrackedPanels from '../game-logic/utils/tracked-panels';
+import Disk from '../game-logic/utils/disk';
 import * as AudioAPI from './audio-api';
 const {Sound, VCFSound} = AudioAPI;
 

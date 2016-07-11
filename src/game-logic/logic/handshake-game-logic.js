@@ -1,4 +1,4 @@
-const SculptureActionCreator = require('../actions/sculpture-action-creator');
+import SculptureActionCreator from '../actions/sculpture-action-creator';
 
 export default class HandshakeGameLogic {
   // These are automatically added to the sculpture store

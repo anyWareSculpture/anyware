@@ -1,4 +1,4 @@
-const BaseActionCreator = require('./base-action-creator');
+import BaseActionCreator from './base-action-creator';
 
 export default class SimonGameActionCreator extends BaseActionCreator {
   // Action types

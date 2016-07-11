@@ -1,4 +1,4 @@
-const TrackedData = require('./tracked-data');
+import TrackedData from './tracked-data';
 
 /**
  * Tracks panel state.
@@ -9,7 +9,8 @@ const TrackedData = require('./tracked-data');
  * Note: Since we require a string key, we use the combined stripId and panelId
  * as a key.
  */
-export class TrackedPanels extends TrackedData {
+
+export default class TrackedPanels extends TrackedData {
 
   static STATE_ON = "on";
   static STATE_OFF = "off"; // default

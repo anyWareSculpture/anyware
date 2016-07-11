@@ -1,5 +1,5 @@
-const COLORS = require('../constants/colors');
-const TrackedData = require('./tracked-data');
+import COLORS from '../constants/colors';
+import TrackedData from './tracked-data';
 
 const DEFAULT_INTENSITY = 0;
 const DEFAULT_COLOR = COLORS.WHITE;

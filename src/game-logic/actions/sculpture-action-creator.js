@@ -1,6 +1,5 @@
-const BaseActionCreator = require('./base-action-creator');
-
-const GAMES = require('../constants/games');
+import BaseActionCreator from './base-action-creator';
+import GAMES from '../constants/games';
 
 export default class SculptureActionCreator extends BaseActionCreator {
   // Action types

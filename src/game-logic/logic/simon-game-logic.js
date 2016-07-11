@@ -1,8 +1,8 @@
-const PanelsActionCreator = require('../actions/panels-action-creator');
-const SculptureActionCreator = require('../actions/sculpture-action-creator');
-const SimonGameActionCreator = require('../actions/simon-game-action-creator');
-const PanelAnimation = require('../animation/panel-animation');
-const NormalizeStripFrame = require('../animation/normalize-strip-frame');
+import PanelsActionCreator from '../actions/panels-action-creator';
+import SculptureActionCreator from '../actions/sculpture-action-creator';
+import SimonGameActionCreator from '../actions/simon-game-action-creator';
+import PanelAnimation from '../animation/panel-animation';
+import NormalizeStripFrame from '../animation/normalize-strip-frame';
 
 const DEFAULT_LEVEL = 0;
 

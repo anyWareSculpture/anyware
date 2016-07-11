@@ -1,4 +1,4 @@
-const TrackedData = require('./tracked-data');
+import TrackedData from './tracked-data';
 
 export default class Disk extends TrackedData {
   static STOPPED = "stopped";

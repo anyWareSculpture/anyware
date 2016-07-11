@@ -13,8 +13,8 @@
  * Try to keep the structure as flat as possible while grouping things logically
  */
 
-const COLORS = require('../constants/colors');
-const GAMES = require('../constants/games');
+import COLORS from '../constants/colors';
+import GAMES from '../constants/games';
 
 export default class DefaultConfig {
   constructor({

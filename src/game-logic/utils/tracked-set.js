@@ -1,4 +1,4 @@
-const TrackedData = require('./tracked-data');
+import TrackedData from './tracked-data';
 
 /**
  * Implements a sub-set of the JavaScript Set API including adding,

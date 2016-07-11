@@ -1,8 +1,7 @@
-const PanelsActionCreator = require('../actions/panels-action-creator');
-const DisksActionCreator = require('../actions/disks-action-creator');
-const SculptureActionCreator = require('../actions/sculpture-action-creator');
-
-const Disk = require('../utils/disk');
+import PanelsActionCreator from '../actions/panels-action-creator';
+import DisksActionCreator from '../actions/disks-action-creator';
+import SculptureActionCreator from '../actions/sculpture-action-creator';
+import Disk from '../utils/disk';
 
 const DEFAULT_LEVEL = 0;
 

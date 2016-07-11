@@ -1,17 +1,17 @@
 const events = require('events');
 
-const GAMES = require('./constants/games');
-const HandshakeGameLogic = require('./logic/handshake-game-logic');
-const MoleGameLogic = require('./logic/mole-game-logic');
-const DiskGameLogic = require('./logic/disk-game-logic');
-const SimonGameLogic = require('./logic/simon-game-logic');
-const SculptureActionCreator = require('./actions/sculpture-action-creator');
-const PanelsActionCreator = require('./actions/panels-action-creator');
-const DisksActionCreator = require('./actions/disks-action-creator');
-const TrackedData = require('./utils/tracked-data');
-const TrackedSet = require('./utils/tracked-set');
-const LightArray = require('./utils/light-array');
-const Disk = require('./utils/disk');
+import GAMES from './constants/games';
+import HandshakeGameLogic from './logic/handshake-game-logic';
+import MoleGameLogic from './logic/mole-game-logic';
+import DiskGameLogic from './logic/disk-game-logic';
+import SimonGameLogic from './logic/simon-game-logic';
+import SculptureActionCreator from './actions/sculpture-action-creator';
+import PanelsActionCreator from './actions/panels-action-creator';
+import DisksActionCreator from './actions/disks-action-creator';
+import TrackedData from './utils/tracked-data';
+import TrackedSet from './utils/tracked-set';
+import LightArray from './utils/light-array';
+import Disk from './utils/disk';
 
 export default class SculptureStore extends events.EventEmitter {
   static EVENT_CHANGE = "change";
