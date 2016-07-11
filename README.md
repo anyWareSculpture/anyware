@@ -1,4 +1,7 @@
-# anyware
+[![Build Status](https://travis-ci.org/anyWareSculpture/anyware.svg?branch=master)](https://travis-ci.org/anyWareSculpture/a yware)
+
+
+# anyWare
 The generic anyWare sculpture library for creating anyWare sculpture applications
 
 ## doc
