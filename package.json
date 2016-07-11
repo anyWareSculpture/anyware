@@ -41,7 +41,6 @@
   },
   "dependencies": {
     "lodash": "^4.13.1",
-    "mqtt": "^1.1.4",
-    "promise-decode-audio-data": "^0.2.0"
+    "mqtt": "^1.1.4"
   }
 }
