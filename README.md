@@ -32,3 +32,10 @@ This was implemented this way for a variety of reasons:
 1. Requiring individual files only gets those files and their dependencies. That way it isn't necessary to include the entire library if you only need a few parts.
 2. This means that we don't have to keep any `index.js` or something up to date all the time. You can access whatever you want using the `lib/` directory.
 
+### views
+
+This contains shared views used by multiple anyWare runtimes.
+
+Example of correct usage:
+
+    const AudioView = require('anyware/lib/views/audio-view);

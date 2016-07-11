@@ -40,6 +40,7 @@
     "sinon": "^1.14.1"
   },
   "dependencies": {
-    "mqtt": "^1.1.4"
+    "mqtt": "^1.1.4",
+    "promise-decode-audio-data": "^0.2.0"
   }
 }
