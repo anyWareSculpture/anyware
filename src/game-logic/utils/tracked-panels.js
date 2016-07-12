@@ -25,7 +25,7 @@ export default class TrackedPanels extends TrackedData {
   }
 
   getPanelState(stripId, panelId) {
-    return this.get(this._hash(stripId, panelId)) || TrackedData.STATE_OFF;
+    return this.get(this._hash(stripId, panelId)) || TrackedPanels.STATE_OFF;
   }
 
   get numPanels() {
