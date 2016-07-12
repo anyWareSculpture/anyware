@@ -1,16 +1,14 @@
 /*eslint no-unused-expressions: 0, no-new: 0 */
 // The above is done in order to support chai assertion syntax without lint errors
 
-const sinon = require('sinon');
+import sinon from 'sinon';
 const expect = require('chai').expect;
-const rewire = require('rewire');
 
-const StreamingClient = rewire('../src/streaming-client');
+import StreamingClient from '../src/streaming-client';
 
 describe('StreamingClient', () => {
   let mockClient;
   let mockMqtt;
-  let revert;
 
   beforeEach(() => {
     mockClient = {
@@ -24,13 +22,11 @@ describe('StreamingClient', () => {
       connect: sinon.stub().returns(mockClient)
     };
 
-    revert = StreamingClient.__set__({
-      mqtt: mockMqtt
-    });
+    StreamingClient.__Rewire__('mqtt', mockMqtt);
   });
 
   afterEach(() => {
-    revert();
+    StreamingClient.__ResetDependency__('mqtt');
   });
 
   /*
