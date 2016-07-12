@@ -1,4 +1,4 @@
 {
   "presets": ["es2015"],
-  "plugins": ["transform-class-properties", "rewire"]
+  "plugins": ["transform-runtime", "transform-class-properties", "rewire"]
 }
