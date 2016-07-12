@@ -1,4 +1,8 @@
-# anyware
+[![Build Status](https://travis-ci.org/anyWareSculpture/anyware.svg?branch=master)](https://travis-ci.org/anyWareSculpture/a yware) [![codecov.io](http://codecov.io/github/anyWareSculpture/anyware/coverage.svg?branch=master)](http://codecov.io/github/anyWareSculpture/anyware?branch=master) [![bitHound Overall Score](https://www.bithound.io/github/anyWareSculpture/anyware/badges/score.svg)](https://www.bithound.io/github/anyWareSculpture/anyware)
+
+
+
+# anyWare
 The generic anyWare sculpture library for creating anyWare sculpture applications
 
 ## doc
