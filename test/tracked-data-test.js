@@ -2,27 +2,26 @@
 // The above is done in order to support chai assertion syntax without lint errors
 
 const expect = require('chai').expect;
-const rewire = require('rewire');
 
-const DataChangeTracker = rewire('../src/game-logic/utils/data-change-tracker');
+import TrackedData from '../src/game-logic/utils/tracked-data';
 
-describe('DataChangeTracker', () => {
+describe('TrackedData', () => {
   it('should not restrict property names when no arguments are passed in', () => {
-    const data = new DataChangeTracker();
+    const data = new TrackedData();
 
     expect(() => data.get("test")).to.not.throw(Error);
     expect(() => data.set("test", "somevalue")).to.not.throw(Error);
   });
 
   it('should restrict all property names when an empty argument is passed in', () => {
-    const data = new DataChangeTracker({});
+    const data = new TrackedData({});
 
     expect(() => data.get("test")).to.throw(Error);
     expect(() => data.set("test", "somevalue")).to.throw(Error);
   });
 
   it('should restrict property names to what is passed in', () => {
-    const data = new DataChangeTracker({abc: 56});
+    const data = new TrackedData({abc: 56});
 
     expect(() => data.get("test")).to.throw(Error);
     expect(() => data.set("test", "somevalue")).to.throw(Error);
@@ -32,7 +31,7 @@ describe('DataChangeTracker', () => {
   });
 
   it('should get and set names correctly', () => {
-    const data = new DataChangeTracker();
+    const data = new TrackedData();
 
     const value = "somevalue1";
     data.set("test", value);
@@ -46,7 +45,7 @@ describe('DataChangeTracker', () => {
 
   it('should provide default values appropriately', () => {
     const defaultValue = 23456;
-    const data = new DataChangeTracker({abc: defaultValue});
+    const data = new TrackedData({abc: defaultValue});
 
     expect(data.get("abc")).to.equal(defaultValue);
 
@@ -56,15 +55,15 @@ describe('DataChangeTracker', () => {
   });
 
   it('should not have any changes registered initially', () => {
-    const data = new DataChangeTracker();
+    const data = new TrackedData();
 
-    expect(data.getChangedPropertyNames()).to.be.empty;
+    expect(Array.from(data.getChangedPropertyNames())).to.be.empty;
     expect(data.getChangedOldValues()).to.be.empty;
     expect(data.getChangedCurrentValues()).to.be.empty;
   });
 
   it('should save old and current values for each change', () => {
-    const data = new DataChangeTracker();
+    const data = new TrackedData();
 
     const propertyName = "test1345";
     const oldValue = "oldvalue";
@@ -73,21 +72,14 @@ describe('DataChangeTracker', () => {
     data.set(propertyName, oldValue);
     data.set(propertyName, newValue);
     expect(data.get(propertyName)).to.equal(newValue);
-    expect(data.getChangedPropertyNames()).to.have.length(1);
-    expect(data.getChangedPropertyNames()).to.have.members([propertyName]);
+    expect(Array.from(data.getChangedPropertyNames())).to.eql([propertyName]);
     expect(data.getChangedOldValues()[propertyName]).to.equal(oldValue);
     expect(data.getChangedCurrentValues()[propertyName]).to.equal(newValue);
     expect(data.getChangedCurrentValues()[propertyName]).to.equal(data.get(propertyName));
   });
 
   it('should allow clearing of any currently registered changes', () => {
-    const data = new DataChangeTracker();
-
-    data.set("a", 0);
-    data.set("b", 0);
-    data.set("c", 0);
-
-    expect(data.getChangedCurrentValues()).to.be.empty;
+    const data = new TrackedData();
 
     data.set("a", 1);
     data.set("b", 2);
@@ -101,7 +93,7 @@ describe('DataChangeTracker', () => {
   });
 
   it('should store changed property names correctly', () => {
-    const data = new DataChangeTracker();
+    const data = new TrackedData();
 
     const propertyNames = ["abc", "test", "qqq", "helloworld"];
     for (let name of propertyNames) {
@@ -109,16 +101,14 @@ describe('DataChangeTracker', () => {
       data.set(name, 3);
     }
 
-    expect(data.getChangedPropertyNames()).to.eql(propertyNames);
+    expect(Array.from(data.getChangedPropertyNames())).to.eql(propertyNames);
   });
 
   it('should register changes even if the same value is set twice', () => {
-    const data = new DataChangeTracker();
+    const data = new TrackedData();
 
     const name = "abc";
 
-    data.set(name, 1);
-    expect(data.getChangedCurrentValues()).to.be.empty;
     data.set(name, 2);
     expect(data.getChangedCurrentValues()[name]).to.equal(2);
     data.set(name, 2);
