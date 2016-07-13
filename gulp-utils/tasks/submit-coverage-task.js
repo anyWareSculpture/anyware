@@ -1,4 +1,4 @@
-var codecov = require('gulp-codecov.io');
+var codecov = require('gulp-codecov');
 
 /**
  * Submits code coverage to codecov.io
