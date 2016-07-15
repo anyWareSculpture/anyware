@@ -111,12 +111,10 @@ export default class StreamingClient extends events.EventEmitter {
    * @param {Object} [configuration] - The configuration object to send for the command
    * @param {Object} [metadata] - Custom metadata to send with the command
    */
-  sendCommand(name, configuration=null, metadata=null) {
+  sendCommand(name, configuration = null, metadata = null) {
     this._assertConnected();
 
-    const message = {
-      name: name
-    };
+    const message = { name };
 
     if (configuration && Object.keys(configuration).length !== 0) {
       message.configuration = configuration;
