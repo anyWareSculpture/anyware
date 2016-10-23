@@ -88,6 +88,9 @@ export default class StreamingClient extends events.EventEmitter {
     const settings = Object.assign({}, DEFAULT_MQTT_CONNECTION_OPTIONS,
         options);
 
+    // FIXME: Workaround for https://github.com/mqttjs/MQTT.js/issues/477
+    if (settings.protocol === 'wss') settings.port = settings.port || 443;
+
     // Only provide default authentication information if BOTH options are
     // blank or not provided
     if (!settings.username && !settings.password) {
@@ -174,7 +177,8 @@ export default class StreamingClient extends events.EventEmitter {
     const authString = `${options.username}:${options.password}`;
     const mqttHost = options.host;
     const mqttProtocol = options.protocol;
-    const url = `${mqttProtocol}://${authString}@${mqttHost}`;
+    const mqttPort = options.port ? `:${options.port}` : '';
+    const url = `${mqttProtocol}://${authString}@${mqttHost}${mqttPort}`;
 
     this._username = options.username;
     this._group = options.group;
