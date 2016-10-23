@@ -20,7 +20,7 @@ const MQTT_TOPIC_STATUS = "status";
 const DEFAULT_MQTT_USERNAME = "anyware";
 const DEFAULT_MQTT_PASSWORD = "anyware";
 
-const DEFAULT_MQTT_HOST = 'connect.shiftr.io';
+const DEFAULT_MQTT_HOST = 'broker.shiftr.io';
 const DEFAULT_MQTT_GROUP = "test";
 const DEFAULT_MQTT_PROTOCOL = "mqtt";
 
