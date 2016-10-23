@@ -44,7 +44,7 @@ export default class DiskGameLogic {
 
     // Activate UI indicators
     const controlMappings = this.gameConfig.CONTROL_MAPPINGS;
-    // TODO: Clean this up
+    // FIXME: Clean this up
     for (let diskId of Object.keys(controlMappings.CLOCKWISE_PANELS)) {
       for (let panelId of controlMappings.CLOCKWISE_PANELS[diskId]) {
         this._lights.setIntensity(controlMappings.CLOCKWISE_STRIP, panelId, this.gameConfig.CONTROL_PANEL_INTENSITY);
@@ -57,7 +57,7 @@ export default class DiskGameLogic {
     }
   }
 
-  // TODO: These end() methods may be obsolete now since everything is reset before every game anyway
+  // FIXME: These end() methods may be obsolete now since everything is reset before every game anyway
   end() {
     this.config.LIGHTS.GAME_STRIPS.forEach((id) => this._lights.setIntensity(id, null, 0));
     // Deactivate shadow lights
@@ -88,7 +88,7 @@ export default class DiskGameLogic {
   }
 
   _actionPanelPressed(payload) {
-    // TODO: Break up this method
+    // FIXME: Break up this method
     if (this._complete) {
       return;
     }
@@ -124,7 +124,7 @@ export default class DiskGameLogic {
       // Override the default behaviour and keep this panel off because
       // it is still a special panel
       // It just doesn't do anything
-      // TODO: Magic literal
+      // FIXME: Magic literal
       lightArray.setIntensity(stripId, panelId, 0);
       return;
     }
@@ -180,10 +180,8 @@ export default class DiskGameLogic {
     }
   }
 
-  _actionFinishStatusAnimation(payload) {
-    if (this._complete) {
-      this.store.moveToNextGame();
-    }
+  _actionFinishStatusAnimation() {
+    if (this._complete) this.store.moveToNextGame();
   }
 
   _activateDisk(diskId, direction, stripId, panelIds) {
@@ -204,12 +202,12 @@ export default class DiskGameLogic {
       // This fixes a bug where a user wins the level with their hand on the
       // panel and then takes it off. We stop all the disks between levels so
       // all the disks are already off when they let go. This can cause errors
-      // TODO: Determine if this check should actually be in Disk#unsetDirection
+      // FIXME: Determine if this check should actually be in Disk#unsetDirection
       disk.unsetDirection(direction);
     }
 
     panelIds.forEach((panelId) => {
-      // TODO: Only deactivate if both panels are inactive
+      // FIXME: Only deactivate if both panels are inactive
       this._lights.setIntensity(stripId, panelId, this.gameConfig.CONTROL_PANEL_INTENSITY);
       this._lights.setDefaultColor(stripId, panelId);
     });
@@ -262,7 +260,7 @@ export default class DiskGameLogic {
     this._winGame();
   }
 
-  // TODO: move these public methods up
+  // FIXME: move these public methods up
   getDiskScore(diskId) {
     // We cannot calculate the score of a complete game as we don't have a valid level
     if (this._complete) return 0;

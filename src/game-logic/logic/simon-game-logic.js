@@ -68,13 +68,11 @@ export default class SimonGameLogic {
     }
   }
 
-  _actionReplaySimonPattern(payload) {
-    if (!this._complete) {
-      this._playCurrentSequence();
-    }
+  _actionReplaySimonPattern() {
+    if (!this._complete) this._playCurrentSequence();
   }
 
-  _actionFinishStatusAnimation(payload) {
+  _actionFinishStatusAnimation() {
     if (this._complete) {
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
     }

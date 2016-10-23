@@ -21,12 +21,10 @@ export default class SculptureActionCreator extends BaseActionCreator {
   }
 
   sendStartGame(game) {
-    this._dispatch(SculptureActionCreator.START_GAME, {
-      game: game
-    });
+    this._dispatch(SculptureActionCreator.START_GAME, { game });
   }
 
-  sendStartNextGame(game) {
+  sendStartNextGame() {
     this._dispatch(SculptureActionCreator.START_NEXT_GAME);
   }
 

@@ -39,7 +39,6 @@
  *  o play show sound
  */
 
-import assert from 'assert';
 import _ from 'lodash';
 
 import SculptureStore from '../game-logic/sculpture-store';

@@ -300,7 +300,7 @@ export default class SculptureStore extends events.EventEmitter {
     }
   }
 
-  _actionRestoreStatus(payload) {
+  _actionRestoreStatus() {
     this.restoreStatus();
   }
 
@@ -310,7 +310,7 @@ export default class SculptureStore extends events.EventEmitter {
     callback();
   }
 
-  _actionFinishStatusAnimation(payload) {
+  _actionFinishStatusAnimation() {
     this.restoreStatus();
   }
 
@@ -369,7 +369,7 @@ export default class SculptureStore extends events.EventEmitter {
           lightArray.setIntensity(stripId, panelId, panelChanges.intensity);
         }
         if (panelChanges.hasOwnProperty("active")) {
-          // TODO: Set color based on metadata
+          // FIXME: Set color based on metadata
           lightArray.activate(stripId, panelId, panelChanges.active);
         }
       }
@@ -377,7 +377,7 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _mergeDisks(diskChanges) {
-    // TODO
+    // FIXME:
     console.log(diskChanges);
   }
 

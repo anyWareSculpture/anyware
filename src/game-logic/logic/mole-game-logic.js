@@ -70,7 +70,7 @@ export default class MoleGameLogic {
   /**
    * We only have a status animation at the end of the game
    */
-  _actionFinishStatusAnimation(payload) {
+  _actionFinishStatusAnimation() {
     this._complete = true;
     // There is currently no transition out, so we can synchronously start the next game
     this.store.moveToNextGame();
@@ -162,10 +162,10 @@ export default class MoleGameLogic {
       const panel = this.gameConfig.INITIAL_PANELS[count];
       return { panel, lifetime: this._getPanelLifetime(count) }; // No timeout
     }
-    return { panel: this._getRandomPanel(count), lifetime: this._getPanelLifetime(count)};
+    return { panel: this._getRandomPanel(), lifetime: this._getPanelLifetime(count)};
   }
 
-  _getRandomPanel(count) {
+  _getRandomPanel() {
     const idx = Math.floor(Math.random() * this._remainingPanels.size);
     const iter = this._remainingPanels.values();
     let curr = iter.next();
