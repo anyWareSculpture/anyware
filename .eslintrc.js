@@ -1,23 +1,28 @@
 module.exports = {
-  "extends": "eslint:recommended",
-
   // http://eslint.org/docs/user-guide/configuring
   "parser": "babel-eslint",
   "parserOptions": {
-    "ecmaVersion": 6,
+    "ecmaVersion": 2016,
     "sourceType": "module",
     "ecmaFeatures": {
-      "modules": true
+      "impliedStrict": true,
     }
   },
 
   "env": {
-    "es6": true, // enable all ECMAScript 6 features except for modules.
     "shared-node-browser": true,
+    "es6": true, // Necessary for ES global symbols like Set, Symbol
   },
 
   "plugins": [
-    "babel"
+    "babel", // Adapts rules to better handle ES2016+ code
+  ],
+
+  "settings": {
+  },
+
+  "extends": [
+    "eslint:recommended",
   ],
 
   // http://eslint.org/docs/rules/
@@ -39,5 +44,8 @@ module.exports = {
     "indent": ["error", 2],
     "semi": ["error", "always"],
     "curly": ["error", "multi-line"],
+
+    // Warn on FIXME/TODO comments
+    "no-warning-comments": ["warn", { "location": "anywhere" }],
   }
 };
