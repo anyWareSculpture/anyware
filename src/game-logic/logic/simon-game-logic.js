@@ -90,7 +90,7 @@ export default class SimonGameLogic {
     const {stripId: targetStripId, panelSequence} = this._currentLevelData;
 
     if (pressed) {
-      this._lights.setColor(stripId, panelId, this.userColor);
+      this._lights.setColor(stripId, panelId, this.store.userColor);
       this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.ACTIVE_INTENSITY);
     }
     else {

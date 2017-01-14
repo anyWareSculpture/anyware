@@ -103,7 +103,7 @@ export default class MoleGameLogic {
     const state = this.data.get('panels').getPanelState(stripId, panelId);
     if (!state || state === TrackedPanels.STATE_OFF) {
       if (pressed) {
-        this._lights.setColor(stripId, panelId, this.userColor);
+        this._lights.setColor(stripId, panelId, this.store.userColor);
         this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.ACTIVE_INTENSITY);
       }
       else {
