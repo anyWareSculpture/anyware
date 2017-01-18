@@ -327,6 +327,8 @@ describe('StreamingClient', () => {
 
   it('should complain when the client is used to send but isn\'t connected yet', sinon.test(function() {
     const mqttMock = this.mock(mqtt);
+    mqttMock.expects('connect').once().returns(mockClient);
+
     const client = new StreamingClient();
 
     const invalid = () => client.sendCommand('someName', {});
