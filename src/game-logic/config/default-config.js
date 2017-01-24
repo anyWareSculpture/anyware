@@ -55,12 +55,10 @@ export default class DefaultConfig {
       STRIP_A: '0',
       STRIP_B: '1',
       STRIP_C: '2',
-      PERIMETER_STRIP: '3',
-      DISK_LIGHT_STRIP: '4',
       HANDSHAKE_STRIP: '5',
       ART_LIGHTS_STRIP: '6'
     };
-    this.LIGHTS.GAME_STRIPS = [
+    this.GAME_STRIPS = [
       this.LIGHTS.STRIP_A,
       this.LIGHTS.STRIP_B,
       this.LIGHTS.STRIP_C
@@ -138,23 +136,17 @@ export default class DefaultConfig {
         // disks: { diskId: target position }
         // perimeter: { stripId: [panelIds..] }
         { disks:     { disk2: 52, disk1: 317, disk0: 316 },
-          perimeter: { [this.LIGHTS.PERIMETER_STRIP]: ['0', '4'] }
+          perimeter: ['0', '4'],
         },
         // level 1
         { disks:     { disk2: 66, disk1: 287, disk0: 308 },
-          perimeter: { [this.LIGHTS.PERIMETER_STRIP]: ['1', '3'] }
+          perimeter: ['1', '3'],
         },
         // level 2
         { disks:     { disk2: 286, disk1: 335, disk0: 240 },
-          perimeter: { [this.LIGHTS.PERIMETER_STRIP]: ['2', '5'] }
+          perimeter: ['2', '5'],
         }
       ],
-      LIGHT_MAPPING: {
-        // diskId: { stripId: panelId }
-        disk0: { [this.LIGHTS.DISK_LIGHT_STRIP]: '0' },
-        disk1: { [this.LIGHTS.DISK_LIGHT_STRIP]: '1' },
-        disk2: { [this.LIGHTS.DISK_LIGHT_STRIP]: '2' }
-      },
       CONTROL_MAPPINGS: {
         CLOCKWISE_STRIP: this.LIGHTS.STRIP_C,
         COUNTERCLOCKWISE_STRIP: this.LIGHTS.STRIP_A,

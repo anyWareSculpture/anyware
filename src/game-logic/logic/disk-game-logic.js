@@ -59,7 +59,7 @@ export default class DiskGameLogic {
 
   // FIXME: These end() methods may be obsolete now since everything is reset before every game anyway
   end() {
-    this.config.LIGHTS.GAME_STRIPS.forEach((id) => this._lights.setIntensity(id, null, 0));
+    this.config.GAME_STRIPS.forEach((id) => this._lights.setIntensity(id, null, 0));
     // Deactivate shadow lights
     for (let stripId of Object.keys(this.gameConfig.SHADOW_LIGHTS)) {
       const panels = this.gameConfig.SHADOW_LIGHTS[stripId];
@@ -68,10 +68,11 @@ export default class DiskGameLogic {
       }
     }
     // Deactivate perimeter lights (FIXME: This should be part of the end animation)
-    for (let panelId of ['0', '1', '2', '3', '4', '5']) {
-      this._lights.setIntensity(this.config.LIGHTS.PERIMETER_STRIP, panelId, 0);
-      this._lights.setDefaultColor(this.config.LIGHTS.PERIMETER_STRIP, panelId);
-    }
+    // FIXME: Write to the new (TBD) perimeter store instead
+    //    for (let panelId of ['0', '1', '2', '3', '4', '5']) {
+    //      this._lights.setIntensity(this.config.LIGHTS.PERIMETER_STRIP, panelId, 0);
+    //      this._lights.setDefaultColor(this.config.LIGHTS.PERIMETER_STRIP, panelId);
+    //    }
   }
 
   handleActionPayload(payload) {

@@ -20,7 +20,7 @@ export default class MoleGameLogic {
     // _remainingPanels are used to select random panels
     this._panels = {}; // Unique panel objects. These can be used in the _remainingPanels Set
     this._remainingPanels = new Set();
-    this.config.LIGHTS.GAME_STRIPS.forEach(stripId => {
+    this.config.GAME_STRIPS.forEach(stripId => {
       this._lights.get(stripId).panelIds.forEach(panelId => {
         const panel = { stripId, panelId, key: this._hash(stripId, panelId) };
         this._panels[panel.key] = panel;
@@ -45,7 +45,7 @@ export default class MoleGameLogic {
   }
 
   end() {
-    this.config.LIGHTS.GAME_STRIPS.forEach(stripId => this._lights.deactivateAll(stripId));
+    this.config.GAME_STRIPS.forEach(stripId => this._lights.deactivateAll(stripId));
   }
 
   /**
