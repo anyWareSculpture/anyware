@@ -232,7 +232,6 @@ export default class AudioView {
       for (let disk of ['disk0', 'disk1', 'disk2']) {
         const score = diskgame.getDiskScore(disk);
         const pulseFreq = this._calcSingleFreq(score);
-        console.log(`score: ${score} pulsefreq: ${pulseFreq}`);
         if (this.sounds.disk[disk].source) this.sounds.disk[disk].source.loopEnd = (pulseFreq === 0 ? 0 : 1/pulseFreq);
       }
       /* code for global score sound
