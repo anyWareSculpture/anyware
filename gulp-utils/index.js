@@ -1,6 +1,12 @@
 var path = require('path');
 var del = require('del');
 
+module.exports = {
+  getDistPath: getDistPath,
+  removeDistFiles: removeDistFiles
+};
+
+
 var DISTRIBUTION_DIRECTORY = "lib";
 
 /**
@@ -19,8 +25,3 @@ function getDistPath() {
 function removeDistFiles(callback) {
   return del([DISTRIBUTION_DIRECTORY], callback);
 }
-
-module.exports = {
-  getDistPath,
-  removeDistFiles
-};
