@@ -40,7 +40,8 @@ export default class DiskGameLogic {
     }
 
     // Indicate start of new level by setting perimeter lights
-    this._setPerimeter(this._level, this.gameConfig.PERIMETER_COLOR, this.gameConfig.ACTIVE_PERIMETER_INTENSITY);
+    // FIXME: Temporarily disabled as we don't currently use the perimeter
+//    this._setPerimeter(this._level, this.gameConfig.PERIMETER_COLOR, this.gameConfig.ACTIVE_PERIMETER_INTENSITY);
 
     // Activate UI indicators
     const controlMappings = this.gameConfig.CONTROL_MAPPINGS;
@@ -294,7 +295,8 @@ export default class DiskGameLogic {
     this.store.setSuccessStatus();
 
     // Indicate end of level by setting perimeter lights
-    this._setPerimeter(this._level, this.store.userColor, this.gameConfig.INACTIVE_PERIMETER_INTENSITY);
+    // FIXME: Temporarily disabled as we don't currently use the perimeter
+//    this._setPerimeter(this._level, this.store.userColor, this.gameConfig.INACTIVE_PERIMETER_INTENSITY);
 
     let level = this._level + 1;
     if (level >= this._levels) {
@@ -305,7 +307,8 @@ export default class DiskGameLogic {
 
     // Indicate start of new level by setting perimeter lights
     if (!this._complete) {
-      this._setPerimeter(level, this.gameConfig.PERIMETER_COLOR, this.gameConfig.ACTIVE_PERIMETER_INTENSITY);
+    // FIXME: Temporarily disabled as we don't currently use the perimeter
+//      this._setPerimeter(level, this.gameConfig.PERIMETER_COLOR, this.gameConfig.ACTIVE_PERIMETER_INTENSITY);
     }
   }
 
