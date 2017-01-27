@@ -4,16 +4,15 @@ export default class TrackedData {
    * @constructor
    * @param {Object} [validProperties=null] - An object containing valid property names as keys and that property's default value as values. If not provided, no validation will occur on property names
    */
-  constructor(validProperties=null) {
-    this._data = Object.assign({}, validProperties || {});
+  constructor(validProperties = null) {
+    this._data = {
+      ...validProperties
+    };
 
     // {changedProperty: oldValue, ...}
     this._changes = {};
 
-    this._validPropertiesNames = null;
-    if (validProperties) {
-      this._validPropertiesNames = new Set(Object.keys(validProperties));
-    }
+    this._validPropertiesNames = validProperties ? new Set(Object.keys(validProperties)) : null;
   }
 
   /**
@@ -56,9 +55,7 @@ export default class TrackedData {
    */
   *getChangedPropertyNames() {
     yield* Object.keys(this._changes);
-    for (let propName of this._changedTrackedDataProperties()) {
-      yield propName;
-    }
+    yield* this._changedTrackedDataProperties();
   }
 
   /**
@@ -67,7 +64,9 @@ export default class TrackedData {
    * @returns {Object} - Object where keys are the names of each changed property and values are the previous value of that property
    */
   getChangedOldValues() {
-    const changed = Object.assign({}, this._changes);
+    const changed = {
+      ...this._changes
+    };
 
     for (let propName of this._changedTrackedDataProperties()) {
       if (!changed.hasOwnProperty(propName)) {
