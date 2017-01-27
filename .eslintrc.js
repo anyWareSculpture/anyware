@@ -12,6 +12,7 @@ module.exports = {
   "env": {
     "shared-node-browser": true,
     "es6": true, // Necessary for ES global symbols like Set, Symbol
+    "mocha": true, // adds all of the Mocha testing global variables.
   },
 
   "plugins": [

@@ -4,7 +4,7 @@
   "description": "The generic anyWare sculpture library for creating anyWare sculpture applications",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint --ext=.js,.jsx src",
+    "lint": "eslint --ext=.js,.jsx src test",
     "test": "npm run lint && gulp test",
     "build": "gulp build",
     "submit-coverage": "gulp submit-coverage",

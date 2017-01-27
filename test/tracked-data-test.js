@@ -1,7 +1,5 @@
-/*eslint no-unused-expressions: 0, no-new: 0 */
-// The above is done in order to support chai assertion syntax without lint errors
-
-const expect = require('chai').expect;
+import chai from 'chai';
+const expect = chai.expect;
 
 import TrackedData from '../src/game-logic/utils/tracked-data';
 
