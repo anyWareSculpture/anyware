@@ -85,11 +85,10 @@ export default class StreamingClient extends events.EventEmitter {
     this._client = null;
     this._connected = false;
 
-    const settings = Object.assign({}, DEFAULT_MQTT_CONNECTION_OPTIONS,
-        options);
-
-    // FIXME: Workaround for https://github.com/mqttjs/MQTT.js/issues/477
-    if (settings.protocol === 'wss') settings.port = settings.port || 443;
+    const settings = {
+      ...DEFAULT_MQTT_CONNECTION_OPTIONS,
+      ...options,
+    };
 
     // Only provide default authentication information if BOTH options are
     // blank or not provided
@@ -114,19 +113,18 @@ export default class StreamingClient extends events.EventEmitter {
    * @param {Object} [configuration] - The configuration object to send for the command
    * @param {Object} [metadata] - Custom metadata to send with the command
    */
-  sendCommand(name, configuration = null, metadata = null) {
+  sendCommand(name, configuration = null, customMetadata = null) {
     this._assertConnected();
 
-    const message = { name };
+    if (!configuration || Object.keys(configuration).length === 0) configuration = undefined;
 
-    if (configuration && Object.keys(configuration).length !== 0) {
-      message.configuration = configuration;
-    }
+    const message = {
+      name,
+      configuration,
+      metadata: this._buildMetadata(customMetadata),
+    };
 
-    this._appendMetadata(message, metadata);
-
-    const serializedMessage = JSON.stringify(message);
-    this._client.publish(this._groupCommandsTopic, serializedMessage);
+    this._client.publish(this._groupCommandsTopic, JSON.stringify(message));
   }
 
   /**
@@ -134,18 +132,16 @@ export default class StreamingClient extends events.EventEmitter {
    * @param {Object} update - The update to send, this must be an object and cannot contain the key 'metadata'
    * @param {Object} [metadata] - Custom metadata to send with the update
    */
-  sendStateUpdate(update, metadata=null) {
+  sendStateUpdate(update, customMetadata = null) {
     this._assertConnected();
 
     if (!(typeof update === 'object' && update !== null && Object.keys(update).length !== 0)) {
       throw new Error("Update must be an object");
     }
 
-    this._appendMetadata(update, metadata);
+    update.metadata = this._buildMetadata(customMetadata);
 
-    const serializedMessage = JSON.stringify(update);
-
-    this._client.publish(this._groupStateUpdatesTopic, serializedMessage);
+    this._client.publish(this._groupStateUpdatesTopic, JSON.stringify(update));
   }
 
   /**
@@ -161,16 +157,16 @@ export default class StreamingClient extends events.EventEmitter {
     }
   }
 
-  _appendMetadata(message, customMetadata) {
-    const metadata = {};
-    metadata.from = this._username;
-    metadata.timestamp = Date.now();
+  _buildMetadata(customMetadata) {
 
-    if (customMetadata && Object.keys(customMetadata).length !== 0) {
-      Object.assign(metadata, customMetadata);
-    }
+    if (customMetadata && Object.keys(customMetadata).length === 0) customMetadata = null;
 
-    message.metadata = metadata;
+    return {
+      from: this._username,
+      timestamp: Date.now(),
+      ...customMetadata,
+    };
+
   }
 
   _connect(options) {
@@ -237,6 +233,7 @@ export default class StreamingClient extends events.EventEmitter {
     this.emit(StreamingClient.EVENT_ERROR, error);
   }
 
+  // FIXME: The exception handling here could be cleaned up
   _onMessage(topic, message) {
     const parsedTopic = topic.split(MQTT_TOPIC_SEPARATOR);
     const messageType = StreamingClient._extractMessageType(parsedTopic);
@@ -286,17 +283,12 @@ export default class StreamingClient extends events.EventEmitter {
   }
 
   static _parseMessage(message) {
-    let parsedMessage;
-    parsedMessage = JSON.parse(message);
-    return parsedMessage;
+    return JSON.parse(message);
   }
 
   static _popMetadata(parsedMessage) {
-    let metadata = parsedMessage.metadata;
+    const metadata = parsedMessage.metadata || {};
     delete parsedMessage.metadata;
-    if (!metadata) {
-      metadata = {};
-    }
 
     StreamingClient._validateMetadata(metadata);
 
@@ -304,10 +296,9 @@ export default class StreamingClient extends events.EventEmitter {
   }
 
   static _validateMetadata(metadata) {
-    const sender = metadata.from;
-    const timestamp = metadata.timestamp;
+    const {from, timestamp} = metadata;
 
-    if (!sender || !timestamp) {
+    if (!from || !timestamp) {
       throw new Error("Invalid message metadata");
     }
   }
@@ -352,4 +343,3 @@ export default class StreamingClient extends events.EventEmitter {
     return parsedTopic[MQTT_TOPIC_MESSAGE_TYPE_INDEX];
   }
 }
-
