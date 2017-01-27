@@ -9,7 +9,8 @@ import StreamingClient from '../src/streaming-client';
 
 describe('StreamingClient', () => {
   let mockClient;
-//  let mockMqtt;
+  let mqttMock;
+
   beforeEach(() => {
     mockClient = {
       on: sinon.stub(),
@@ -17,12 +18,18 @@ describe('StreamingClient', () => {
       publish: sinon.stub(),
       end: sinon.stub()
     };
+
+    mqttMock = sinon.mock(mqtt);
   });
-/*
+
   afterEach(() => {
-    StreamingClient.__ResetDependency__('mqtt');
+    mqttMock.verify();
   });
-*/
+
+  function expectConnect() {
+    mqttMock.expects('connect').once().returns(mockClient);
+  }
+
   /*
    * Test utility function for feigning a connection event
    */
@@ -30,17 +37,16 @@ describe('StreamingClient', () => {
     const connectHandler = sinon.stub();
     client.on(StreamingClient.EVENT_CONNECT, connectHandler);
 
+    // Fake mqtt connection event by calling the StreamingClient connection handler directly
     const onConnect = mockClient.on.args.find((funcArgs) => {
-      return funcArgs[0] === "connect";
+      return funcArgs[0] === 'connect';
     })[1];
     onConnect();
+    return connectHandler;
   }
 
   it('should connect with some default options', sinon.test(function() {
-
-    const mqttMock = this.mock(mqtt);
-    mqttMock.expects('connect').once().returns(mockClient);
-
+    expectConnect();
     const client = new StreamingClient();
 
     // Assert that the right amount of calls were made to bind events
@@ -55,19 +61,13 @@ describe('StreamingClient', () => {
     expect(client.connected).to.be.false;
   }));
 
-  it.skip('should automatically subscribe to topics and emit an event',sinon.test(function() {
+  it('should automatically subscribe to topics and emit an event', sinon.test(function() {
+    expectConnect();
     const client = new StreamingClient();
+    const connectHandler = connectClient(client);
 
-    const connectHandler = sinon.stub();
-    client.on(StreamingClient.EVENT_CONNECT, connectHandler);
-    const errorHandler = sinon.stub();
+    const errorHandler = this.stub();
     client.on(StreamingClient.EVENT_ERROR, errorHandler);
-
-    // retrieve the connect callback for testing
-    const onConnect = mockClient.on.args.find((funcArgs) => {
-      return funcArgs[0] === "connect";
-    })[1];
-    onConnect();
 
     expect(client.connected, "client connected").to.be.true;
     expect(mockClient.subscribe.callCount).to.equal(1);
@@ -103,17 +103,9 @@ describe('StreamingClient', () => {
       host: 'notthedefaultdomain.com',
       protocol: 'magic'
     };
-    const connect = this.stub(mqtt, 'connect').returns(mockClient);
-
-    new StreamingClient(options);
-
-    const connectUrl = connect.firstCall.args[0];
-    expect(connectUrl).to.be.a('string');
-
-    Object.keys(options).filter((key) => key !== 'group').forEach((key) => {
-      const partIndex = connectUrl.indexOf(options[key]);
-      expect(partIndex, `${options[key]} should be in URL`).to.be.at.least(0);
-    });                                                  
+    mqttMock.expects('connect').once().withArgs(`${options.protocol}://${options.username}:${options.password}@${options.host}`).returns(mockClient);
+    const client = new StreamingClient(options);
+    connectClient(client);
   }));
 
   it('should complain when an empty group is specified', () => {
@@ -121,7 +113,8 @@ describe('StreamingClient', () => {
     expect(invalid).to.throw(Error);
   });
 
-  it.skip('should emit valid messages and extract the metadata', () => {
+  it('should emit valid messages and extract the metadata', () => {
+    expectConnect();
     const client = new StreamingClient();
 
     const errorHandler = sinon.stub();
@@ -214,7 +207,8 @@ describe('StreamingClient', () => {
     commandHandler.reset();
   });
 
-  it.skip('should complain about commands without a name', () => {
+  it('should complain about commands without a name', () => {
+    expectConnect();
     const client = new StreamingClient();
 
     const errorHandler = sinon.stub();
@@ -247,7 +241,8 @@ describe('StreamingClient', () => {
     expect(commandHandler.callCount).to.equal(0);
   });
 
-  it.skip('should ignore messages without valid metadata', () => {
+  it('should ignore messages without valid metadata', () => {
+    expectConnect();
     const client = new StreamingClient();
 
     const errorHandler = sinon.stub();
@@ -300,7 +295,8 @@ describe('StreamingClient', () => {
     expect(commandHandler.callCount).to.equal(0);
   });
 
-  it.skip('should reject invalid JSON in messages', () => {
+  it('should reject invalid JSON in messages', () => {
+    expectConnect();
     const client = new StreamingClient();
 
     const errorHandler = sinon.stub();
@@ -326,16 +322,14 @@ describe('StreamingClient', () => {
   });
 
   it('should complain when the client is used to send but isn\'t connected yet', sinon.test(function() {
-    const mqttMock = this.mock(mqtt);
-    mqttMock.expects('connect').once().returns(mockClient);
-
     const client = new StreamingClient();
 
     const invalid = () => client.sendCommand('someName', {});
     expect(invalid).to.throw(Error);
   }));
 
-  it.skip('should format and send commands even without a configuration', () => {
+  it('should format and send commands even without a configuration', () => {
+    expectConnect();
     const client = new StreamingClient();
     connectClient(client);
 
@@ -352,7 +346,8 @@ describe('StreamingClient', () => {
     expect(parsedMessage).to.not.have.property("configuration");
   });
 
-  it.skip('should format and send commands with a configuration', () => {
+  it('should format and send commands with a configuration', () => {
+    expectConnect();
     const client = new StreamingClient();
     connectClient(client);
 
@@ -373,7 +368,8 @@ describe('StreamingClient', () => {
     expect(parsedMessage.configuration).to.eql(commandConfig);
   });
 
-  it.skip('should not send empty or invalid configurations when sending commands', () => {
+  it('should not send empty or invalid configurations when sending commands', () => {
+    expectConnect();
     const client = new StreamingClient();
     connectClient(client);
 
@@ -393,7 +389,8 @@ describe('StreamingClient', () => {
     }
   });
 
-  it.skip('should format and send state updates', () => {
+  it('should format and send state updates', () => {
+    expectConnect();
     const client = new StreamingClient();
     connectClient(client);
 
@@ -415,7 +412,8 @@ describe('StreamingClient', () => {
     expect(parsedMessage).to.eql(update);
   });
 
-  it.skip('should reject state updates that aren\'t objects', () => {
+  it('should reject state updates that aren\'t objects', () => {
+    expectConnect();
     const client = new StreamingClient();
     connectClient(client);
 
@@ -433,7 +431,8 @@ describe('StreamingClient', () => {
     }
   });
 
-  it.skip('should send custom metadata', () => {
+  it('should send custom metadata', () => {
+    expectConnect();
     const client = new StreamingClient();
     connectClient(client);
 
@@ -454,7 +453,8 @@ describe('StreamingClient', () => {
     expect(parsedCommandMessage.metadata).to.include(testMetadata);
   });
 
-  it.skip('should append the expected metadata', () => {
+  it('should append the expected metadata', () => {
+    expectConnect();
     const client = new StreamingClient();
     connectClient(client);
 
@@ -472,7 +472,8 @@ describe('StreamingClient', () => {
     }
   });
 
-  it.skip('should allow expected metadata to be overridden by custom metadata', () => {
+  it('should allow expected metadata to be overridden by custom metadata', () => {
+    expectConnect();
     const username = "testUser123";
     const client = new StreamingClient({username: username});
     connectClient(client);
@@ -494,19 +495,20 @@ describe('StreamingClient', () => {
     }
   });
 
-  it.skip('should disconnect when the connection is closed', () => {
+  it('should disconnect when the connection is closed', sinon.test(function() {
+    expectConnect();
     const client = new StreamingClient();
     connectClient(client);
 
-    const disconnectHandler = sinon.stub();
+    const disconnectHandler = this.stub();
     client.on(StreamingClient.EVENT_DISCONNECT, disconnectHandler);
 
-    // retrieve the close callback for testing
+    // Functions for faking close and offline events 
     const onClose = mockClient.on.args.find((funcArgs) => {
-      return funcArgs[0] === "close";
+      return funcArgs[0] === 'close';
     })[1];
     const onOffline = mockClient.on.args.find((funcArgs) => {
-      return funcArgs[0] === "offline";
+      return funcArgs[0] === 'offline';
     })[1];
 
     expect(client.connected).to.be.true;
@@ -523,11 +525,10 @@ describe('StreamingClient', () => {
     onOffline();
     expect(client.connected).to.be.false;
     expect(disconnectHandler.calledOnce).to.be.true;
-  });
+  }));
 
   it('should end the client connection when closed', sinon.test(function() {
-    const mqttMock = this.mock(mqtt);
-    mqttMock.expects('connect').once().returns(mockClient);
+    expectConnect();
     const client = new StreamingClient();
     client.close();
     expect(mockClient.end.calledOnce).to.be.true;
