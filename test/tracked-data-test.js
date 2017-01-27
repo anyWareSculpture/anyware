@@ -114,4 +114,18 @@ describe('TrackedData', () => {
     data.set(name, 2);
     expect(data.getChangedCurrentValues()[name]).to.equal(2);
   });
+
+  it('can have properties of type TrackedData', () => {
+    const data = new TrackedData({
+      value: 42,
+      object: new TrackedData({
+        subvalue: 23
+      })
+    });
+
+    data.set('value', 43);
+    data.get('object').set('subvalue', 24);
+    expect(Array.from(data.getChangedPropertyNames())).to.eql(['value', 'object']);
+  });
+
 });
