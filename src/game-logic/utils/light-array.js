@@ -5,9 +5,10 @@ const DEFAULT_INTENSITY = 0;
 const DEFAULT_COLOR = COLORS.WHITE;
 
 export default class LightArray extends TrackedData {
-  constructor(stripLengths, defaultIntensity=DEFAULT_INTENSITY, defaultColor=DEFAULT_COLOR) {
+  constructor(stripLengths, defaultIntensity = DEFAULT_INTENSITY, defaultColor = DEFAULT_COLOR) {
     const properties = {};
-    for (let stripId of Object.keys(stripLengths)) {
+    const stripIds = Object.keys(stripLengths);
+    for (let stripId of stripIds) {
       const strip = {};
       const panelIds = [];
       for (let panelId = 0; panelId < stripLengths[stripId]; panelId++) {
@@ -29,13 +30,12 @@ export default class LightArray extends TrackedData {
     }
     super(properties);
 
-    this.stripIds = Object.keys(stripLengths);
-
+    this.stripIds = stripIds;
     this.defaultIntensity = defaultIntensity;
     this.defaultColor = defaultColor;
   }
 
-  setMaxIntensity(intensity, stripId=null) {
+  setMaxIntensity(intensity, stripId = null) {
     const stripsToModify = stripId === null ? this.stripIds : [stripId];
 
     for (let targetStripId of stripsToModify) {
@@ -56,6 +56,7 @@ export default class LightArray extends TrackedData {
     return this.setColor(stripId, panelId, this.defaultColor);
   }
 
+  // If panelId is null, we'll set the color for all panels in the given strip
   setColor(stripId, panelId, color) {
     this._applyToOnePanelOrAll((panel) => panel.set("color", color), stripId, panelId);
   }
@@ -76,6 +77,7 @@ export default class LightArray extends TrackedData {
     return this.setIntensity(stripId, panelId, this.defaultIntensity);
   }
 
+  // If panelId is null, we'll set the intensity for all panels in the given strip
   setIntensity(stripId, panelId, intensity) {
     this._applyToOnePanelOrAll((panel) => panel.set("intensity", intensity), stripId, panelId);
   }
@@ -86,7 +88,7 @@ export default class LightArray extends TrackedData {
     return panel.get("active");
   }
 
-  activate(stripId, panelId, active=true) {
+  activate(stripId, panelId, active = true) {
     const panel = this.getPanel(stripId, panelId);
 
     panel.set("active", active);
@@ -96,7 +98,7 @@ export default class LightArray extends TrackedData {
     this.activate(stripId, panelId, false);
   }
 
-  deactivateAll(stripId=null) {
+  deactivateAll(stripId = null) {
     const targetStripIds = stripId === null ? this.stripIds : [stripId];
 
     for (let targetStripId of targetStripIds) {
@@ -106,7 +108,7 @@ export default class LightArray extends TrackedData {
     }
   }
 
-  _applyToOnePanelOrAll(panelFunc, stripId, panelId=null) {
+  _applyToOnePanelOrAll(panelFunc, stripId, panelId = null) {
     const panels = this._getOnePanelOrAll(stripId, panelId);
 
     for (let panel of panels) {
@@ -117,6 +119,7 @@ export default class LightArray extends TrackedData {
   _getOnePanelOrAll(stripId, panelId) {
     if (panelId === null) {
       // this code is necessary because there is no Object.values() function
+      // FIXME: ES2017 added Object.values(). Make sure we polyfill correctly before enabling that
       const stripPanels = this.get(stripId).get("panels");
       // Old code
       // return [for (stripPanelId of stripPanels) stripPanels.get(stripPanelId)];
