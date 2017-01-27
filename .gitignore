@@ -29,6 +29,9 @@ node_modules
 # Distribution directory
 /lib
 
+# Tmp
+/tmp
+
 ### Vim ###
 [._]*.s[a-w][a-z]
 [._]s[a-w][a-z]
