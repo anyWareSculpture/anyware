@@ -39,10 +39,6 @@ export default class DiskGameLogic {
       }
     }
 
-    // Indicate start of new level by setting perimeter lights
-    // FIXME: Temporarily disabled as we don't currently use the perimeter
-//    this._setPerimeter(this._level, this.gameConfig.PERIMETER_COLOR, this.gameConfig.ACTIVE_PERIMETER_INTENSITY);
-
     // Activate UI indicators
     const controlMappings = this.gameConfig.CONTROL_MAPPINGS;
     // FIXME: Clean this up
@@ -56,6 +52,7 @@ export default class DiskGameLogic {
         this._lights.setIntensity(controlMappings.COUNTERCLOCKWISE_STRIP, panelId, this.gameConfig.CONTROL_PANEL_INTENSITY);
       }
     }
+
   }
 
   // FIXME: These end() methods may be obsolete now since everything is reset before every game anyway
@@ -68,12 +65,6 @@ export default class DiskGameLogic {
         this._lights.setIntensity(stripId, panelId, 0);
       }
     }
-    // Deactivate perimeter lights (FIXME: This should be part of the end animation)
-    // FIXME: Write to the new (TBD) perimeter store instead
-    //    for (let panelId of ['0', '1', '2', '3', '4', '5']) {
-    //      this._lights.setIntensity(this.config.LIGHTS.PERIMETER_STRIP, panelId, 0);
-    //      this._lights.setDefaultColor(this.config.LIGHTS.PERIMETER_STRIP, panelId);
-    //    }
   }
 
   handleActionPayload(payload) {
@@ -175,7 +166,6 @@ export default class DiskGameLogic {
       // Single Disk Success Event
       // - Play success sounds (AudioView)
       // - UI LEDS and disk LED turns location color
-      // - If Disk 1 or 2, turn perimeter LED to location color
       // - Lock this disk in position; disable any future interaction
       // - From now on, allow Disk 1 to trigger a Single Disk Success Event
       this._checkWinConditions(disks);
@@ -228,38 +218,50 @@ export default class DiskGameLogic {
   }
 
   /**
+   * Calculates how far away from the correct zone the current disk position is.
+   */
+  _distanceFromZone(pos, zone) {
+
+    const angle = (zone[1] - zone[0] + 360) % 360;
+    const d = angle / 2;
+    const c = (zone[0] + d) % 360;
+
+    // Smallest difference between two angles
+    const e = 180 - Math.abs(Math.abs(pos - c) - 180);
+
+    const err = Math.max(e-d, 0);
+    return err;
+  }
+
+  /**
    * Win conditions:
-   * - The three disks needs to be _relatively_ aligned within RELATIVE_TOLERANCE
-   * - Any disk must be aligned within ABSOLUTE_TOLERANCE
+   * - Each marker must have it's rules match against the position range of all 3 disks
    */
   _checkWinConditions(disks) {
-    for (let diskId of Object.keys(this._targetPositions)) {
-      const targetPos = this._targetPositions[diskId];
-      const currDisk = disks.get(diskId);
-      const diskPos = currDisk.getPosition();
-
-      // Check position relative to neighbor disk
-// FIXME: We disabled this for now, as relative tolerance only makes sense
-// if we have better disk precision than the tolerance.
-//    let prevDiskId = null;
-//      if (prevDiskId) {
-//        if (Math.abs((targetPos - this._targetPositions[prevDiskId]) -
-//                     (diskPos - disks.get(prevDiskId).getPosition())) >
-//                     this.gameConfig.RELATIVE_TOLERANCE) {
-//          return false;
-//        }
-//      }
-      // Check absolute position
-      const d = Math.abs(diskPos - targetPos) % 360;
-      const r = d > 180 ? 360 - d : d;
-      console.debug(`${diskId} error: ${r}`);
-      if (Math.abs(r) > this.gameConfig.ABSOLUTE_TOLERANCE) {
-        return false;
+    let totalError = 0;
+    let correctdisks = {};
+    for (let markerId of Object.keys(this._levelConfig)) {
+      correctdisks[markerId] = 0;
+      const markerConfig = this._levelConfig[markerId];
+      let markerError = 0;
+      for (let diskId of Object.keys(markerConfig)) {
+        const zone = markerConfig[diskId];
+        const diskPos = disks.get(diskId).getPosition();
+        const diskError = this._distanceFromZone(diskPos, zone);
+        if (diskError === 0) correctdisks[markerId]++;
+        console.debug(`${markerId} ${diskId}: ${diskError}`);
+        markerError += diskError;
       }
-//      prevDiskId = diskId;
+      console.debug(`${markerId}: ${markerError}`);
+      totalError += markerError;
     }
+    console.debug(`Total error: ${totalError}`);
 
-    this._winGame();
+    if (correctdisks.marker0 === 3 &&
+        (correctdisks.marker1 === 1 || correctdisks.marker1 === 2) &&
+        correctdisks.marker2 === 3) {
+      this._winGame();
+    }
   }
 
   // FIXME: move these public methods up
@@ -294,35 +296,12 @@ export default class DiskGameLogic {
 
     this.store.setSuccessStatus();
 
-    // Indicate end of level by setting perimeter lights
-    // FIXME: Temporarily disabled as we don't currently use the perimeter
-//    this._setPerimeter(this._level, this.store.userColor, this.gameConfig.INACTIVE_PERIMETER_INTENSITY);
-
     let level = this._level + 1;
     if (level >= this._levels) {
       this._complete = true;
     }
 
     this._level = level;
-
-    // Indicate start of new level by setting perimeter lights
-    if (!this._complete) {
-    // FIXME: Temporarily disabled as we don't currently use the perimeter
-//      this._setPerimeter(level, this.gameConfig.PERIMETER_COLOR, this.gameConfig.ACTIVE_PERIMETER_INTENSITY);
-    }
-  }
-
-  /**
-   * Set perimeter lights for the given level to the given color and intensity
-   */
-  _setPerimeter(level, color, intensity) {
-    const perimeter = this.gameConfig.LEVELS[level].perimeter;
-    for (let stripId of Object.keys(perimeter)) {
-      for (let panelId of perimeter[stripId]) {
-        this._lights.setColor(stripId, panelId, color);
-        this._lights.setIntensity(stripId, panelId, intensity);
-      }
-    }
   }
 
   _stopAllDisks() {
@@ -333,9 +312,8 @@ export default class DiskGameLogic {
     }
   }
 
-  get _targetPositions() {
-    const level = this._level;
-    return this.gameConfig.LEVELS[level].disks;
+  get _levelConfig() {
+    return this.gameConfig.LEVELS[this._level];
   }
 
   get _levels() {

@@ -117,15 +117,11 @@ export default class DefaultConfig {
     };
 
     this.DISK_GAME = {
-      // The user will wins when they reach these positions for each diskId.
       RELATIVE_TOLERANCE: 5, // degrees tolerance for disks relative to each other
       ABSOLUTE_TOLERANCE: 8, // degrees tolerance for the absolute disk positions
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_INTENSITY: 20,
       ACTIVE_CONTROL_PANEL_INTENSITY: 100,
-      ACTIVE_PERIMETER_INTENSITY: 100,
-      INACTIVE_PERIMETER_INTENSITY: 50, // Inactive: when turned to location color
-      PERIMETER_COLOR: "white",
       SHADOW_LIGHTS: {
         // stripId: [panelId..]
         '6': ['0', '1', '2']
@@ -133,19 +129,23 @@ export default class DefaultConfig {
       SHADOW_LIGHT_INTENSITY: 100,
       LEVELS: [
         // level 0
-        // disks: { diskId: target position }
-        // perimeter: { stripId: [panelIds..] }
-        { disks:     { disk2: 184, disk1: 120, disk0: 20 },
-          perimeter: ['0', '4'],
+        {
+          marker0: {
+            disk0: [310, 156],
+            disk1: [133, 48],
+            disk2: [168, 0],
+          },
+          marker1: {
+            disk0: [347, 85],
+            disk1: [211, 265],
+            disk2: [165, 291],
+          },
+          marker2: {
+            disk0: [352, 173],
+            disk1: [168, 270],
+            disk2: [182, 235],
+          },
         },
-        // level 1
-        { disks:     { disk2: 87, disk1: 212, disk0: 291 },
-          perimeter: ['1', '3'],
-        },
-        // level 2
-        { disks:     { disk2: 0, disk1: 0, disk0: 0 },
-          perimeter: ['2', '5'],
-        }
       ],
       CONTROL_MAPPINGS: {
         CLOCKWISE_STRIP: this.LIGHTS.STRIP_C,
