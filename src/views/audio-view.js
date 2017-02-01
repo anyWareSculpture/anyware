@@ -229,11 +229,11 @@ export default class AudioView {
       }
 
       const diskgame = this.store.currentGameLogic;
-      for (let disk of ['disk0', 'disk1', 'disk2']) {
-        const score = diskgame.getDiskScore(disk);
-        const pulseFreq = this._calcSingleFreq(score);
-        if (this.sounds.disk[disk].source) this.sounds.disk[disk].source.loopEnd = (pulseFreq === 0 ? 0 : 1/pulseFreq);
-      }
+//      for (let disk of ['disk0', 'disk1', 'disk2']) {
+//        const score = diskgame.getDiskScore(disk);
+//        const pulseFreq = this._calcSingleFreq(score);
+//        if (this.sounds.disk[disk].source) this.sounds.disk[disk].source.loopEnd = (pulseFreq === 0 ? 0 : 1/pulseFreq);
+//      }
       /* code for global score sound
       const score = diskgame.getScore(disks);
       //console.log(`score: ${score}`);
