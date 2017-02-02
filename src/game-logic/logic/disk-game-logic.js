@@ -40,19 +40,10 @@ export default class DiskGameLogic {
     }
 
     // Activate UI indicators
-    const controlMappings = this.gameConfig.CONTROL_MAPPINGS;
-    // FIXME: Clean this up
-    for (let diskId of Object.keys(controlMappings.CLOCKWISE_PANELS)) {
-      for (let panelId of controlMappings.CLOCKWISE_PANELS[diskId]) {
-        this._lights.setIntensity(controlMappings.CLOCKWISE_STRIP, panelId, this.gameConfig.CONTROL_PANEL_INTENSITY);
-      }
+    const lightArray = this._lights;
+    for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
+      this._setDiskColor(stripId, this.gameConfig.CONTROL_PANEL_INTENSITY, this.gameConfig.CONTROL_PANEL_COLOR);
     }
-    for (let diskId of Object.keys(controlMappings.COUNTERCLOCKWISE_PANELS)) {
-      for (let panelId of controlMappings.COUNTERCLOCKWISE_PANELS[diskId]) {
-        this._lights.setIntensity(controlMappings.COUNTERCLOCKWISE_STRIP, panelId, this.gameConfig.CONTROL_PANEL_INTENSITY);
-      }
-    }
-
   }
 
   // FIXME: These end() methods may be obsolete now since everything is reset before every game anyway
@@ -80,81 +71,86 @@ export default class DiskGameLogic {
     }
   }
 
+  /**
+   * Called on any change in panel state
+   */
   _actionPanelPressed(payload) {
     // FIXME: Break up this method
-    if (this._complete) {
-      return;
-    }
+    if (this._complete) return;
 
     const controlMappings = this.gameConfig.CONTROL_MAPPINGS;
     const {stripId, panelId} = payload;
+    
+    const diskId = controlMappings.STRIP_TO_DISK[stripId];
+    // The event doesn't concern us - use default behavior
+    if (diskId === undefined) return; 
 
-    let panels, direction;
-    if (stripId === controlMappings.CLOCKWISE_STRIP) {
-      panels = controlMappings.CLOCKWISE_PANELS;
-      direction = Disk.CLOCKWISE;
-    }
-    else if (stripId === controlMappings.COUNTERCLOCKWISE_STRIP) {
-      panels = controlMappings.COUNTERCLOCKWISE_PANELS;
-      direction = Disk.COUNTERCLOCKWISE;
-    }
-    else {
-      // just go with whatever default behaviour
-      return;
-    }
+    const disk = this.store.data.get('disks').get(diskId);
 
-    let diskId = null, panelIds;
-    for (let panelsDiskId of Object.keys(panels)) {
-      panelIds = panels[panelsDiskId];
-      if (panelIds.includes(panelId)) {
-        diskId = panelsDiskId;
-        break;
-      }
-    }
+    // For each strip change:
+    //   Find highest positive activated panel
+    //   Find highest negative activated panel
+    //   if both positive and negative:
+    //     Set conflict
+    //   else 
+    //     set target speed, or 0 if no panels are active
 
     const lightArray = this._lights;
-    if (diskId === null) {
-      // Override the default behaviour and keep this panel off because
-      // it is still a special panel
-      // It just doesn't do anything
-      // FIXME: Magic literal
-      lightArray.setIntensity(stripId, panelId, 0);
-      return;
-    }
-    const disks = this.store.data.get('disks');
-    const disk = disks.get(diskId);
+    const panels = lightArray.get(stripId).get('panels');
+    const isActive = (panelId) => panels.get(panelId).get('active');
+    const positivePanels = ['5','6','7','8','9'];
+    const negativePanels = ['4','3','2','1','0'];
+    let positivePanel = positivePanels.findIndex(isActive);
+    let negativePanel = negativePanels.findIndex(isActive);
 
-    const activePanels = panelIds.reduce((total, currPanelId) => {
-      return total + (lightArray.isActive(stripId, currPanelId) ? 1 : 0);
-    }, 0);
-
-    // Only need to activate/deactivate them once
-    if (activePanels === 1) {
-      this._activateDisk(diskId, direction, stripId, panelIds);
+    if (positivePanel >= 0 && negativePanel >= 0) {
+      // FIXME: Set conflict
+      this._setDiskColor(stripId, this.gameConfig.CONFLICT_INTENSITY, this.config.COLORS.ERROR);
     }
-    else if (activePanels === 0) {
-      this._deactivateDisk(diskId, direction, stripId, panelIds);
-    }
+    else {
+      let speed = 0;
+      let panelIds = [];
+      if (positivePanel === -1 && negativePanel === -1) {
+        speed = 0;
+      }
+      else if (positivePanel >= 0) {
+        speed = (positivePanel + 1);
+        for (let i=0;i<=positivePanel;i++) panelIds.push(positivePanels[i]);
+      }
+      else {
+        speed = -(negativePanel + 1);
+        for (let i=0;i<=negativePanel;i++) panelIds.push(negativePanels[i]);
+      }
 
-    if (disk.isConflicting) {
-      this._setDiskControlsColor(diskId, this.config.COLORS.ERROR);
+      disk.setTargetSpeed(speed * this.gameConfig.MAX_SPEED / 5);
+
+      const lightArray = this._lights;
+      lightArray.setIntensity(stripId, null, this.gameConfig.CONTROL_PANEL_INTENSITY);
+      lightArray.setColor(stripId, null, this.gameConfig.CONTROL_PANEL_COLOR);
+      const setPanels = (panels, index) => {
+        for (let i=0;i<5;i++) {
+          if (index >= i) {
+            lightArray.setIntensity(stripId, panels[i], this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
+            lightArray.setColor(stripId, panels[i], this.store.userColor);
+          }
+        }
+      };
+      if (speed > 0) setPanels(positivePanels, positivePanel);
+      else if (speed < 0) setPanels(negativePanels, negativePanel);
     }
   }
 
+  /**
+   * Called when disks move (comes from the physical disk model)
+   */
   _actionDiskUpdate(payload) {
-    const {diskId, position, direction, state} = payload;
+    const {diskId, position} = payload;
 
     const disks = this.store.data.get('disks');
     const disk = disks.get(diskId);
 
     if (typeof position !== 'undefined') {
       disk.rotateTo(position);
-    }
-    if (typeof direction !== 'undefined') {
-      disk.setDirection(direction);
-    }
-    if (typeof state !== 'undefined') {
-      disk.setState(state);
     }
 
     if (!this.store.isStatusSuccess) {
@@ -176,45 +172,10 @@ export default class DiskGameLogic {
     if (this._complete) this.store.moveToNextGame();
   }
 
-  _activateDisk(diskId, direction, stripId, panelIds) {
-    const disks = this.store.data.get('disks');
-    const disk = disks.get(diskId);
-    disk.setDirection(direction);
-
-    panelIds.forEach((panelId) => {
-      this._lights.setIntensity(stripId, panelId, this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
-      this._lights.setColor(stripId, panelId, this.store.userColor);
-    });
-  }
-
-  _deactivateDisk(diskId, direction, stripId, panelIds) {
-    const disks = this.store.data.get('disks');
-    const disk = disks.get(diskId);
-    if (!disk.isStopped) {
-      // This fixes a bug where a user wins the level with their hand on the
-      // panel and then takes it off. We stop all the disks between levels so
-      // all the disks are already off when they let go. This can cause errors
-      // FIXME: Determine if this check should actually be in Disk#unsetDirection
-      disk.unsetDirection(direction);
-    }
-
-    panelIds.forEach((panelId) => {
-      // FIXME: Only deactivate if both panels are inactive
-      this._lights.setIntensity(stripId, panelId, this.gameConfig.CONTROL_PANEL_INTENSITY);
-      this._lights.setDefaultColor(stripId, panelId);
-    });
-  }
-
-  _setDiskControlsColor(diskId, color) {
-    const controlMappings = this.gameConfig.CONTROL_MAPPINGS;
-
+  _setDiskColor(stripId, intensity, color) {
     const lightArray = this._lights;
-    for (let panelId of controlMappings.CLOCKWISE_PANELS[diskId]) {
-      lightArray.setColor(controlMappings.CLOCKWISE_STRIP, panelId, color);
-    }
-    for (let panelId of controlMappings.COUNTERCLOCKWISE_PANELS[diskId]) {
-      lightArray.setColor(controlMappings.COUNTERCLOCKWISE_STRIP, panelId, color);
-    }
+    lightArray.setIntensity(stripId, null, intensity);
+    lightArray.setColor(stripId, null, color);
   }
 
   /**
@@ -249,13 +210,13 @@ export default class DiskGameLogic {
         const diskPos = disks.get(diskId).getPosition();
         const diskError = this._distanceFromZone(diskPos, zone);
         if (diskError === 0) correctdisks[markerId]++;
-        console.debug(`${markerId} ${diskId}: ${diskError}`);
+//        console.debug(`${markerId} ${diskId}: ${diskError}`);
         markerError += diskError;
       }
-      console.debug(`${markerId}: ${markerError}`);
+//      console.debug(`${markerId}: ${markerError}`);
       totalError += markerError;
     }
-    console.debug(`Total error: ${totalError}`);
+//    console.debug(`Total error: ${totalError}`);
 
     if (correctdisks.marker0 === 3 &&
         (correctdisks.marker1 === 1 || correctdisks.marker1 === 2) &&

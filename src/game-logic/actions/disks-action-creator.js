@@ -5,22 +5,14 @@ export default class DisksActionCreator extends BaseActionCreator {
   static DISK_UPDATE = "disk-update";
 
   /**
-   * Sends an action to the dispatcher representing when a disk position, direction, or state changes.
-   * Only sends action if at least one argument is provided to the object
+   * Sends an action to the dispatcher representing when a disk position changes.
+   * Only sends action if an argument is provided to the object
    * @param {String} diskId - The ID of the disk that was updated
    */
-  sendDiskUpdate(diskId, {position=null, direction=null, state=null}) {
+  sendDiskUpdate(diskId, {position}) {
     const payloadBody = {};
     if (position !== null) {
       payloadBody.position = position;
-    }
-
-    if (direction !== null) {
-      payloadBody.direction = direction;
-    }
-
-    if (state !== null) {
-      payloadBody.state = state;
     }
 
     if (Object.keys(payloadBody).length > 0) {

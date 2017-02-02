@@ -117,10 +117,13 @@ export default class DefaultConfig {
     };
 
     this.DISK_GAME = {
+      MAX_SPEED: 360 / 5, // degrees/sec
       RELATIVE_TOLERANCE: 5, // degrees tolerance for disks relative to each other
       ABSOLUTE_TOLERANCE: 8, // degrees tolerance for the absolute disk positions
       // The intensity of the panels that the user can use to play the sequence
+      CONTROL_PANEL_COLOR: COLORS.WHITE,
       CONTROL_PANEL_INTENSITY: 20,
+      CONFLICT_INTENSITY: 20,
       ACTIVE_CONTROL_PANEL_INTENSITY: 100,
       SHADOW_LIGHTS: {
         // stripId: [panelId..]
@@ -148,20 +151,11 @@ export default class DefaultConfig {
         },
       ],
       CONTROL_MAPPINGS: {
-        CLOCKWISE_STRIP: this.LIGHTS.STRIP_C,
-        COUNTERCLOCKWISE_STRIP: this.LIGHTS.STRIP_A,
-
-        CLOCKWISE_PANELS: {
-          // diskId : [panelId1, ...]
-          disk0: ['1'],
-          disk1: ['3'],
-          disk2: ['5']
+        STRIP_TO_DISK: {
+          [this.LIGHTS.STRIP_A]: 'disk0',
+          [this.LIGHTS.STRIP_B]: 'disk1',
+          [this.LIGHTS.STRIP_C]: 'disk2',
         },
-        COUNTERCLOCKWISE_PANELS: {
-          disk0: ['1'],
-          disk1: ['3'],
-          disk2: ['5']
-        }
       }
     };
 
@@ -198,7 +192,7 @@ export default class DefaultConfig {
       // The time after input to wait for the user to finish the sequence
       INPUT_TIMEOUT: 10000,
       // The default color to set the panels to when
-      DEFAULT_SIMON_PANEL_COLOR: "white",
+      DEFAULT_SIMON_PANEL_COLOR: COLORS.WHITE,
       // Wait while playing final sound
       TRANSITION_OUT_TIME: 10000
     };

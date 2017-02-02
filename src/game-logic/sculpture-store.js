@@ -334,24 +334,12 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _actionDiskUpdate(payload) {
-    let {diskId, position, direction, user} = payload;
+    let {diskId, position} = payload;
 
-    if (typeof diskId === 'undefined') {
-      return;
-    }
-
-    const disk = this.data.get('disks').get(diskId);
+    if (typeof diskId === 'undefined') return;
 
     if (typeof position !== 'undefined') {
-      disk.rotateTo(position);
-    }
-
-    if (typeof direction !== 'undefined') {
-      disk.setDirection(direction);
-    }
-
-    if (typeof user !== 'undefined' && user !== null) {
-      disk.setUser(user);
+      this.data.get('disks').get(diskId).rotateTo(position);
     }
   }
 
