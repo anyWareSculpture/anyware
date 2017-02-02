@@ -164,7 +164,7 @@ export default class DiskGameLogic {
       // - UI LEDS and disk LED turns location color
       // - Lock this disk in position; disable any future interaction
       // - From now on, allow Disk 1 to trigger a Single Disk Success Event
-      this._checkWinConditions(disks);
+      this._checkWinConditions();
     }
   }
 
@@ -198,9 +198,10 @@ export default class DiskGameLogic {
    * Win conditions:
    * - Each marker must have it's rules match against the position range of all 3 disks
    */
-  _checkWinConditions(disks) {
+  _checkWinConditions() {
     let totalError = 0;
     let correctdisks = {};
+    const disks = this.store.data.get('disks');
     for (let markerId of Object.keys(this._levelConfig)) {
       correctdisks[markerId] = 0;
       const markerConfig = this._levelConfig[markerId];
@@ -226,6 +227,22 @@ export default class DiskGameLogic {
   }
 
   // FIXME: move these public methods up
+  getMarkerScore(markerId) {
+    // We cannot calculate the score of a complete game as we don't have a valid level
+    if (this._complete) return 0;
+
+    const disks = this.store.data.get('disks');
+    const markerConfig = this._levelConfig[markerId];
+    let markerError = 0;
+    for (let diskId of Object.keys(markerConfig)) {
+      const zone = markerConfig[diskId];
+      const diskPos = disks.get(diskId).getPosition();
+      markerError += this._distanceFromZone(diskPos, zone);
+    }
+    return markerError;
+  }
+
+  // FIXME: move these public methods up
   getDiskScore(diskId) {
     // We cannot calculate the score of a complete game as we don't have a valid level
     if (this._complete) return 0;
@@ -236,6 +253,7 @@ export default class DiskGameLogic {
     while (delta > 180) delta -= 360;
     return Math.abs(delta);
   }
+
   /**
    * Current score (the total number of degrees away from solution).
    * For 3 disks, this will be between 0 and 540
