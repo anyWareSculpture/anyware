@@ -183,7 +183,9 @@ export default class StreamingClient extends events.EventEmitter {
     }
 
     // Note: mqtt.Client automatically handles reconnections
-    this._client = mqtt.connect(url);
+    this._client = mqtt.connect(url, {
+      keepalive: 30, // Someone (shiftr.io?) kills the socket after 60 seconds of inactivity
+    });
 
     this._client.on(MQTT_EVENT_CONNECT, this._onConnect.bind(this));
     this._client.on(MQTT_EVENT_CLOSE, this._onClose.bind(this));
