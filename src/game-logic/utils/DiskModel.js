@@ -98,7 +98,7 @@ export default class DiskModel extends events.EventEmitter {
     // Find shortest target position, and accelerate in that direction
     const diff = (targetPos - this.pos + 180 + 360) % 360 - 180;
     this.acceleration = Math.sign(diff) * MAX_ACCEL;
-    this.targetSpeed = Math.sign(diff) * MAX_SPEED;
+    this.targetSpeed = Math.sign(diff) * DiskModel.MAX_SPEED;
   }
 
   clearTargetPosition() {
