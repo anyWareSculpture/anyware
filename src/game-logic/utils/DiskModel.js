@@ -64,10 +64,13 @@ export default class DiskModel extends events.EventEmitter {
     }
 
     // Emit position if it changed.
-    // FIXME: enforce a precision to avoid too many events?
+    // Positions are quantized prior to emitting to avoid flooding with events
     if (newpos !== this.pos) {
+      const quantizedNew = Math.round(newpos);
+      const quantizedPos = Math.round(this.pos);
+
       this.pos = newpos;
-      this.emit('position', this.pos);
+      if (quantizedNew !== quantizedPos) this.emit('position', this.pos);
     }
   }
 
