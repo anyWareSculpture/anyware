@@ -12,10 +12,6 @@ export default class PanelsActionCreator extends BaseActionCreator {
    * @param {Boolean|Number} pressed - Whether the panel was pressed or not (1 or 0)
    */
   sendPanelPressed(stripId, panelId, pressed=1) {
-    this._dispatch(PanelsActionCreator.PANEL_PRESSED, {
-      stripId: stripId,
-      panelId: panelId,
-      pressed: pressed
-    });
+    this._dispatch(PanelsActionCreator.PANEL_PRESSED, { stripId, panelId, pressed });
   }
 }

@@ -44,10 +44,8 @@ export default class SculptureActionCreator extends BaseActionCreator {
     this._dispatch(SculptureActionCreator.RESTORE_STATUS);
   }
 
-  sendAnimationFrame(frameCallback) {
-    this._dispatch(SculptureActionCreator.ANIMATION_FRAME, {
-      callback: frameCallback
-    });
+  sendAnimationFrame(callback) {
+    this._dispatch(SculptureActionCreator.ANIMATION_FRAME, { callback });
   }
 
   sendFinishStatusAnimation() {
@@ -55,15 +53,11 @@ export default class SculptureActionCreator extends BaseActionCreator {
   }
 
   sendHandshakeActivate(user) {
-    this._dispatch(SculptureActionCreator.HANDSHAKE_ACTIVATE, {
-      user: user
-    });
+    this._dispatch(SculptureActionCreator.HANDSHAKE_ACTIVATE, { user });
   }
 
   sendHandshakeDeactivate(user) {
-    this._dispatch(SculptureActionCreator.HANDSHAKE_DEACTIVATE, {
-      user: user
-    });
+    this._dispatch(SculptureActionCreator.HANDSHAKE_DEACTIVATE, { user });
   }
 }
 

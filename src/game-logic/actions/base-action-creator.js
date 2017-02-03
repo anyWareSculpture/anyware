@@ -9,8 +9,6 @@ export default class BaseActionCreator {
   }
 
   _dispatch(actionType, data={}) {
-    this._dispatcher.dispatch(Object.assign({
-      actionType: actionType
-    }, data));
+    this._dispatcher.dispatch({ actionType, ...data });
   }
 }

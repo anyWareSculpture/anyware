@@ -10,15 +10,8 @@ export default class DisksActionCreator extends BaseActionCreator {
    * @param {String} diskId - The ID of the disk that was updated
    */
   sendDiskUpdate(diskId, {position}) {
-    const payloadBody = {};
     if (position !== null) {
-      payloadBody.position = position;
-    }
-
-    if (Object.keys(payloadBody).length > 0) {
-      payloadBody.diskId = diskId;
-
-      this._dispatch(DisksActionCreator.DISK_UPDATE, payloadBody);
+      this._dispatch(DisksActionCreator.DISK_UPDATE, { position, diskId });
     }
   }
 }
