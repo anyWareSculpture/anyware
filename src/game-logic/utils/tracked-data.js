@@ -51,6 +51,14 @@ export default class TrackedData {
   }
 
   /**
+   * @returns {Boolean} Returns true if there is at least one changed property
+   */
+  hasChanges() {
+    const changedNames = this.getChangedPropertyNames();
+    return !changedNames.next().done;
+  }
+
+  /**
    * Iterates through the names of the properties that have changed
    */
   *getChangedPropertyNames() {
@@ -114,6 +122,20 @@ export default class TrackedData {
     for (let name of Object.keys(this._data)) {
       yield name;
     }
+  }
+
+  pretty() {
+    const obj = {};
+    for (let key of this) {
+      const value = this.get(key);
+      if (value instanceof TrackedData) {
+        obj[key] = value.pretty();
+      }
+      else {
+        obj[key] = value;
+      }
+    }
+    return obj;
   }
 
   *_changedTrackedDataProperties() {
