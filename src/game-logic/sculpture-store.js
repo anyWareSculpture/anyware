@@ -27,6 +27,7 @@ export default class SculptureStore extends events.EventEmitter {
     this.dispatcher = dispatcher;
     this.config = config;
 
+    this._username = this.config.username;
     this.data = new TrackedData({
       status: SculptureStore.STATUS_READY,
       panelAnimation: null,
@@ -98,14 +99,14 @@ export default class SculptureStore extends events.EventEmitter {
    * @returns {String} Returns the current user's username
    */
   get username() {
-    return this.config.username;
+    return this._username;
   }
 
   /**
    *
    */
   get userColor() {
-    return this.config.getUserColor(this.config.username);
+    return this.config.getUserColor(this._username);
   }
 
   /**
@@ -234,22 +235,18 @@ export default class SculptureStore extends events.EventEmitter {
 
     this._delegateAction(payload);
 
-    if (this.currentGameLogic !== null) {
-      this.currentGameLogic.handleActionPayload(payload);
-    }
+    if (this.currentGameLogic) this.currentGameLogic.handleActionPayload(payload);
 
     this._publishChanges();
   }
 
   _actionCanRunWhenLocked(actionType) {
-    const enabledActions = new Set([
-      SculptureActionCreator.MERGE_STATE
-    ]);
-    return enabledActions.has(actionType);
+    return actionType === SculptureActionCreator.MERGE_STATE;
   }
 
   _delegateAction(payload) {
     const actionHandlers = {
+      [SculptureActionCreator.LOGIN]: this._actionLogin.bind(this),
       [SculptureActionCreator.START_GAME]: this._actionStartGame.bind(this),
       [SculptureActionCreator.START_NEXT_GAME]: this._actionStartNextGame.bind(this),
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
@@ -268,6 +265,10 @@ export default class SculptureStore extends events.EventEmitter {
     }
   }
 
+  _actionLogin({username}) {
+    this._username = username;
+  }
+
   _actionStartGame(payload) {
     const game = payload.game;
     if (!game) {
@@ -282,7 +283,7 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _actionMergeState(payload) {
-    if (payload.metadata.from === this.username) {
+    if (payload.metadata.from === this._username) {
       return;
     }
 
@@ -324,12 +325,11 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _actionPanelPressed(payload) {
-    if (!this.isReady) {
-      return;
-    }
+    if (!this.isReady) return;
 
     const lightArray = this.data.get('lights');
     const {stripId, panelId, pressed} = payload;
+
     lightArray.activate(stripId, panelId, pressed);
   }
 

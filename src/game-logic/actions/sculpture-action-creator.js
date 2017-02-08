@@ -3,6 +3,7 @@ import GAMES from '../constants/games';
 
 export default class SculptureActionCreator extends BaseActionCreator {
   // Action types
+  static LOGIN = "login";
   static MERGE_STATE = "merge-state";
   static START_GAME = "start-game";
   static START_NEXT_GAME = "start-next-game";
@@ -11,6 +12,10 @@ export default class SculptureActionCreator extends BaseActionCreator {
   static FINISH_STATUS_ANIMATION = "finish-status-animation";
   static HANDSHAKE_ACTIVATE = "handshake-activate";
   static HANDSHAKE_DEACTIVATE = "handshake-deactivate";
+
+  sendLogin(username) {
+    this._dispatch(SculptureActionCreator.LOGIN, { username });
+  }
 
   /**
    * Sends an action asking the sculpture to merge some state
