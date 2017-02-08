@@ -209,8 +209,8 @@ export default class SculptureStore extends events.EventEmitter {
   _resetGamePanels() {
     const lightArray = this.data.get('lights');
     this.config.GAME_STRIPS.forEach((stripId) => {
-      lightArray.setDefaultColor(stripId);
-      lightArray.setDefaultIntensity(stripId);
+      lightArray.setToDefaultColor(stripId);
+      lightArray.setToDefaultIntensity(stripId);
     });
   }
 

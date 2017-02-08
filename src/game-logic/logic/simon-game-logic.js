@@ -94,7 +94,7 @@ export default class SimonGameLogic {
       this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.ACTIVE_INTENSITY);
     }
     else {
-      this._lights.setDefaultColor(stripId, panelId);
+      this._lights.setToDefaultColor(stripId, panelId);
       this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.INACTIVE_INTENSITY);
     }
 
