@@ -28,18 +28,6 @@ export default class SculptureActionCreator extends BaseActionCreator {
     this._dispatch(SculptureActionCreator.START_NEXT_GAME);
   }
 
-  sendStartMoleGame() {
-    this.sendStartGame(GAMES.MOLE);
-  }
-
-  sendStartDiskGame() {
-    this.sendStartGame(GAMES.DISK);
-  }
-
-  sendStartSimonGame() {
-    this.sendStartGame(GAMES.SIMON);
-  }
-
   sendRestoreStatus() {
     this._dispatch(SculptureActionCreator.RESTORE_STATUS);
   }
