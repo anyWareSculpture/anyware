@@ -18,10 +18,10 @@ import GAMES from '../constants/games';
 
 export default class DefaultConfig {
   constructor({
-      username="",
-      user0="sculpture0",
-      user1="sculpture1",
-      user2="sculpture2"
+    username = "",
+    user0 = "sculpture0",
+    user1 = "sculpture1",
+    user2 = "sculpture2",
   } = {}) {
     this.user0 = user0;
     this.user1 = user1;
