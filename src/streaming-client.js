@@ -114,7 +114,9 @@ export default class StreamingClient extends events.EventEmitter {
    * @param {Object} [metadata] - Custom metadata to send with the command
    */
   sendCommand(name, configuration = null, customMetadata = null) {
-    this._assertConnected();
+    // FIXME: Temporary fix: Drop packets if we temporarily lost connection. This needs fixing!!
+    if (!this._connected) return;
+    //    this._assertConnected();
 
     if (!configuration || Object.keys(configuration).length === 0) configuration = undefined;
 
@@ -124,7 +126,10 @@ export default class StreamingClient extends events.EventEmitter {
       metadata: this._buildMetadata(customMetadata),
     };
 
-    this._client.publish(this._groupCommandsTopic, JSON.stringify(message));
+    // FIXME: Temporary workaround for supporting read-only clients
+    if (this._username !== 'anyware') {
+      this._client.publish(this._groupCommandsTopic, JSON.stringify(message));
+    }
   }
 
   /**
@@ -133,7 +138,9 @@ export default class StreamingClient extends events.EventEmitter {
    * @param {Object} [metadata] - Custom metadata to send with the update
    */
   sendStateUpdate(update, customMetadata = null) {
-    this._assertConnected();
+    // FIXME: Temporary fix: Drop packets if we temporarily lost connection. This needs fixing!!
+    if (!this._connected) return;
+    //    this._assertConnected();
 
     if (!(typeof update === 'object' && update !== null && Object.keys(update).length !== 0)) {
       throw new Error("Update must be an object");
@@ -141,7 +148,10 @@ export default class StreamingClient extends events.EventEmitter {
 
     update.metadata = this._buildMetadata(customMetadata);
 
-    this._client.publish(this._groupStateUpdatesTopic, JSON.stringify(update));
+    // FIXME: Temporary workaround for supporting read-only clients
+    if (this._username !== 'anyware') {
+      this._client.publish(this._groupStateUpdatesTopic, JSON.stringify(update));
+    }
   }
 
   /**
@@ -151,9 +161,13 @@ export default class StreamingClient extends events.EventEmitter {
     this._client.end();
   }
 
+  get username() {
+    return this._username;
+  }
+
   _assertConnected() {
     if (!this._connected) {
-      throw new Error("Not connected yet");
+      throw new Error("Not connected");
     }
   }
 
@@ -185,6 +199,7 @@ export default class StreamingClient extends events.EventEmitter {
     // Note: mqtt.Client automatically handles reconnections
     this._client = mqtt.connect(url, {
       keepalive: 30, // Someone (shiftr.io?) kills the socket after 60 seconds of inactivity
+      clientId: options.username,
     });
 
     this._client.on(MQTT_EVENT_CONNECT, this._onConnect.bind(this));
