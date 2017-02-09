@@ -27,18 +27,14 @@ export default class HandshakeGameLogic {
   }
 
   handleActionPayload(payload) {
-    if (this._complete) {
-      return;
-    }
+    if (this._complete) return;
 
     const actionHandlers = {
       [SculptureActionCreator.HANDSHAKE_ACTIVATE]: this._actionHandshakeActivate.bind(this)
     };
 
     const actionHandler = actionHandlers[payload.actionType];
-    if (actionHandler) {
-      actionHandler(payload);
-    }
+    if (actionHandler) actionHandler(payload);
   }
 
   _actionHandshakeActivate(payload) {
