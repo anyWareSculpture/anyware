@@ -17,8 +17,8 @@ const MQTT_TOPIC_COMMANDS = "commands";
 const MQTT_TOPIC_STATUS = "status";
 
 // Default, read-only username/password
-const DEFAULT_MQTT_USERNAME = "anyware";
-const DEFAULT_MQTT_PASSWORD = "anyware";
+const DEFAULT_MQTT_USERNAME = "none";
+const DEFAULT_MQTT_PASSWORD = "none";
 
 const DEFAULT_MQTT_HOST = 'broker.shiftr.io';
 const DEFAULT_MQTT_GROUP = "test";
