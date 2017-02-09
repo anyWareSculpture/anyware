@@ -20,9 +20,9 @@ describe('LightArray', () => {
 
     lights.setColor(key, '1', COLORS.ERROR);
     lights.setIntensity(key, '1', 44);
-    lights.activate(key, '1');
-    lights.activate(key, '2');
-    lights.deactivate(key, '2');
+    lights.setActive(key, '1');
+    lights.setActive(key, '2');
+    lights.setActive(key, '2', false);
 
     expect(lights.getIntensity(key, '0')).to.equal(0);
     expect(lights.getColor(key, '0')).to.equal(COLORS.BLACK);
@@ -47,8 +47,8 @@ describe('LightArray', () => {
   it('Can deactivate all', () => {
     const lights = new LightArray({keyA: 3, keyB: 4}, 0, COLORS.BLACK);
 
-    lights.activate('keyA', '0');
-    lights.activate('keyB', '3');
+    lights.setActive('keyA', '0');
+    lights.setActive('keyB', '3');
     lights.deactivateAll();
     expect(lights.isActive('keyA', '0')).to.equal(false);
     expect(lights.isActive('keyB', '3')).to.equal(false);
