@@ -138,13 +138,11 @@ export default class AudioView {
     // On startup, or when Start State becomes active, play ambient sound
     if (changes.currentGame === GAMES.HANDSHAKE) this.sounds.alone.ambient.play();
 
-    if (changes.handshakes) {
-      // Did someone shake my hand?
-      if (changes.handshakes[this.config.username]) {
-        this.sounds.alone.ambient.stop();
-        this.sounds.alone.handshake.play();
-      }
-      // FIXME: Did someone else shake hands? -> dimmed sound?
+    if (changes.handshakes && Object.keys(changes.handshakes).length > 0) {
+      // FIXME: Determine volume based on if _our_ hand initiated the handshake
+      // if (changes.handshakes[this.store.username]) -> max volume, else low volume
+      this.sounds.alone.ambient.stop();
+      this.sounds.alone.handshake.play();
     }
   }
 
