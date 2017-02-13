@@ -131,7 +131,7 @@ export default class DiskGameLogic {
         for (let i=0;i<5;i++) {
           if (index >= i) {
             lightArray.setIntensity(stripId, panels[i], this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
-            lightArray.setColor(stripId, panels[i], this.store.userColor);
+            lightArray.setColor(stripId, panels[i], this.store.locationColor);
           }
         }
       };

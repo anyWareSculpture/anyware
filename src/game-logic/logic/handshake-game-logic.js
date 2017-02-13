@@ -40,7 +40,7 @@ export default class HandshakeGameLogic {
   _actionHandshakeActivate(payload) {
     this._complete = true;
     // Only the receiving sculpture will manage the transition
-    if (payload.user === this.store.username) {
+    if (payload.sculptureId === this.store.me) {
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
     }
   }

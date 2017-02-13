@@ -13,8 +13,8 @@ export default class SculptureActionCreator extends BaseActionCreator {
   static HANDSHAKE_ACTIVATE = "handshake-activate";
   static HANDSHAKE_DEACTIVATE = "handshake-deactivate";
 
-  sendLogin(username) {
-    this._dispatch(SculptureActionCreator.LOGIN, { username });
+  sendLogin(sculptureId) {
+    this._dispatch(SculptureActionCreator.LOGIN, { sculptureId });
   }
 
   /**
@@ -45,12 +45,12 @@ export default class SculptureActionCreator extends BaseActionCreator {
     this._dispatch(SculptureActionCreator.FINISH_STATUS_ANIMATION);
   }
 
-  sendHandshakeActivate(user) {
-    this._dispatch(SculptureActionCreator.HANDSHAKE_ACTIVATE, { user });
+  sendHandshakeActivate(sculptureId) {
+    this._dispatch(SculptureActionCreator.HANDSHAKE_ACTIVATE, { sculptureId });
   }
 
-  sendHandshakeDeactivate(user) {
-    this._dispatch(SculptureActionCreator.HANDSHAKE_DEACTIVATE, { user });
+  sendHandshakeDeactivate(sculptureId) {
+    this._dispatch(SculptureActionCreator.HANDSHAKE_DEACTIVATE, { sculptureId });
   }
 }
 

@@ -103,7 +103,7 @@ export default class MoleGameLogic {
     const state = this.data.get('panels').getPanelState(stripId, panelId);
     if (!state || state === TrackedPanels.STATE_OFF) {
       if (pressed) {
-        this._lights.setColor(stripId, panelId, this.store.userColor);
+        this._lights.setColor(stripId, panelId, this.store.locationColor);
         this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.ACTIVE_INTENSITY);
       }
       else {
@@ -237,7 +237,7 @@ export default class MoleGameLogic {
   _colorPanel(panel) {
     this._setPanelState(panel, TrackedPanels.STATE_IGNORED);
     this._lights.setIntensity(panel.stripId, panel.panelId, this.gameConfig.COLORED_PANEL_INTENSITY);
-    this._lights.setColor(panel.stripId, panel.panelId, this.store.userColor);
+    this._lights.setColor(panel.stripId, panel.panelId, this.store.locationColor);
   }
 
   _winGame() {

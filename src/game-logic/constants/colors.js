@@ -1,7 +1,7 @@
 export default Object.freeze({
-  USER0: 'user0',
-  USER1: 'user1',
-  USER2: 'user2',
+  SCULPTURE1: 'sculpture1',
+  SCULPTURE2: 'sculpture2',
+  SCULPTURE3: 'sculpture3',
   BLACK: 'black',
   WHITE: 'white',
   SUCCESS: 'success',

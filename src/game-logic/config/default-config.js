@@ -18,25 +18,26 @@ import GAMES from '../constants/games';
 
 export default class DefaultConfig {
   constructor({
-    username = "",
-    user0 = "sculpture0",
-    user1 = "sculpture1",
-    user2 = "sculpture2",
+    me = "",
+    sculpture1 = "sculpture1",
+    sculpture2 = "sculpture2",
+    sculpture3 = "sculpture3",
   } = {}) {
-    this.user0 = user0;
-    this.user1 = user1;
-    this.user2 = user2;
+    this.defaultSculptureId = 'anyware'; // Read-only sculpture
+    this.sculpture1 = sculpture1;
+    this.sculpture2 = sculpture2;
+    this.sculpture3 = sculpture3;
 
-    // The username of the current user
-    this.username = username || user0;
+    // The ID of this sculpture
+    this.me = me || sculpture1;
 
-    // A mapping between usernames and the colors that represent them
+    // A mapping between sculpture IDs and the colors that represent them
     this.COLORS = {
-      USERS: {
-        // username : color
-        [this.user0]: COLORS.USER0,
-        [this.user1]: COLORS.USER1,
-        [this.user2]: COLORS.USER2
+      LOCATIONS: {
+        // sculpture : color
+        [this.sculpture1]: COLORS.SCULPTURE1,
+        [this.sculpture2]: COLORS.SCULPTURE2,
+        [this.sculpture3]: COLORS.SCULPTURE3
       },
       ERROR: 'error'
     };
@@ -199,8 +200,8 @@ export default class DefaultConfig {
     };
   }
 
-  getUserColor(username) {
-    return this.COLORS.USERS[username];
+  getLocationColor(loc) {
+    return this.COLORS.LOCATIONS[loc];
   }
 }
 

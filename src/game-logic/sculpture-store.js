@@ -27,7 +27,7 @@ export default class SculptureStore extends events.EventEmitter {
     this.dispatcher = dispatcher;
     this.config = config;
 
-    this._username = this.config.username;
+    this._me = this.config.me;
     this.data = new TrackedData({
       status: SculptureStore.STATUS_READY,
       panelAnimation: null,
@@ -97,17 +97,17 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   /**
-   * @returns {String} Returns the current user's username
+   * @returns {String} Returns the current sculpture ID
    */
-  get username() {
-    return this._username;
+  get me() {
+    return this._me;
   }
 
   /**
    *
    */
-  get userColor() {
-    return this.config.getUserColor(this._username);
+  get locationColor() {
+    return this.config.getLocationColor(this._me);
   }
 
   /**
@@ -266,8 +266,8 @@ export default class SculptureStore extends events.EventEmitter {
     }
   }
 
-  _actionLogin({username}) {
-    this._username = username;
+  _actionLogin({sculptureId}) {
+    this._me = sculptureId;
   }
 
   _actionStartGame(payload) {
@@ -284,9 +284,8 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _actionMergeState(payload) {
-    if (payload.metadata.from === this._username) {
-      return;
-    }
+    const metadata = payload.metadata;
+    if (metadata.from === this._me) return;
 
     const mergeFunctions = {
       status: this._mergeStatus.bind(this),
@@ -318,11 +317,11 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _actionHandshakeActivate(payload) {
-    this.data.get('handshakes').add(payload.user);
+    this.data.get('handshakes').set(payload.sculptureId);
   }
 
   _actionHandshakeDeactivate(payload) {
-    this.data.get('handshakes').delete(payload.user);
+    this.data.get('handshakes').delete(payload.sculptureId);
   }
 
   _actionPanelPressed(payload) {

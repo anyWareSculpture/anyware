@@ -140,7 +140,7 @@ export default class AudioView {
 
     if (changes.handshakes && Object.keys(changes.handshakes).length > 0) {
       // FIXME: Determine volume based on if _our_ hand initiated the handshake
-      // if (changes.handshakes[this.store.username]) -> max volume, else low volume
+      // if (changes.handshakes[this.store.me]) -> max volume, else low volume
       this.sounds.alone.ambient.stop();
       this.sounds.alone.handshake.play();
     }
