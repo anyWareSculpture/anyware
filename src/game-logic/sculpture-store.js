@@ -38,6 +38,7 @@ export default class SculptureStore extends events.EventEmitter {
         [this.config.LIGHTS.STRIP_A]: 10,
         [this.config.LIGHTS.STRIP_B]: 10,
         [this.config.LIGHTS.STRIP_C]: 10,
+        [this.config.LIGHTS.RGB_STRIPS]: 2,
         [this.config.LIGHTS.HANDSHAKE_STRIP]: 4,
         [this.config.LIGHTS.ART_LIGHTS_STRIP]: 3
       }),

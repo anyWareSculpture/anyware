@@ -55,6 +55,7 @@ export default class DefaultConfig {
       STRIP_A: '0',
       STRIP_B: '1',
       STRIP_C: '2',
+      RGB_STRIPS: '3',
       HANDSHAKE_STRIP: '5',
       ART_LIGHTS_STRIP: '6'
     };

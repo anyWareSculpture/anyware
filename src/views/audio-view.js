@@ -301,10 +301,12 @@ export default class AudioView {
 
     // FIXME: This is a hack to support lower volume on non-primary panel
     for (let stripId in lightChanges) {
-      for (let panelId in lightChanges[stripId].panels) {
-        const panelChange = lightChanges[stripId].panels[panelId];
-        if (panelChange.active || panelChange.intensity > 90) {
-          this.sounds.simon.panels[stripId][panelId].play({gain: (stripId === simongame.currentStrip) ? 1 : 0.1});
+      if (this.config.GAME_STRIPS.includes(stripId)) {
+        for (let panelId in lightChanges[stripId].panels) {
+          const panelChange = lightChanges[stripId].panels[panelId];
+          if (panelChange.active || panelChange.intensity > 90) {
+            this.sounds.simon.panels[stripId][panelId].play({gain: (stripId === simongame.currentStrip) ? 1 : 0.1});
+          }
         }
       }
     }

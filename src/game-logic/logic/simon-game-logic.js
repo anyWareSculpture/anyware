@@ -37,6 +37,12 @@ export default class SimonGameLogic {
   }
 
   start() {
+    // Activate RGB Strips
+    this._lights.setIntensity(this.config.LIGHTS.RGB_STRIPS, '0', 100);
+    this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, '0', 'rgb0');
+    this._lights.setIntensity(this.config.LIGHTS.RGB_STRIPS, '1', 100);
+    this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, '1', 'rgb1');
+
     this.data.set('level', DEFAULT_LEVEL);
     this._playCurrentSequence();
   }
@@ -45,6 +51,7 @@ export default class SimonGameLogic {
     let lights = this.store.data.get('lights');
     lights.deactivateAll();
     this.config.GAME_STRIPS.forEach((id) => lights.setIntensity(id, null, 0));
+    lights.setIntensity(this.config.LIGHTS.RGB_STRIPS, null, 0);
   }
 
   get complete() {
