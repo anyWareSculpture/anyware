@@ -1,16 +1,19 @@
+import SculptureStore from '../sculpture-store';
 import SculptureActionCreator from '../actions/sculpture-action-creator';
 
 export default class HandshakeGameLogic {
+  static STATE_WAITING = "waiting";
+  static STATE_ACTIVATING = "activating";
+
   // These are automatically added to the sculpture store
   static trackedProperties = {
+    state: HandshakeGameLogic.STATE_WAITING,
   };
 
   constructor(store, config) {
     this.store = store;
     this.config = config;
     this.gameConfig = config.HANDSHAKE_GAME;
-
-    this._complete = false;
 
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
   }
@@ -20,27 +23,31 @@ export default class HandshakeGameLogic {
   }
 
   start() {
+    this.data.set('state', HandshakeGameLogic.STATE_WAITING);
   }
 
   end() {
     this.store.data.get('lights').deactivateAll();
   }
 
+  get _complete() {
+    this.data.get('state') === HandshakeGameLogic.STATE_ACTIVATING;
+  }
+
   handleActionPayload(payload) {
     if (this._complete) return;
 
     const actionHandlers = {
-      [SculptureActionCreator.HANDSHAKE_ACTIVATE]: this._actionHandshakeActivate.bind(this)
+      [SculptureActionCreator.HANDSHAKE_ACTION]: this._actionHandshakeAction.bind(this)
     };
 
     const actionHandler = actionHandlers[payload.actionType];
     if (actionHandler) actionHandler(payload);
   }
 
-  _actionHandshakeActivate(payload) {
-    this._complete = true;
-    // Only the receiving sculpture will manage the transition
-    if (payload.sculptureId === this.store.me) {
+  _actionHandshakeAction(payload) {
+    if (payload.state === SculptureStore.HANDSHAKE_ACTIVE) {
+      this.data.set('state', HandshakeGameLogic.STATE_ACTIVATING);
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
     }
   }

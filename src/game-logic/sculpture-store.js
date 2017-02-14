@@ -21,6 +21,10 @@ export default class SculptureStore extends events.EventEmitter {
   static STATUS_SUCCESS = "success";
   static STATUS_FAILURE = "failure";
 
+  static HANDSHAKE_OFF = "off";
+  static HANDSHAKE_ACTIVE = "active";
+  static HANDSHAKE_PRESENT = "present";
+
   constructor(dispatcher, config) {
     super();
 
@@ -32,7 +36,11 @@ export default class SculptureStore extends events.EventEmitter {
       status: SculptureStore.STATUS_READY,
       panelAnimation: null,
       currentGame: null,
-      handshakes: new TrackedSet(),
+      handshakes: new TrackedData({ // off, active, present
+        sculpture1: SculptureStore.HANDSHAKE_OFF,
+        sculpture2: SculptureStore.HANDSHAKE_OFF,
+        sculpture3: SculptureStore.HANDSHAKE_OFF,
+      }),
       lights: new LightArray({
         // stripId : number of panels
         [this.config.LIGHTS.STRIP_A]: 10,
@@ -274,8 +282,7 @@ export default class SculptureStore extends events.EventEmitter {
       [SculptureActionCreator.RESTORE_STATUS]: this._actionRestoreStatus.bind(this),
       [SculptureActionCreator.ANIMATION_FRAME]: this._actionAnimationFrame.bind(this),
       [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
-      [SculptureActionCreator.HANDSHAKE_ACTIVATE]: this._actionHandshakeActivate.bind(this),
-      [SculptureActionCreator.HANDSHAKE_DEACTIVATE]: this._actionHandshakeDeactivate.bind(this),
+      [SculptureActionCreator.HANDSHAKE_ACTION]: this._actionHandshakeAction.bind(this),
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this)
     };
@@ -313,6 +320,7 @@ export default class SculptureStore extends events.EventEmitter {
       handshakes: this._mergeHandshakes.bind(this),
       lights: this._mergeLights.bind(this),
       disks: this._mergeDisks.bind(this),
+      handshake: this._mergeHandshakeGame.bind(this),
       mole: this._mergeMoleGame.bind(this),
       disk: this._mergeDiskGame.bind(this),
       simon: this._mergeSimonGame.bind(this),
@@ -340,12 +348,8 @@ export default class SculptureStore extends events.EventEmitter {
     this.restoreStatus();
   }
 
-  _actionHandshakeActivate(payload) {
-    this.data.get('handshakes').set(payload.sculptureId);
-  }
-
-  _actionHandshakeDeactivate(payload) {
-    this.data.get('handshakes').delete(payload.sculptureId);
+  _actionHandshakeAction(payload) {
+    this.data.get('handshakes').set(payload.sculptureId, payload.state);
   }
 
   _actionPanelPressed(payload) {
@@ -386,9 +390,7 @@ export default class SculptureStore extends events.EventEmitter {
 
   _mergeHandshakes(handshakes) {
     for (let sculptureId of Object.keys(handshakes)) {
-      const value = handshakes[sculptureId];
-      if (value) this.data.get('handshakes').add(sculptureId);
-      else this.data.get('handshakes').delete(sculptureId);
+      this.data.get('handshakes').set(sculptureId, handshakes[sculptureId]);
     }
   }
 
@@ -428,6 +430,13 @@ export default class SculptureStore extends events.EventEmitter {
       if (disk.hasOwnProperty('targetSpeed')) {
         currDisk.setTargetSpeed(disk.targetSpeed);
       }
+    }
+  }
+
+  _mergeHandshakeGame(handshake) {
+    const handshakeData = this.data.get('handshake');
+    if (handshake.hasOwnProperty('state')) {
+      handshakeData.set('state', handshake.state);
     }
   }
 

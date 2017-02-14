@@ -10,8 +10,7 @@ export default class SculptureActionCreator extends BaseActionCreator {
   static RESTORE_STATUS = "restore-status";
   static ANIMATION_FRAME = "animation-frame";
   static FINISH_STATUS_ANIMATION = "finish-status-animation";
-  static HANDSHAKE_ACTIVATE = "handshake-activate";
-  static HANDSHAKE_DEACTIVATE = "handshake-deactivate";
+  static HANDSHAKE_ACTION = "handshake-action";
 
   sendLogin(sculptureId) {
     this._dispatch(SculptureActionCreator.LOGIN, { sculptureId });
@@ -45,12 +44,9 @@ export default class SculptureActionCreator extends BaseActionCreator {
     this._dispatch(SculptureActionCreator.FINISH_STATUS_ANIMATION);
   }
 
-  sendHandshakeActivate(sculptureId) {
-    this._dispatch(SculptureActionCreator.HANDSHAKE_ACTIVATE, { sculptureId });
+  sendHandshakeAction(sculptureId, state) {
+    this._dispatch(SculptureActionCreator.HANDSHAKE_ACTION, { sculptureId, state });
   }
 
-  sendHandshakeDeactivate(sculptureId) {
-    this._dispatch(SculptureActionCreator.HANDSHAKE_DEACTIVATE, { sculptureId });
-  }
 }
 

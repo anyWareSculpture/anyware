@@ -42,6 +42,7 @@
 import _ from 'lodash';
 
 import SculptureStore from '../game-logic/sculpture-store';
+import HandshakeGameLogic from '../game-logic/logic/handshake-game-logic';
 import GAMES from '../game-logic/constants/games';
 import TrackedPanels from '../game-logic/utils/tracked-panels';
 import Disk from '../game-logic/utils/disk';
@@ -138,9 +139,11 @@ export default class AudioView {
     // On startup, or when Start State becomes active, play ambient sound
     if (changes.currentGame === GAMES.HANDSHAKE) this.sounds.alone.ambient.play();
 
-    if (changes.handshakes && Object.keys(changes.handshakes).length > 0) {
+    if (changes.handshake && changes.handshake.state === HandshakeGameLogic.STATE_ACTIVATING) {
       // FIXME: Determine volume based on if _our_ hand initiated the handshake
-      // if (changes.handshakes[this.store.me]) -> max volume, else low volume
+//      if (changes.handshakes[this.store.me]) -> max volume, else low volume
+//      gain: (stripId === simongame.currentStrip) ? 1 : 0.1
+
       this.sounds.alone.ambient.stop();
       this.sounds.alone.handshake.play();
     }
