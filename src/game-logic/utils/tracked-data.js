@@ -9,6 +9,9 @@ export default class TrackedData {
       ...validProperties
     };
 
+    // Per-field timestamps. Note: Only for POJO fields
+    this._timestamps = {};
+
     // {changedProperty: oldValue, ...}
     this._changes = {};
 
@@ -28,18 +31,23 @@ export default class TrackedData {
 
   /**
    * Stores the given value and tracks its old value as changed
-   * Even if the same value is stored twice, a change will still be registered
+   * 
+   * If the given timestamp is older or equal to the currently set timestamp,
+   * the new value will be ignored.
+   * 
    * @param {string} name - The name of the property to set
    * @param {*} value - The value to store
+   * @param {Number} timestamp - The timestamp to use (defaults to null, meaning Date.now())
    */
-  set(name, value) {
+  set(name, value, timestamp = null) {
     this._assertValidProperty(name);
 
-    if (value !== this._data[name]) {
-      this._changes[name] = this._data[name];
-    }
+    if (value === this._data[name] || timestamp && timestamp <= this._timestamps[name]) return;
 
+    this._changes[name] = this._data[name];
     this._data[name] = value;
+    if (!timestamp) timestamp = Date.now();
+    this._timestamps[name] = timestamp;
   }
 
   /**
@@ -88,20 +96,24 @@ export default class TrackedData {
   /**
    * Retrieves an object containing the name and current values
    * of each property that has been changed
-   * @returns {Object} - Object where keys are the names of each changed property and the values are the current value of that property
+   * @returns {changes:, timestamps:} - changes is an object where keys are the names of each changed property and the values are the current value of that property, timestamp has the same keys, but with the timestamp of the stored value
    */
   getChangedCurrentValues() {
-    const changed = {};
+    const changes = {};
+    const timestamps = {};
 
     for (let propName of this._changedTrackedDataProperties()) {
-      changed[propName] = this.get(propName).getChangedCurrentValues();
+      const datachanged = this.get(propName).getChangedCurrentValues();
+      changes[propName] = datachanged.changes;
+      timestamps[propName] = datachanged.timestamps;
     }
 
     for (let propName of Object.keys(this._changes)) {
-      changed[propName] = this.get(propName);
+      changes[propName] = this.get(propName);
+      timestamps[propName] = this._timestamps[propName];
     }
 
-    return changed;
+    return {changes, timestamps};
   }
 
   /**

@@ -243,10 +243,9 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _publishChanges() {
-    const changes = this.data.getChangedCurrentValues();
-
+    const {changes, timestamps} = this.data.getChangedCurrentValues();
     if (Object.keys(changes).length) {
-      this.emit(SculptureStore.EVENT_CHANGE, changes);
+      this.emit(SculptureStore.EVENT_CHANGE, changes, {timestamps});
     }
 
     this.data.clearChanges();
@@ -329,7 +328,7 @@ export default class SculptureStore extends events.EventEmitter {
     for (let propName of Object.keys(payload)) {
       const mergeFunction = mergeFunctions[propName];
       if (mergeFunction) {
-        mergeFunction(payload[propName], metadata);
+        mergeFunction(payload[propName], metadata.timestamps[propName]);
       }
     }
   }
@@ -388,9 +387,9 @@ export default class SculptureStore extends events.EventEmitter {
     this._startGameAsMerge(currentGame);
   }
 
-  _mergeHandshakes(handshakes) {
+  _mergeHandshakes(handshakes, timestamps) {
     for (let sculptureId of Object.keys(handshakes)) {
-      this.data.get('handshakes').set(sculptureId, handshakes[sculptureId]);
+      this.data.get('handshakes').set(sculptureId, handshakes[sculptureId], timestamps[sculptureId]);
     }
   }
 
@@ -433,10 +432,10 @@ export default class SculptureStore extends events.EventEmitter {
     }
   }
 
-  _mergeHandshakeGame(handshake) {
+  _mergeHandshakeGame(handshake, timestamps) {
     const handshakeData = this.data.get('handshake');
     if (handshake.hasOwnProperty('state')) {
-      handshakeData.set('state', handshake.state);
+      handshakeData.set('state', handshake.state, timestamps.state);
     }
   }
 
