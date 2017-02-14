@@ -17,6 +17,10 @@ Sculptures have some local state as well.
 * `HandshakeGameLogic`:
    * `_complete`
    * Transition timeout?
+* `HandshakeView`:
+   * `_complete`
+   * `_pulseInterval`
+   * `_activityTimeout`
 * `MoleGameLogic`:
    * `_complete`
    * `remainingPanels`
