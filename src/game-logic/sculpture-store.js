@@ -47,9 +47,6 @@ export default class SculptureStore extends events.EventEmitter {
         disk1: new Disk(),
         disk2: new Disk()
       }),
-      // FIXME: Move perimeter and disk light strip status somewhere, e.g. disks:
-      // [this.config.LIGHTS.PERIMETER_STRIP]: 6,
-      // [this.config.LIGHTS.DISK_LIGHT_STRIP]: 3,
       handshake: new TrackedData(HandshakeGameLogic.trackedProperties),
       mole: new TrackedData(MoleGameLogic.trackedProperties),
       disk: new TrackedData(DiskGameLogic.trackedProperties),
@@ -57,7 +54,7 @@ export default class SculptureStore extends events.EventEmitter {
     });
 
     this.currentGameLogic = null;
-    this.dispatchToken = this._registerDispatcher(this.dispatcher);
+    this.dispatchToken = dispatcher.register(this._handleActionPayload.bind(this));
     this.sculptureActionCreator = new SculptureActionCreator(this.dispatcher);
   }
 
@@ -207,12 +204,34 @@ export default class SculptureStore extends events.EventEmitter {
     this.currentGameLogic.start();
   }
 
+  _startGameAsMerge(game) {
+    const gameLogicClasses = {
+      [GAMES.HANDSHAKE]: HandshakeGameLogic,
+      [GAMES.MOLE]: MoleGameLogic,
+      [GAMES.DISK]: DiskGameLogic,
+      [GAMES.SIMON]: SimonGameLogic
+    };
+    const GameLogic = gameLogicClasses[game];
+    if (!GameLogic) {
+      throw new Error(`Unrecognized game: ${game}`);
+    }
+
+    this.data.set('currentGame', game);
+    this.currentGameLogic = new GameLogic(this, this.config);
+  }
+
   _resetGamePanels() {
     const lightArray = this.data.get('lights');
     this.config.GAME_STRIPS.forEach((stripId) => {
       lightArray.setToDefaultColor(stripId);
       lightArray.setToDefaultIntensity(stripId);
     });
+  }
+
+  _assertNoChanges() {
+    if (this.data.hasChanges()) {
+      throw new Error(`Store was changed outside of an action: ${JSON.stringify(this.data.getChangedCurrentValues())}`);
+    }
   }
 
   _publishChanges() {
@@ -225,11 +244,12 @@ export default class SculptureStore extends events.EventEmitter {
     this.data.clearChanges();
   }
 
-  _registerDispatcher(dispatcher) {
-    return dispatcher.register(this._handleActionPayload.bind(this));
-  }
-
   _handleActionPayload(payload) {
+    // Protects against accidentally modifying the store outside of an action
+    // FIXME: We had to temporarily disable this as we don't have a mechanism for queuing
+    // up changes which hasn't yet been published due to a Streaming Client lost connection.
+    //    this._assertNoChanges();
+
     if (this.isLocked && !this._actionCanRunWhenLocked(payload.actionType)) {
       return;
     }
@@ -289,15 +309,19 @@ export default class SculptureStore extends events.EventEmitter {
 
     const mergeFunctions = {
       status: this._mergeStatus.bind(this),
+      currentGame: this._mergeCurrentGame.bind(this),
+      handshakes: this._mergeHandshakes.bind(this),
       lights: this._mergeLights.bind(this),
       disks: this._mergeDisks.bind(this),
-      mole: this._mergeMole.bind(this)
+      mole: this._mergeMoleGame.bind(this),
+      disk: this._mergeDiskGame.bind(this),
+      simon: this._mergeSimonGame.bind(this),
     };
 
     for (let propName of Object.keys(payload)) {
       const mergeFunction = mergeFunctions[propName];
       if (mergeFunction) {
-        mergeFunction(payload[propName]);
+        mergeFunction(payload[propName], metadata);
       }
     }
   }
@@ -330,7 +354,16 @@ export default class SculptureStore extends events.EventEmitter {
     const lightArray = this.data.get('lights');
     const {stripId, panelId, pressed} = payload;
 
-    lightArray.activate(stripId, panelId, pressed);
+    // This is a reasonable default behaviour that can be overridden in
+    // a game logic class if necessary.
+    // FIXME: This is mostly for testing, and could/should be removed later
+    lightArray.setActive(stripId, panelId, pressed);
+//    if (pressed) {
+//      lightArray.setColor(stripId, panelId, this.locationColor);
+//    }
+//    else {
+//      lightArray.setToDefaultColor(stripId, panelId);
+//    }
   }
 
   _actionDiskUpdate(payload) {
@@ -347,33 +380,78 @@ export default class SculptureStore extends events.EventEmitter {
     this.data.set('status', newStatus);
   }
 
-  _mergeLights(lightChanges) {
+  _mergeCurrentGame(currentGame) {
+    this._startGameAsMerge(currentGame);
+  }
+
+  _mergeHandshakes(handshakes) {
+    for (let sculptureId of Object.keys(handshakes)) {
+      const value = handshakes[sculptureId];
+      if (value) this.data.get('handshakes').add(sculptureId);
+      else this.data.get('handshakes').delete(sculptureId);
+    }
+  }
+
+  _mergeLights(lights) {
     const lightArray = this.data.get('lights');
 
-    for (let stripId of Object.keys(lightChanges)) {
-      const panels = lightChanges[stripId].panels;
+    for (let stripId of Object.keys(lights)) {
+      const panels = lights[stripId].panels;
       for (let panelId of Object.keys(panels)) {
         const panelChanges = panels[panelId];
         if (panelChanges.hasOwnProperty("intensity")) {
           lightArray.setIntensity(stripId, panelId, panelChanges.intensity);
         }
+        if (panelChanges.hasOwnProperty("color")) {
+          lightArray.setColor(stripId, panelId, panelChanges.color);
+        }
         if (panelChanges.hasOwnProperty("active")) {
-          // FIXME: Set color based on metadata
-          lightArray.activate(stripId, panelId, panelChanges.active);
+          // FIXME: Set color based on metadata? Collision with the color field?
+          lightArray.setActive(stripId, panelId, panelChanges.active);
         }
       }
     }
   }
 
-  _mergeDisks(diskChanges) {
-    // FIXME:
-    console.log(diskChanges);
+  _mergeDisks(disks) {
+    const currDisks = this.data.get('disks');
+
+    for (let diskId of Object.keys(disks)) {
+      const disk = disks[diskId];
+      const currDisk = currDisks.get(diskId);
+      if (disk.hasOwnProperty('position')) {
+        currDisk.rotateTo(disk.position);
+      }
+      if (disk.hasOwnProperty('user')) {
+        currDisk.setUser(disk.user);
+      }
+      if (disk.hasOwnProperty('targetSpeed')) {
+        currDisk.setTargetSpeed(disk.targetSpeed);
+      }
+    }
   }
 
-  _mergeMole(moleChanges) {
-    for (let propName of Object.keys(moleChanges)) {
-      this.data.get('mole').set(propName, moleChanges[propName]);
+  _mergeMoleGame(mole) {
+    const moleData = this.data.get('mole');
+
+    if (mole.hasOwnProperty('panelCount')) {
+      moleData.set('panelCount', mole.panelCount);
     }
+    if (mole.hasOwnProperty('panels')) {
+      const molePanels = moleData.get('panels');
+      const panels = mole.panels;
+      for (let panelKey of Object.keys(panels)) {
+        molePanels.setPanelStateByKey(panelKey, panels[panelKey]);
+      }
+    }
+  }
+
+  _mergeDiskGame(disk) {
+    // FIXME: Implement
+  }
+
+  _mergeSimonGame(simon) {
+    // FIXME: Implement
   }
 
   _getNextGame() {
