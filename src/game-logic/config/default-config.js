@@ -31,6 +31,9 @@ export default class DefaultConfig {
     // The ID of this sculpture
     this.me = me || sculpture1;
 
+    // Local sculptures will time out after this number of minutes without interaction
+    this.ACTIVITY_TIMEOUT = 300;
+
     // A mapping between sculpture IDs and the colors that represent them
     this.COLORS = {
       LOCATIONS: {
