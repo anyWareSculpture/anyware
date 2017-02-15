@@ -212,22 +212,6 @@ export default class SculptureStore extends events.EventEmitter {
     this.currentGameLogic.start();
   }
 
-  _startGameAsMerge(game) {
-    const gameLogicClasses = {
-      [GAMES.HANDSHAKE]: HandshakeGameLogic,
-      [GAMES.MOLE]: MoleGameLogic,
-      [GAMES.DISK]: DiskGameLogic,
-      [GAMES.SIMON]: SimonGameLogic
-    };
-    const GameLogic = gameLogicClasses[game];
-    if (!GameLogic) {
-      throw new Error(`Unrecognized game: ${game}`);
-    }
-
-    this.data.set('currentGame', game);
-    this.currentGameLogic = new GameLogic(this, this.config);
-  }
-
   _resetGamePanels() {
     const lightArray = this.data.get('lights');
     this.config.GAME_STRIPS.forEach((stripId) => {
@@ -383,8 +367,20 @@ export default class SculptureStore extends events.EventEmitter {
     this.data.set('status', newStatus);
   }
 
-  _mergeCurrentGame(currentGame) {
-    this._startGameAsMerge(currentGame);
+  _mergeCurrentGame(currentGame, timestamps) {
+    const gameLogicClasses = {
+      [GAMES.HANDSHAKE]: HandshakeGameLogic,
+      [GAMES.MOLE]: MoleGameLogic,
+      [GAMES.DISK]: DiskGameLogic,
+      [GAMES.SIMON]: SimonGameLogic
+    };
+    const GameLogic = gameLogicClasses[currentGame];
+    if (!GameLogic) {
+      throw new Error(`Unrecognized game: ${currentGame}`);
+    }
+
+    this.data.set('currentGame', currentGame, timestamps.currentGame);
+    this.currentGameLogic = new GameLogic(this, this.config);
   }
 
   _mergeHandshakes(handshakes, timestamps) {
@@ -393,22 +389,23 @@ export default class SculptureStore extends events.EventEmitter {
     }
   }
 
-  _mergeLights(lights) {
-    const lightArray = this.data.get('lights');
+  _mergeLights(changedLights, timestamps) {
+    const lights = this.data.get('lights');
 
-    for (let stripId of Object.keys(lights)) {
-      const panels = lights[stripId].panels;
-      for (let panelId of Object.keys(panels)) {
-        const panelChanges = panels[panelId];
-        if (panelChanges.hasOwnProperty("intensity")) {
-          lightArray.setIntensity(stripId, panelId, panelChanges.intensity);
+    for (let stripId of Object.keys(changedLights)) {
+      const changedPanels = changedLights[stripId].panels;
+      for (let panelId of Object.keys(changedPanels)) {
+        const changedPanel = changedPanels[panelId];
+        const panelTimestamp = timestamps[stripId].panels[panelId];
+        if (changedPanel.hasOwnProperty("intensity")) {
+          lights.setIntensity(stripId, panelId, changedPanel.intensity, panelTimestamp.intensity);
         }
-        if (panelChanges.hasOwnProperty("color")) {
-          lightArray.setColor(stripId, panelId, panelChanges.color);
+        if (changedPanel.hasOwnProperty("color")) {
+          lights.setColor(stripId, panelId, changedPanel.color, panelTimestamp.color);
         }
-        if (panelChanges.hasOwnProperty("active")) {
+        if (changedPanel.hasOwnProperty("active")) {
           // FIXME: Set color based on metadata? Collision with the color field?
-          lightArray.setActive(stripId, panelId, panelChanges.active);
+          lights.setActive(stripId, panelId, changedPanel.active, panelTimestamp.active);
         }
       }
     }
@@ -439,18 +436,9 @@ export default class SculptureStore extends events.EventEmitter {
     }
   }
 
-  _mergeMoleGame(mole) {
-    const moleData = this.data.get('mole');
-
-    if (mole.hasOwnProperty('panelCount')) {
-      moleData.set('panelCount', mole.panelCount);
-    }
-    if (mole.hasOwnProperty('panels')) {
-      const molePanels = moleData.get('panels');
-      const panels = mole.panels;
-      for (let panelKey of Object.keys(panels)) {
-        molePanels.setPanelStateByKey(panelKey, panels[panelKey]);
-      }
+  _mergeMoleGame(mole, timestamps) {
+    if (this.isPlayingMoleGame) {
+      this.currentGameLogic.mergeState(mole, timestamps);
     }
   }
 

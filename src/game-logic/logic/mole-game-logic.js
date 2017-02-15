@@ -141,6 +141,40 @@ export default class MoleGameLogic {
     }
   }
 
+  mergeState(moleChanges, timestamps) {
+    const moleData = this.data;
+
+    if (moleChanges.hasOwnProperty('panelCount')) {
+      moleData.set('panelCount', moleChanges.panelCount, timestamps.panelCount);
+    }
+    if (moleChanges.hasOwnProperty('panels')) {
+      const panels = moleData.get('panels');
+      const changedPanels = moleChanges.panels;
+      for (let panelKey of Object.keys(changedPanels)) {
+        const newstate = changedPanels[panelKey];
+        if (newstate === TrackedPanels.STATE_ON) {
+          this._remainingPanels.delete(this._panels[panelKey]);
+        }
+        else if (newstate === TrackedPanels.STATE_OFF) {
+          this._remainingPanels.add(this._panels[panelKey]);
+        }
+        else if (newstate === TrackedPanels.STATE_IGNORED) {
+          // Kill any timeouts related to this panel
+          if (this._activeTimeouts.hasOwnProperty(panelKey)) {
+            clearTimeout(this._activeTimeouts[panelKey]);
+            delete this._activeTimeouts[panelKey];
+          }
+          // FIXME: What if we just triggered this timeout
+          // We could be in a few states:
+          // * PANEL_MOVE_DELAY timer is active
+          // * The next panel was already made active
+          
+        }
+        panels.setPanelStateByKey(panelKey, newstate, timestamps.panels[panelKey]);
+      }
+    }
+  }
+
   _hash(stripId, panelId) {
     return `${stripId},${panelId}`;
   }
