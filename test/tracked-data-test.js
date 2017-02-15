@@ -57,7 +57,9 @@ describe('TrackedData', () => {
 
     expect(Array.from(data.getChangedPropertyNames())).to.be.empty;
     expect(data.getChangedOldValues()).to.be.empty;
-    expect(data.getChangedCurrentValues()).to.be.empty;
+    const {changes, timestamps} = data.getChangedCurrentValues();
+    expect(changes).to.be.empty;
+    expect(timestamps).to.be.empty;
   });
 
   it('should save old and current values for each change', () => {
@@ -72,9 +74,13 @@ describe('TrackedData', () => {
     expect(data.get(propertyName)).to.equal(newValue);
     expect(Array.from(data.getChangedPropertyNames())).to.eql([propertyName]);
     expect(data.getChangedOldValues()[propertyName]).to.equal(oldValue);
-    expect(data.getChangedCurrentValues()[propertyName]).to.equal(newValue);
-    expect(data.getChangedCurrentValues()[propertyName]).to.equal(data.get(propertyName));
+    const {changes, timestamps} = data.getChangedCurrentValues();
+
+    expect(changes[propertyName]).to.equal(newValue);
+    expect(changes[propertyName]).to.equal(data.get(propertyName));
   });
+
+  it.skip('Test timestamps');
 
   it('should allow clearing of any currently registered changes', () => {
     const data = new TrackedData();
@@ -83,11 +89,13 @@ describe('TrackedData', () => {
     data.set("b", 2);
     data.set("c", 3);
 
-    expect(data.getChangedCurrentValues()).to.eql({a: 1, b: 2, c: 3});
+    let {changes} = data.getChangedCurrentValues();
+    expect(changes).to.eql({a: 1, b: 2, c: 3});
 
     data.clearChanges();
 
-    expect(data.getChangedCurrentValues()).to.be.empty;
+    let {newchanges} = data.getChangedCurrentValues();
+    expect(newchanges).to.be.empty;
   });
 
   it('should store changed property names correctly', () => {
@@ -108,11 +116,11 @@ describe('TrackedData', () => {
     const name = "abc";
 
     data.set(name, 2);
-    expect(data.getChangedCurrentValues()[name]).to.equal(2);
+    expect(data.getChangedCurrentValues().changes[name]).to.equal(2);
     data.set(name, 2);
-    expect(data.getChangedCurrentValues()[name]).to.equal(2);
+    expect(data.getChangedCurrentValues().changes[name]).to.equal(2);
     data.set(name, 2);
-    expect(data.getChangedCurrentValues()[name]).to.equal(2);
+    expect(data.getChangedCurrentValues().changes[name]).to.equal(2);
   });
 
   it('can have properties of type TrackedData', () => {
