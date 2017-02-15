@@ -17,7 +17,7 @@ export default class MoleGameLogic {
 
     this._complete = false;
 
-    // _remainingPanels are used to select random panels
+    // _remainingPanels are panels with STATE_OFF, and are used to select random panels
     this._panels = {}; // Unique panel objects. These can be used in the _remainingPanels Set
     this._remainingPanels = new Set();
     this.config.GAME_STRIPS.forEach(stripId => {
@@ -60,7 +60,7 @@ export default class MoleGameLogic {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [MoleGameActionCreator.AVAIL_PANEL]: this._actionAvailPanel.bind(this),
       [MoleGameActionCreator.DEAVAIL_PANEL]: this._actionDeavailPanel.bind(this),
-      [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this)
+      [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
     };
 
     const actionHandler = actionHandlers[payload.actionType];
@@ -221,7 +221,6 @@ export default class MoleGameLogic {
     if (panel) this._activeTimeouts[this._getPanelKey(panel)] = tid;
   }
 
-  // FIXME: The panel should also pulse. Should the pulsating state be part of tracked data, or should each view deduce this from the current game and state?
   _availPanel(panel) {
     this._setPanelState(panel, TrackedPanels.STATE_ON);
     this._remainingPanels.delete(this._getPanel(panel));
