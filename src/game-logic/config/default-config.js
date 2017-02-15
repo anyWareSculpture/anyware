@@ -90,10 +90,10 @@ export default class DefaultConfig {
     this.MOLE_GAME = {
       GAME_END: 30,
       INITIAL_PANELS: [
-        {stripId: this.LIGHTS.STRIP_A, panelId: '3'},
-        {stripId: this.LIGHTS.STRIP_A, panelId: '7'},
-        {stripId: this.LIGHTS.STRIP_C, panelId: '6'},
-        {stripId: this.LIGHTS.STRIP_B, panelId: '5'}
+        {stripId: this.LIGHTS.STRIP_C, panelId: '3'},
+        {stripId: this.LIGHTS.STRIP_C, panelId: '7'},
+        {stripId: this.LIGHTS.STRIP_B, panelId: '6'},
+        {stripId: this.LIGHTS.STRIP_A, panelId: '5'}
       ],
       NUM_ACTIVE_PANELS: {
         10: 1, // At panelCount of 10, increase # of simultaneusly active panels
