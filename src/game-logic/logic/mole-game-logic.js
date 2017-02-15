@@ -40,7 +40,7 @@ export default class MoleGameLogic {
   start() {
     this._complete = false;
     this.data.set('panelCount', 0);
-    this.data.set('panels', new TrackedPanels());
+    this.data.get('panels').clear();
     this._registerTimeout(0); // Request a new active panel immediately
   }
 
