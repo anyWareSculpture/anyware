@@ -23,7 +23,7 @@ Sculptures have some local state as well.
    * `_activityTimeout`
 * `MoleGameLogic`:
    * `_complete`
-   * `remainingPanels`
+   * `_remainingPanels`
    * `_activeTimeouts`
    * Transition timeout?
 * `DiskGameLogic`:
