@@ -31,8 +31,8 @@ export default class DefaultConfig {
     // The ID of this sculpture
     this.me = me || this.defaultSculptureId;
 
-    // Local sculptures will time out after this number of minutes without interaction
-    this.ACTIVITY_TIMEOUT = 300;
+    // Local sculptures will time out after this number of seconds without interaction
+    this.ACTIVITY_TIMEOUT = 60;
 
     // A mapping between sculpture IDs and the colors that represent them
     this.COLORS = {
@@ -96,10 +96,10 @@ export default class DefaultConfig {
         {stripId: this.LIGHTS.STRIP_A, panelId: '5'}
       ],
       NUM_ACTIVE_PANELS: {
-        10: 1, // At panelCount of 10, increase # of simultaneusly active panels
-        20: 1,
-        25: -1, // At panelCount of 25, decrease # of simultaneusly active panels
-        27: -1
+//        10: 1, // At panelCount of 10, increase # of simultaneusly active panels
+//        20: 1,
+//        25: -1, // At panelCount of 25, decrease # of simultaneusly active panels
+//        27: -1
       },
       PANEL_LIFETIME: [
         {count: 0, range: [10, 10]}, // Initial timeout
@@ -110,7 +110,7 @@ export default class DefaultConfig {
       // How long to wait before enabling the next panel, on success
       PANEL_SUCCESS_DELAY: 1000,
       // How long to wait before enabling the next panel, on automatic panel move
-      PANEL_MOVE_DELAY: 200,
+      PANEL_MOVE_DELAY: 500,
       // The intensity to use on active panels
       ACTIVE_PANEL_INTENSITY: 100,
       // The intensity to use on inactive panels

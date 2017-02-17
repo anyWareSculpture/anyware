@@ -380,7 +380,10 @@ export default class SculptureStore extends events.EventEmitter {
     }
 
     this.data.set('currentGame', currentGame, timestamps.currentGame);
-    this.currentGameLogic = new GameLogic(this, this.config);
+    // FIXME: Modifying local state on merge - tricky to get right
+    if (!(this.currentGameLogic instanceof GameLogic)) {
+      this.currentGameLogic = new GameLogic(this, this.config);
+    }
   }
 
   _mergeHandshakes(handshakes, timestamps) {

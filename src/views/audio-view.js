@@ -163,6 +163,8 @@ export default class AudioView {
     for (let stripId in lightChanges) {
       for (let panelId in lightChanges[stripId].panels) {
         const panelChange = lightChanges[stripId].panels[panelId];
+        // FIXME: To get correct multi-player sounds, we should listen only for STATE changes,
+        // as the active flag might not be correctly set
         if (panelChange.active === true) {
           const panelkey = `${stripId},${panelId}`;
           if (changes.mole && changes.mole.panels) {
