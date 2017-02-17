@@ -14,6 +14,8 @@ Sculptures have some local state as well.
 
 **Notes:**
 
+* `SculptureStore`:
+   * currentGameLogic
 * `HandshakeGameLogic`:
    * `_complete`
    * Transition timeout?
