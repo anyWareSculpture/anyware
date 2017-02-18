@@ -1,7 +1,9 @@
+import assert from 'assert';
 import PanelsActionCreator from '../actions/panels-action-creator';
 import SculptureActionCreator from '../actions/sculpture-action-creator';
 import MoleGameActionCreator from '../actions/mole-game-action-creator';
 import TrackedPanels from '../utils/tracked-panels';
+import COLORS from '../constants/colors';
 
 export default class MoleGameLogic {
   // These are automatically added to the sculpture store
@@ -16,7 +18,6 @@ export default class MoleGameLogic {
     this.gameConfig = config.MOLE_GAME;
 
     this._complete = false;
-    this._master = false;
 
     // Unique panel objects: panelKey -> panel
     this._panels = {};
@@ -26,6 +27,10 @@ export default class MoleGameLogic {
         this._panels[key] = { stripId, panelId, key };
       });
     });
+
+    // Force RGB strips to black.
+    // FIXME: This is a temporary fix for a firmware bug not respecting intensity
+    this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, null, COLORS.BLACK);
 
     this.moleGameActionCreator = new MoleGameActionCreator(this.store.dispatcher);
   }
@@ -40,7 +45,6 @@ export default class MoleGameLogic {
   start() {
     this._initRemainingPanels();
     this._complete = false;
-    this._master = true;
     this.data.set('panelCount', 0);
     this.data.get('panels').clear();
     this._registerMoveDelay(0); // Request a new active panel immediately
@@ -57,7 +61,6 @@ export default class MoleGameLogic {
 
   end() {
     this.config.GAME_STRIPS.forEach(stripId => this._lights.deactivateAll(stripId));
-    this._master = false;
   }
 
   /**
@@ -73,6 +76,7 @@ export default class MoleGameLogic {
       [MoleGameActionCreator.AVAIL_PANEL]: this._actionAvailPanel.bind(this),
       [MoleGameActionCreator.DEAVAIL_PANEL]: this._actionDeavailPanel.bind(this),
       [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
+      [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
     };
 
     const actionHandler = actionHandlers[payload.actionType];
@@ -129,10 +133,11 @@ export default class MoleGameLogic {
 
     // If an active panel was touched
     if (state === TrackedPanels.STATE_ON) {
-      this._colorPanel({stripId, panelId});
+      this._colorPanel(payload);
 
       // Only for master:
-      if (this._master) {
+      if (this.store.isMaster) {
+        this._remainingPanels.delete(this._getPanelKey(payload));
         // If we have a timeout on this panel, kill the timeout
         this._removeTimeout(this._getPanelKey(payload));
         this._advanceGame();
@@ -141,7 +146,7 @@ export default class MoleGameLogic {
   }
 
   /**
-   * Advance game. Should only be called by one of the sculptures.
+   * Advance game. Should only be called by master
    */
   _advanceGame() {
     let panelCount = this.data.get("panelCount") + 1;
@@ -165,56 +170,90 @@ export default class MoleGameLogic {
    * Remote action
    * If we're master, we're responsible for correctly advancing the game
    */
-  mergeState(moleChanges, timestamps) {
-    const moleData = this.data;
+  _actionMergeState(payload) {
+    if (!payload.mole) return; // Only handle mole state
 
-    if (moleChanges.hasOwnProperty('panelCount')) {
-      moleData.set('panelCount', moleChanges.panelCount, timestamps.panelCount);
+    const moleData = this.data;
+    const moleChanges = payload.mole;
+    const moleProps = payload.metadata.props.mole;
+
+    // Master owns the panelCount field
+    if (!this.store.isMaster) {
+      if (moleChanges.hasOwnProperty('panelCount')) {
+        moleData.set('panelCount', moleChanges.panelCount, moleProps.panelCount);
+      }
     }
+
+    // Iterate over changed panel states
     if (moleChanges.hasOwnProperty('panels')) {
       const panels = moleData.get('panels');
       const changedPanels = moleChanges.panels;
       for (let panelKey of Object.keys(changedPanels)) {
         const newstate = changedPanels[panelKey];
         const oldstate = panels.getPanelStateByKey(panelKey);
-        // Only advance game when the state actually changes!
-        if (newstate !== oldstate && newstate === TrackedPanels.STATE_IGNORED) {
-          if (this._master) {
-            // Make sure the panel is removed
-            this._remainingPanels.delete(panelKey);
-            // Make sure state is correct
-            this._lights.setIntensity(this._panels[panelKey].stripId, this._panels[panelKey].panelId, this.gameConfig.COLORED_PANEL_INTENSITY);
 
+        // Slaves just merge
+        if (!this.store.isMaster) {
+          panels.setPanelStateByKey(panelKey, newstate, moleProps.panels[panelKey]);
+        }
+        else {
+          // Master will only accept state modification to STATE_IGNORED
+          if (newstate !== oldstate && newstate === TrackedPanels.STATE_IGNORED) {
+            panels.setPanelStateByKey(panelKey, newstate);
+
+            // oldstate was ON
+            // Normal situation (no race condition): oldstate === ON
             if (this._hasTimeout(panelKey)) { // Normal situation (no race condition): oldstate === ON
+              console.log('Merge normal (after new panel)');
+              if (oldstate !== TrackedPanels.STATE_ON) {
+                assert('state must be STATE_ON');
+              }
+              
+              this._remainingPanels.delete(panelKey);
               this._removeTimeout(panelKey);
               this._advanceGame();
             }
+            // oldstate was OFF
             else {
+              if (oldstate !== TrackedPanels.STATE_OFF) {
+                assert('state must be STATE_OFF');
+              }
+              
               // If we don't have a timeout any longer, we have a race condition.
               // We could be in a few states:
-              // * PANEL_SUCCESS_TIMER is active
-
-              // PANEL_MOVE_DELAY timer is active
+              // 1_ PANEL_SUCCESS_TIMER is active
+              // Master already hit the panel => Master wins.
+              // This is a NOP since master will pass on the correct colors automatically
+              
+              // 2) PANEL_MOVE_DELAY timer is active
+              // Master just deactivated the panel, waiting to activate the next one
+              // => Kill timer and advance the game
               if (oldstate === TrackedPanels.STATE_OFF && this._panels[panelKey].moveDelay) {
+                console.log('merged during MOVE_DELAY');
                 clearTimeout(this._panels[panelKey].moveDelay);
                 delete this._panels[panelKey].moveDelay;
+                this._remainingPanels.delete(panelKey);
                 this._advanceGame();
-                console.log('merged during MOVE_DELAY');
               }
-              // The next panel was already made active
+              
+              // 3) The next panel was already made active
+              // Accept the change. We also need to reset the intensity
+              // 
+              // Note: This can never be the last move, as the last panel would then be 
+              // reactivated, not OFF.
               else if (oldstate === TrackedPanels.STATE_OFF && !this._panels[panelKey].moveDelay) {
-                // Note This can never be the last move, as the last panel would then be 
-                // reactivated, not OFF.
                 console.log('merged after new panel');
-                // "Silent advance": Just update panelCount
+                this._remainingPanels.delete(panelKey);
                 this.data.set('panelCount', this.data.get("panelCount") + 1);
+                this._lights.setIntensity(this._panels[panelKey].stripId, this._panels[panelKey].panelId, this.gameConfig.COLORED_PANEL_INTENSITY);
+              }
+              else {
+                console.log('merge: Master wins - slave is late');
               }
             }
+            // Make sure changes are merged by all slaves
+            this.store.reassertChanges();
           }
-        }
-        // IGNORED always wins. FIXME: We need to be able to restart the game
-        if (oldstate !== TrackedPanels.STATE_IGNORED) {
-          panels.setPanelStateByKey(panelKey, newstate, timestamps.panels[panelKey]);
         }
       }
     }
@@ -286,6 +325,9 @@ export default class MoleGameLogic {
   _requestPanel(oldPanelKey = null) {
     if (oldPanelKey) delete this._panels[oldPanelKey].moveDelay;
     const {panelkey, lifetime} = this._nextActivePanel(this.data.get("panelCount"));
+    if (!panelkey) {
+      console.error('No panel key!');
+    }
     this.moleGameActionCreator.sendAvailPanel(this._panels[panelkey]);
     this._panels[panelkey].timeout = setTimeout(this._panelTimeout.bind(this, this._panels[panelkey]), lifetime);
   }
