@@ -26,12 +26,12 @@ export default class TrackedPanels extends TrackedData {
     }
   }
 
-  setPanelState(stripId, panelId, state, timestamp = null) {
-    this.set(this._hash(stripId, panelId), state, timestamp);
+  setPanelState(stripId, panelId, state, props) {
+    this.setPanelStateByKey(this._hash(stripId, panelId), state, props);
   }
 
-  setPanelStateByKey(key, state, timestamp = null) {
-    this.set(key, state, timestamp);
+  setPanelStateByKey(key, state, props) {
+    this.set(key, state, props);
   }
 
   getPanelState(stripId, panelId) {

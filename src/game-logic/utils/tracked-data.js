@@ -9,8 +9,8 @@ export default class TrackedData {
       ...validProperties
     };
 
-    // Per-field timestamps. Note: Only for POJO fields
-    this._timestamps = {};
+    // Per-field props. Note: Only for POJO fields
+    this._props = {};
 
     // {changedProperty: oldValue, ...}
     this._changes = {};
@@ -32,22 +32,31 @@ export default class TrackedData {
   /**
    * Stores the given value and tracks its old value as changed
    * 
-   * If the given timestamp is older or equal to the currently set timestamp,
-   * the new value will be ignored.
+   * If the given props contains a timestamp and the timestamp is older or equal
+   * to the currently set timestamp, the new value will be ignored.
    * 
    * @param {string} name - The name of the property to set
    * @param {*} value - The value to store
-   * @param {Number} timestamp - The timestamp to use (defaults to null, meaning Date.now())
+   * @param {Number} props - The props to use (if not set, will set a new timestamp)
    */
-  set(name, value, timestamp = null) {
+  set(name, value, props = {}) {
     this._assertValidProperty(name);
 
-    if (value === this._data[name] || timestamp && timestamp <= this._timestamps[name]) return;
+    // Default to now
+    props.timestamp = props.timestamp || Date.now();
+
+    // Don't apply equal or old values
+    if (value === this._data[name] ||
+        this._props[name] && props.timestamp <= this._props[name].timestamp) {
+      return;
+    }
 
     this._changes[name] = this._data[name];
     this._data[name] = value;
-    if (!timestamp) timestamp = Date.now();
-    this._timestamps[name] = timestamp;
+
+    // Merge props
+    this._props[name] = this._props[name] || {};
+    Object.assign(this._props[name], props);
   }
 
   /**
@@ -96,24 +105,24 @@ export default class TrackedData {
   /**
    * Retrieves an object containing the name and current values
    * of each property that has been changed
-   * @returns {changes:, timestamps:} - changes is an object where keys are the names of each changed property and the values are the current value of that property, timestamp has the same keys, but with the timestamp of the stored value
+   * @returns {changes:, props:} - changes is an object where keys are the names of each changed property and the values are the current value of that property, props has the same keys, but with the props of the stored value
    */
   getChangedCurrentValues() {
     const changes = {};
-    const timestamps = {};
+    const props = {};
 
     for (let propName of this._changedTrackedDataProperties()) {
       const datachanged = this.get(propName).getChangedCurrentValues();
       changes[propName] = datachanged.changes;
-      timestamps[propName] = datachanged.timestamps;
+      props[propName] = datachanged.props;
     }
 
     for (let propName of Object.keys(this._changes)) {
       changes[propName] = this.get(propName);
-      timestamps[propName] = this._timestamps[propName];
+      props[propName] = this._props[propName];
     }
 
-    return {changes, timestamps};
+    return {changes, props};
   }
 
   /**

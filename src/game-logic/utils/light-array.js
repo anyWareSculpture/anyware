@@ -39,12 +39,12 @@ export default class LightArray extends TrackedData {
    * Sets the max intensity for the given strip.
    * If stripId is null, sets the max intensity for all strips
    */
-  setMaxIntensity(intensity, stripId = null, timestamp) {
+  setMaxIntensity(intensity, stripId = null, props) {
     const stripsToModify = stripId === null ? this.stripIds : [stripId];
 
     for (let targetStripId of stripsToModify) {
       const strip = this.get(targetStripId);
-      strip.set("maxIntensity", intensity, timestamp);
+      strip.set("maxIntensity", intensity, props);
     }
   }
 
@@ -63,8 +63,8 @@ export default class LightArray extends TrackedData {
   /**
    *  If panelId is null, we'll set the color for all panels in the given strip.
    */
-  setColor(stripId, panelId, color, timestamp) {
-    this._applyToOnePanelOrAll(stripId, panelId, (panel) => panel.set("color", color, timestamp));
+  setColor(stripId, panelId, color, props) {
+    this._applyToOnePanelOrAll(stripId, panelId, (panel) => panel.set("color", color, props));
   }
 
   getColor(stripId, panelId) {
@@ -86,8 +86,8 @@ export default class LightArray extends TrackedData {
   /**
    *  If panelId is null, we'll set the color for all panels in the given strip.
    */
-  setIntensity(stripId, panelId, intensity, timestamp) {
-    this._applyToOnePanelOrAll(stripId, panelId, (panel) => panel.set("intensity", intensity, timestamp));
+  setIntensity(stripId, panelId, intensity, props) {
+    this._applyToOnePanelOrAll(stripId, panelId, (panel) => panel.set("intensity", intensity, props));
   }
 
   isActive(stripId, panelId) {
@@ -96,10 +96,10 @@ export default class LightArray extends TrackedData {
     return panel.get("active");
   }
 
-  setActive(stripId, panelId, active = true, timestamp) {
+  setActive(stripId, panelId, active = true, props) {
     const panel = this.getPanel(stripId, panelId);
 
-    panel.set("active", active, timestamp);
+    panel.set("active", active, props);
   }
 
   deactivateAll(stripId = null) {
