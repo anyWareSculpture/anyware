@@ -30,15 +30,16 @@ export default class HandshakeGameLogic {
     this.store.data.get('lights').deactivateAll();
   }
 
-  get _complete() {
+  isComplete() {
     this.data.get('state') === HandshakeGameLogic.STATE_ACTIVATING;
   }
 
   handleActionPayload(payload) {
-    if (this._complete) return;
+    if (this.isComplete()) return;
 
     const actionHandlers = {
-      [SculptureActionCreator.HANDSHAKE_ACTION]: this._actionHandshakeAction.bind(this)
+      [SculptureActionCreator.HANDSHAKE_ACTION]: this._actionHandshakeAction.bind(this),
+      [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
     };
 
     const actionHandler = actionHandlers[payload.actionType];
@@ -51,4 +52,21 @@ export default class HandshakeGameLogic {
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
     }
   }
+
+  /**
+   * FIXME: We need to resolve the race condition of two sculptures sending a handshake at the same time
+   * to avoid both sculptures operating as master.
+   */
+  _actionMergeState(payload) {
+    if (!payload.handshake) return; // Only handle handshake state
+
+    const handshakeData = this.data;
+    const handshakeChanges = payload.handshake;
+    const handshakeProps = payload.metadata.props.handshake;
+
+    if (handshakeChanges.hasOwnProperty('state')) {
+      handshakeData.set('state', handshakeChanges.state, handshakeProps.state);
+    }
+  }
+
 }
