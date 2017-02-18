@@ -61,6 +61,8 @@ export default class SculptureStore extends events.EventEmitter {
       simon: new TrackedData(SimonGameLogic.trackedProperties)
     });
 
+    this._reassertChanges = false;
+    this._master = false;
     this.currentGameLogic = null;
     this.dispatchToken = dispatcher.register(this._handleActionPayload.bind(this));
     this.sculptureActionCreator = new SculptureActionCreator(this.dispatcher);
@@ -99,6 +101,10 @@ export default class SculptureStore extends events.EventEmitter {
    */
   get isPlayingNoGame() {
     return !this.currentGame;
+  }
+
+  get isMaster() {
+    return this._master;
   }
 
   /**
@@ -204,10 +210,12 @@ export default class SculptureStore extends events.EventEmitter {
     // end any previous game
     if (this.currentGameLogic) {
       this.currentGameLogic.end();
+      this._master = false;
     }
     this._resetGamePanels();
 
     this.data.set('currentGame', game);
+    this._master = true;
     this.currentGameLogic = new GameLogic(this, this.config);
     this.currentGameLogic.start();
   }
@@ -226,13 +234,22 @@ export default class SculptureStore extends events.EventEmitter {
     }
   }
 
-  _publishChanges() {
-    const {changes, timestamps} = this.data.getChangedCurrentValues();
+  _publishChanges(metadata) {
+    const {changes, props} = this.data.getChangedCurrentValues();
     if (Object.keys(changes).length) {
-      this.emit(SculptureStore.EVENT_CHANGE, changes, {timestamps});
+      this.emit(SculptureStore.EVENT_CHANGE, changes, {...metadata, props});
     }
 
+    this._clearChanges();
+  }
+
+  _clearChanges() {
     this.data.clearChanges();
+    this._reassertChanges = false;
+  }
+
+  reassertChanges() {
+    this._reassertChanges = true;
   }
 
   _handleActionPayload(payload) {
@@ -245,11 +262,27 @@ export default class SculptureStore extends events.EventEmitter {
       return;
     }
 
+    // Merge Rule: Ignore self-responses as slave
+    if (payload.actionType === SculptureActionCreator.MERGE_STATE && 
+        (payload.metadata.from === this.me ||
+          !this.isMaster && payload.metadata.mergedFrom === this.me)) {
+      return;
+    }
+
     this._delegateAction(payload);
 
     if (this.currentGameLogic) this.currentGameLogic.handleActionPayload(payload);
 
-    this._publishChanges();
+    // If we're responding after a merge, set the 'mergedFrom' metadata field accordingly:
+    // o Natural merge: Use the original sender
+    // o Preferred or modified merge: Reset sender
+    let metadata;
+    if (payload.actionType === SculptureActionCreator.MERGE_STATE) {
+      metadata = {
+        mergedFrom: this._reassertChanges ? this.me : payload.metadata.from,
+      };
+    }
+    this._publishChanges(metadata);
   }
 
   _actionCanRunWhenLocked(actionType) {
@@ -295,24 +328,21 @@ export default class SculptureStore extends events.EventEmitter {
 
   _actionMergeState(payload) {
     const metadata = payload.metadata;
-    if (metadata.from === this._me) return;
 
     const mergeFunctions = {
       status: this._mergeStatus.bind(this),
       currentGame: this._mergeCurrentGame.bind(this),
       handshakes: this._mergeHandshakes.bind(this),
       lights: this._mergeLights.bind(this),
-      disks: this._mergeDisks.bind(this),
-      handshake: this._mergeHandshakeGame.bind(this),
-      mole: this._mergeMoleGame.bind(this),
-      disk: this._mergeDiskGame.bind(this),
-      simon: this._mergeSimonGame.bind(this),
+//      disks: this._mergeDisks.bind(this),
+//      disk: this._mergeDiskGame.bind(this),
+//      simon: this._mergeSimonGame.bind(this),
     };
 
     for (let propName of Object.keys(payload)) {
       const mergeFunction = mergeFunctions[propName];
       if (mergeFunction) {
-        mergeFunction(payload[propName], metadata.timestamps[propName]);
+        mergeFunction(payload[propName], metadata.props[propName] || {});
       }
     }
   }
@@ -367,7 +397,7 @@ export default class SculptureStore extends events.EventEmitter {
     this.data.set('status', newStatus);
   }
 
-  _mergeCurrentGame(currentGame, timestamps) {
+  _mergeCurrentGame(currentGame, props) {
     const gameLogicClasses = {
       [GAMES.HANDSHAKE]: HandshakeGameLogic,
       [GAMES.MOLE]: MoleGameLogic,
@@ -379,36 +409,40 @@ export default class SculptureStore extends events.EventEmitter {
       throw new Error(`Unrecognized game: ${currentGame}`);
     }
 
-    this.data.set('currentGame', currentGame, timestamps.currentGame);
-    // FIXME: Modifying local state on merge - tricky to get right
+    this.data.set('currentGame', currentGame, props.currentGame);
+
     if (!(this.currentGameLogic instanceof GameLogic)) {
+      this._master = false;
       this.currentGameLogic = new GameLogic(this, this.config);
     }
   }
 
-  _mergeHandshakes(handshakes, timestamps) {
+  /**
+   * Sculptures own their own handshakes[sculptureId] field, so we can
+   * merge directly.
+   */
+  _mergeHandshakes(handshakes, props) {
     for (let sculptureId of Object.keys(handshakes)) {
-      this.data.get('handshakes').set(sculptureId, handshakes[sculptureId], timestamps[sculptureId]);
+      this.data.get('handshakes').set(sculptureId, handshakes[sculptureId], props[sculptureId]);
     }
   }
 
-  _mergeLights(changedLights, timestamps) {
+  _mergeLights(changedLights, props) {
     const lights = this.data.get('lights');
 
     for (let stripId of Object.keys(changedLights)) {
       const changedPanels = changedLights[stripId].panels;
       for (let panelId of Object.keys(changedPanels)) {
         const changedPanel = changedPanels[panelId];
-        const panelTimestamp = timestamps[stripId].panels[panelId];
+        const panelProps = props[stripId].panels[panelId];
         if (changedPanel.hasOwnProperty("intensity")) {
-          lights.setIntensity(stripId, panelId, changedPanel.intensity, panelTimestamp.intensity);
+          lights.setIntensity(stripId, panelId, changedPanel.intensity, panelProps.intensity);
         }
         if (changedPanel.hasOwnProperty("color")) {
-          lights.setColor(stripId, panelId, changedPanel.color, panelTimestamp.color);
+          lights.setColor(stripId, panelId, changedPanel.color, panelProps.color);
         }
         if (changedPanel.hasOwnProperty("active")) {
-          // FIXME: Set color based on metadata? Collision with the color field?
-          lights.setActive(stripId, panelId, changedPanel.active, panelTimestamp.active);
+          lights.setActive(stripId, panelId, changedPanel.active, panelProps.active);
         }
       }
     }
@@ -429,19 +463,6 @@ export default class SculptureStore extends events.EventEmitter {
       if (disk.hasOwnProperty('targetSpeed')) {
         currDisk.setTargetSpeed(disk.targetSpeed);
       }
-    }
-  }
-
-  _mergeHandshakeGame(handshake, timestamps) {
-    const handshakeData = this.data.get('handshake');
-    if (handshake.hasOwnProperty('state')) {
-      handshakeData.set('state', handshake.state, timestamps.state);
-    }
-  }
-
-  _mergeMoleGame(mole, timestamps) {
-    if (this.isPlayingMoleGame) {
-      this.currentGameLogic.mergeState(mole, timestamps);
     }
   }
 
