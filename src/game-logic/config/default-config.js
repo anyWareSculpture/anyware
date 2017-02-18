@@ -168,7 +168,7 @@ export default class DefaultConfig {
       PATTERN_LEVELS: [
         // level 0 sequence
         {
-          stripId: this.LIGHTS.STRIP_A,
+          stripId: this.LIGHTS.STRIP_C,
           // Each array of panel IDs is lit up one at a time
           // Each array within this array is called a "frame" in the "sequence"
           panelSequence: [['3'], ['5'], ['7']],
@@ -176,12 +176,12 @@ export default class DefaultConfig {
         },
         // level 1 sequence
         {
-          stripId: '1',
+          stripId: this.LIGHTS.STRIP_B,
           panelSequence: [['1'], ['8'], ['5']]
         },
         // level 2 sequence
         {
-          stripId: '2',
+          stripId: this.LIGHTS.STRIP_A,
           panelSequence: [['3'], ['6'], ['2'], ['9']]
         }
       ],
