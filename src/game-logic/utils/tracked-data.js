@@ -47,7 +47,7 @@ export default class TrackedData {
 
     // Don't apply equal or old values
     if (value === this._data[name] ||
-        this._props[name] && props.timestamp <= this._props[name].timestamp) {
+        this._props[name] && props.timestamp < this._props[name].timestamp) {
       return;
     }
 
