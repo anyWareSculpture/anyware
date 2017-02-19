@@ -32,9 +32,9 @@ export default class SculptureStore extends events.EventEmitter {
     this.config = config;
 
     this._me = this.config.me;
+    this.panelAnimation = null;
     this.data = new TrackedData({
       status: SculptureStore.STATUS_READY,
-      panelAnimation: null,
       currentGame: null,
       handshakes: new TrackedData({ // off, active, present
         sculpture1: SculptureStore.HANDSHAKE_OFF,
@@ -125,7 +125,7 @@ export default class SculptureStore extends events.EventEmitter {
    * @returns {Boolean} Returns whether a panel animation is running
    */
   get isPanelAnimationRunning() {
-    const panelAnimation = this.data.get('panelAnimation');
+    const panelAnimation = this.panelAnimation;
     return panelAnimation ? panelAnimation.isRunning : false;
   }
 
@@ -184,7 +184,7 @@ export default class SculptureStore extends events.EventEmitter {
    * Plays the given animation
    */
   playAnimation(animation) {
-    this.data.set('panelAnimation', animation);
+    this.panelAnimation = animation;
     animation.play(this.dispatcher);
   }
 
