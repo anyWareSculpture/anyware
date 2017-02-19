@@ -123,7 +123,7 @@ export default class DefaultConfig {
 
     this.DISK_GAME = {
       MAX_SPEED: 360 / 5, // degrees/sec
-      ABSOLUTE_TOLERANCE: 12, // sum of degrees tolerance for the absolute disk positions
+      ABSOLUTE_TOLERANCE: 8, // sum of degrees tolerance for the absolute disk positions
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_COLOR: COLORS.WHITE,
       CONTROL_PANEL_INTENSITY: 20,
