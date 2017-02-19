@@ -73,7 +73,7 @@ export class Sound {
     this.source.loop = params.loop;
     if (params.rate !== 1) this.source.playbackRate.value = params.rate;
     this.source.loopEnd = params.loopFreq === 0 ? 0 : 1/params.loopFreq;
-    if (params.gain !== 1) this.gain.gain.value = params.gain;
+    this.gain.gain.value = params.gain;
     this.source.connect(this.head);
     if (isNode) this.gain.connect(context.destination);
     this.source.start(context.currentTime);
