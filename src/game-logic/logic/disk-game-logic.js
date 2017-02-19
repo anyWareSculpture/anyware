@@ -179,7 +179,7 @@ export default class DiskGameLogic {
 
   _actionFinishStatusAnimation() {
     if (this._complete) {
-      setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 5000);
+      setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 4000);
     }
   }
 
