@@ -43,6 +43,8 @@ export default class DiskModel extends events.EventEmitter {
 
     // ds = v0 * t + 1/2 * a * t^2
     let newpos = this.pos + this.speed * dt + 0.5 * this.acceleration * dt*dt;
+    if (newpos < 0) newpos += 360;
+    newpos = newpos % 360;
     if (this.targetPos !== undefined && between(this.targetPos, this.pos, newpos)) {
       newpos = this.targetPos;
       delete this.targetPos;

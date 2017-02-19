@@ -31,6 +31,13 @@ export default class DiskGameLogic {
     this._level = DEFAULT_LEVEL;
     this._complete = false;
 
+    // Set initial position
+    const disks = this.store.data.get('disks');
+    for (let diskId of Object.keys(this._levelConfig)) {
+      const disk = disks.get(diskId);
+      disk.rotateTo(this._levelConfig[diskId]);
+    }
+
     // Activate shadow lights
     for (let stripId of Object.keys(this.gameConfig.SHADOW_LIGHTS)) {
       const panels = this.gameConfig.SHADOW_LIGHTS[stripId];
@@ -200,58 +207,27 @@ export default class DiskGameLogic {
    */
   _checkWinConditions() {
     let totalError = 0;
-    let correctdisks = {};
     const disks = this.store.data.get('disks');
-    for (let markerId of Object.keys(this._levelConfig)) {
-      correctdisks[markerId] = 0;
-      const markerConfig = this._levelConfig[markerId];
-      let markerError = 0;
-      for (let diskId of Object.keys(markerConfig)) {
-        const zone = markerConfig[diskId];
-        const diskPos = disks.get(diskId).getPosition();
-        const diskError = this._distanceFromZone(diskPos, zone);
-        if (diskError === 0) correctdisks[markerId]++;
-//        console.debug(`${markerId} ${diskId}: ${diskError}`);
-        markerError += diskError;
-      }
-//      console.debug(`${markerId}: ${markerError}`);
-      totalError += markerError;
+    for (let diskId of disks) {
+      const err = this.getDiskError(diskId);
+//      console.debug(`${diskId} error: ${err}`);
+      totalError += err;
     }
 //    console.debug(`Total error: ${totalError}`);
-
-    if (correctdisks.marker0 === 3 &&
-        (correctdisks.marker1 === 1 || correctdisks.marker1 === 2) &&
-        correctdisks.marker2 === 3) {
+    if (totalError <= this.gameConfig.ABSOLUTE_TOLERANCE) {
       this._winGame();
     }
   }
 
   // FIXME: move these public methods up
-  getMarkerScore(markerId) {
+  getDiskError(diskId) {
     // We cannot calculate the score of a complete game as we don't have a valid level
     if (this._complete) return 0;
 
     const disks = this.store.data.get('disks');
-    const markerConfig = this._levelConfig[markerId];
-    let markerError = 0;
-    for (let diskId of Object.keys(markerConfig)) {
-      const zone = markerConfig[diskId];
-      const diskPos = disks.get(diskId).getPosition();
-      markerError += this._distanceFromZone(diskPos, zone);
-    }
-    return markerError;
-  }
-
-  // FIXME: move these public methods up
-  getDiskScore(diskId) {
-    // We cannot calculate the score of a complete game as we don't have a valid level
-    if (this._complete) return 0;
-
-    const disks = this.store.data.get('disks');
-    let delta = this._targetPositions[diskId] - disks.get(diskId).getPosition();
-    while (delta <= -180) delta += 360;
-    while (delta > 180) delta -= 360;
-    return Math.abs(delta);
+    let pos = disks.get(diskId).getPosition();
+    if (pos > 180) pos -= 360;
+    return Math.abs(pos);
   }
 
   /**

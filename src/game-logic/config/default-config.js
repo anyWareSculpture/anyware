@@ -123,8 +123,7 @@ export default class DefaultConfig {
 
     this.DISK_GAME = {
       MAX_SPEED: 360 / 5, // degrees/sec
-      RELATIVE_TOLERANCE: 5, // degrees tolerance for disks relative to each other
-      ABSOLUTE_TOLERANCE: 8, // degrees tolerance for the absolute disk positions
+      ABSOLUTE_TOLERANCE: 12, // sum of degrees tolerance for the absolute disk positions
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_COLOR: COLORS.WHITE,
       CONTROL_PANEL_INTENSITY: 20,
@@ -137,23 +136,8 @@ export default class DefaultConfig {
       SHADOW_LIGHT_INTENSITY: 100,
       LEVELS: [
         // level 0
-        {
-          marker0: {
-            disk0: [310, 156],
-            disk1: [133, 48],
-            disk2: [168, 0],
-          },
-          marker1: {
-            disk0: [347, 85],
-            disk1: [211, 265],
-            disk2: [165, 291],
-          },
-          marker2: {
-            disk0: [352, 173],
-            disk1: [168, 270],
-            disk2: [182, 235],
-          },
-        },
+        // disks: { diskId: initial position }
+        { disk0: -90, disk1: 90, disk2: 120 },
       ],
       CONTROL_MAPPINGS: {
         STRIP_TO_DISK: {

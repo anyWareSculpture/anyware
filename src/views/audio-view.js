@@ -231,16 +231,11 @@ export default class AudioView {
       }
 
       const diskgame = this.store.currentGameLogic;
-      const markerToDisk = {
-        marker0: 'disk0',
-        marker1: 'disk1',
-        marker2: 'disk2',
-      };
-      for (let markerId of ['marker0', 'marker1', 'marker2']) {
-        const score = diskgame.getMarkerScore(markerId);
-        const pulseFreq = this._calcFreq(score);
-        if (this.sounds.disk[markerToDisk[markerId]].source) {
-          this.sounds.disk[markerToDisk[markerId]].source.loopEnd = (pulseFreq === 0 ? 0 : 1/pulseFreq);
+      for (let diskId of ['disk0', 'disk1', 'disk2']) {
+        const err = diskgame.getDiskError(diskId);
+        const pulseFreq = this._calcFreq(err);
+        if (this.sounds.disk[diskId].source) {
+          this.sounds.disk[diskId].source.loopEnd = (pulseFreq === 0 ? 0 : 1/pulseFreq);
         }
       }
 //      for (let disk of ['disk0', 'disk1', 'disk2']) {
