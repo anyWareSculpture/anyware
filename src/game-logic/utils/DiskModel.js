@@ -1,6 +1,7 @@
 import events from 'events';
 
 const MAX_ACCEL = 100;      // degrees/sec^2
+const MAX_DECEL = 300;      // degrees/sec^2
 
 const between = (num, first, last) => (first < last ? num >= first && num <= last : num >= last && num <= first);
 
@@ -91,7 +92,7 @@ export default class DiskModel extends events.EventEmitter {
    */
   setTargetSpeed(targetSpeed) {
     this.targetSpeed = targetSpeed;
-    this.acceleration = targetSpeed === this.speed ? 0 : targetSpeed > this.speed ? MAX_ACCEL : -MAX_ACCEL;
+    this.acceleration = targetSpeed === this.speed ? 0 : targetSpeed > this.speed ? MAX_ACCEL : -MAX_DECEL;
   }
 
   // Set target position. This will override direction and move towards the given position
