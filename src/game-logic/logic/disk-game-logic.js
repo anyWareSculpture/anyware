@@ -16,6 +16,8 @@ export default class DiskGameLogic {
     this.config = config;
     this.gameConfig = config.DISK_GAME;
 
+    this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
+
     this._complete = false;
   }
 
@@ -176,7 +178,9 @@ export default class DiskGameLogic {
   }
 
   _actionFinishStatusAnimation() {
-    if (this._complete) this.store.moveToNextGame();
+    if (this._complete) {
+      setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 5000);
+    }
   }
 
   _setDiskColor(stripId, intensity, color) {
@@ -208,13 +212,16 @@ export default class DiskGameLogic {
   _checkWinConditions() {
     let totalError = 0;
     const disks = this.store.data.get('disks');
+    let isMoving = false;
     for (let diskId of disks) {
       const err = this.getDiskError(diskId);
 //      console.debug(`${diskId} error: ${err}`);
       totalError += err;
+
+      if (Math.abs(this.getDiskSpeed(diskId)) > 0) isMoving = true;
     }
 //    console.debug(`Total error: ${totalError}`);
-    if (totalError <= this.gameConfig.ABSOLUTE_TOLERANCE) {
+    if (!isMoving && totalError <= this.gameConfig.ABSOLUTE_TOLERANCE) {
       this._winGame();
     }
   }
@@ -228,6 +235,11 @@ export default class DiskGameLogic {
     let pos = disks.get(diskId).getPosition();
     if (pos > 180) pos -= 360;
     return Math.abs(pos);
+  }
+
+  getDiskSpeed(diskId) {
+    const disks = this.store.data.get('disks');
+    return disks.get(diskId).getTargetSpeed();
   }
 
   /**
