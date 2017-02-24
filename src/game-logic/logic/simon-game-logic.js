@@ -66,7 +66,8 @@ export default class SimonGameLogic {
     const actionHandlers = {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
-      [SimonGameActionCreator.REPLAY_SIMON_PATTERN]: this._actionReplaySimonPattern.bind(this)
+      [SimonGameActionCreator.REPLAY_SIMON_PATTERN]: this._actionReplaySimonPattern.bind(this),
+      [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
     };
 
     const actionHandler = actionHandlers[payload.actionType];
@@ -134,6 +135,23 @@ export default class SimonGameLogic {
     }
     else {
       this._targetSequence = new Set(panelSequence[this._targetSequenceIndex]);
+    }
+  }
+
+  /*!
+   * Remote action
+   */
+  _actionMergeState(payload) {
+    if (!payload.simon) return; // Only handle simon state
+
+    const simonChanges = payload.simon;
+    const simonProps = payload.metadata.props.simon;
+
+    // Master owns the level field
+    if (!this.store.isMaster) {
+      if (simonChanges.hasOwnProperty('level')) {
+        this.data.set('level', simonChanges.level, simonProps.level);
+      }
     }
   }
 
