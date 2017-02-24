@@ -46,8 +46,7 @@ export default class TrackedData {
     props.timestamp = props.timestamp || Date.now();
 
     // Don't apply equal or old values
-    if (value === this._data[name] ||
-        this._props[name] && props.timestamp < this._props[name].timestamp) {
+    if (value === this._data[name] || this.hasNewerValue(name, value, props)) {
       return;
     }
 
@@ -57,6 +56,13 @@ export default class TrackedData {
     // Merge props
     this._props[name] = this._props[name] || {};
     Object.assign(this._props[name], props);
+  }
+
+  /**
+   * Returns true if we hold a more recent version of the incoming value
+   */
+  hasNewerValue(name, value, props = {}) {
+    return this._props[name] && props.timestamp < this._props[name].timestamp;
   }
 
   /**
