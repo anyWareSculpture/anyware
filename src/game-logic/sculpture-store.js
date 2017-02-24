@@ -263,10 +263,9 @@ export default class SculptureStore extends events.EventEmitter {
       return;
     }
 
-    // Merge Rule: Ignore self-responses as slave
+    // Merge Rule: Ignore self-responses
     if (payload.actionType === SculptureActionCreator.MERGE_STATE && 
-        (payload.metadata.from === this.me ||
-          !this.isMaster && payload.metadata.mergedFrom === this.me)) {
+        (payload.metadata.from === this.me || payload.metadata.mergedFrom === this.me)) {
       return;
     }
 
