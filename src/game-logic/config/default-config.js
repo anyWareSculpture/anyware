@@ -155,18 +155,18 @@ export default class DefaultConfig {
           stripId: this.LIGHTS.STRIP_C,
           // Each array of panel IDs is lit up one at a time
           // Each array within this array is called a "frame" in the "sequence"
-          panelSequence: [['4'], ['5'], ['6']],
+          panelSequence: ['4', '5', '6'],
           frameDelay: 750 // Overriding default frame delay to make first level slower
         },
         // level 1 sequence
         {
           stripId: this.LIGHTS.STRIP_B,
-          panelSequence: [['1'], ['8'], ['6']]
+          panelSequence: ['1', '8', '6']
         },
         // level 2 sequence
         {
           stripId: this.LIGHTS.STRIP_A,
-          panelSequence: [['3'], ['6'], ['2'], ['9']]
+          panelSequence: ['3', '6', '2', '9']
         }
       ],
       // The intensity of the panels when they are pressed or when the sequence is playing

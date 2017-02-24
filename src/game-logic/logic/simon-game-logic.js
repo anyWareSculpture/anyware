@@ -4,12 +4,11 @@ import SimonGameActionCreator from '../actions/simon-game-action-creator';
 import PanelAnimation from '../animation/panel-animation';
 import NormalizeStripFrame from '../animation/normalize-strip-frame';
 
-const DEFAULT_LEVEL = 0;
-
 export default class SimonGameLogic {
   // These are automatically added to the sculpture store
   static trackedProperties = {
-    level: DEFAULT_LEVEL
+    level: 0,
+    targetPanel: null,
   };
 
   constructor(store, config) {
@@ -21,7 +20,6 @@ export default class SimonGameLogic {
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
 
     this._targetSequenceIndex = 0;
-    this._targetSequence = null;
     this._receivedInput = false;
 
     this._inputTimeout = null;
@@ -36,6 +34,9 @@ export default class SimonGameLogic {
     return this.store.data.get('lights');
   }
 
+  /**
+   * Start game - only run by master
+   */
   start() {
     // Activate RGB Strips
     this._lights.setIntensity(this.config.LIGHTS.RGB_STRIPS, '0', 100);
@@ -43,10 +44,13 @@ export default class SimonGameLogic {
     this._lights.setIntensity(this.config.LIGHTS.RGB_STRIPS, '1', 100);
     this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, '1', 'rgb1');
 
-    this.data.set('level', DEFAULT_LEVEL);
+    this.data.set('level', 0);
     this._playCurrentSequence();
   }
 
+  /**
+   * End game - only run by master
+   */
   end() {
     let lights = this.store.data.get('lights');
     lights.deactivateAll();
@@ -67,6 +71,7 @@ export default class SimonGameLogic {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
       [SimonGameActionCreator.REPLAY_SIMON_PATTERN]: this._actionReplaySimonPattern.bind(this),
+      [SimonGameActionCreator.LEVEL_WON]: this._actionLevelWon.bind(this),
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
     };
 
@@ -80,7 +85,13 @@ export default class SimonGameLogic {
     if (!this._complete) this._playCurrentSequence();
   }
 
+  /**
+   * Upon finishing a status animation, the master will take over again
+   * FIXME: Handle the final status animation separately?
+   */
   _actionFinishStatusAnimation() {
+    if (!this.store.isMaster) return;
+
     if (this._complete) {
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
     }
@@ -90,51 +101,50 @@ export default class SimonGameLogic {
   }
 
   _actionPanelPressed(payload) {
-    if (this._complete || !this.store.isReady) {
-      return;
-    }
+    if (this._complete || !this.store.isReady) return;
 
     const {stripId, panelId, pressed} = payload;
-    const {stripId: targetStripId, panelSequence} = this._currentLevelData;
+    const targetStripId = this._currentLevelData.stripId;
 
+    // Presses on current strip stays on, other strips are free play
     if (pressed) {
       this._lights.setColor(stripId, panelId, this.store.locationColor);
       this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.ACTIVE_INTENSITY);
     }
-    else {
+    else if (targetStripId !== stripId) {
       this._lights.setToDefaultColor(stripId, panelId);
       this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.INACTIVE_INTENSITY);
     }
 
+    if (this.store.isMaster && pressed) this._handlePanelPress(stripId, panelId);
+  }
 
-    const panelUp = !pressed;
-    if (!panelUp || targetStripId !== stripId) {
-      return;
-    }
+  /**
+   * Handle panel press (locally or through merge) - master only
+   */
+  _handlePanelPress(stripId, panelId) {
+    const {stripId: targetStripId, panelSequence} = this._currentLevelData;
+
+    // Only handle current game strips from here on
+    if (targetStripId !== stripId) return;
 
     if (!this._receivedInput) {
       this._receivedInput = true;
-      this._targetSequence = new Set(panelSequence[this._targetSequenceIndex]);
-
       this._setInputTimeout();
     }
 
-    if (!this._targetSequence.has(panelId)) {
+    if (this._targetPanel !== panelId) {
       this.store.setFailureStatus();
       return;
     }
 
-    this._targetSequence.delete(panelId);
-
-    if (!this._targetSequence.length) {
-      this._targetSequenceIndex += 1;
-    }
+    this._targetSequenceIndex += 1;
 
     if (this._targetSequenceIndex >= panelSequence.length) {
-      this._winLevel();
+      setTimeout(() => this.simonGameActionCreator.sendLevelWon(), 1000);
     }
     else {
-      this._targetSequence = new Set(panelSequence[this._targetSequenceIndex]);
+      this._targetPanel = panelSequence[this._targetSequenceIndex];
     }
   }
 
@@ -142,18 +152,39 @@ export default class SimonGameLogic {
    * Remote action
    */
   _actionMergeState(payload) {
-    if (!payload.simon) return; // Only handle simon state
+    if (payload.simon) this._mergeSimon(payload.simon, payload.metadata.props.simon);
+    if (payload.lights) this._mergeLights(payload.lights, payload.metadata.props.lights);
+  }
 
-    const simonChanges = payload.simon;
-    const simonProps = payload.metadata.props.simon;
-
-    // Master owns the level field
+  _mergeSimon(simonChanges, props) {
+    // Master owns all local fields
     if (!this.store.isMaster) {
       if (simonChanges.hasOwnProperty('level')) {
-        this.data.set('level', simonChanges.level, simonProps.level);
+        this.data.set('level', simonChanges.level, props.level);
+      }
+      if (simonChanges.hasOwnProperty('targetPanel')) {
+        this.data.set('targetPanel', simonChanges.targetPanel, props.targetPanel);
       }
     }
   }
+
+  _mergeLights(lightsChanges, props) {
+    // Master is responsible for merging panel actions
+    if (this.store.isMaster) {
+      for (let stripId of Object.keys(lightsChanges)) {
+        const changedPanels = lightsChanges[stripId].panels;
+        for (let panelId of Object.keys(changedPanels)) {
+          const changedPanel = changedPanels[panelId];
+          const panelProps = props[stripId].panels[panelId];
+          if (changedPanel.hasOwnProperty("active") && changedPanel.active) {
+            // Simon-specific merge on panel activity changes
+            this._handlePanelPress(stripId, panelId);
+          }
+        }
+      }
+    }
+  }
+
 
   _setInputTimeout() {
     clearTimeout(this._inputTimeout);
@@ -168,11 +199,11 @@ export default class SimonGameLogic {
 
   _discardInput() {
     this._targetSequenceIndex = 0;
-    this._targetSequence = null;
+    this._targetPanel = null;
     this._receivedInput = false;
   }
 
-  _winLevel() {
+  _actionLevelWon() {
     this.store.data.get('lights').deactivateAll();
     this._lights.setIntensity(this._currentLevelData.stripId, null, 0);
 
@@ -184,30 +215,31 @@ export default class SimonGameLogic {
     }
 
     this._level = level;
+    // Make sure changes are merged by all slaves
+    this.store.reassertChanges();
   }
 
   _playCurrentSequence() {
     const {stripId, panelSequence, frameDelay} = this._currentLevelData;
 
     this._playSequence(stripId, panelSequence, frameDelay);
+    this._targetPanel = panelSequence[this._targetSequenceIndex];
   }
 
   _playSequence(stripId, panelSequence, frameDelay) {
     this._discardInput();
 
-    const frames = panelSequence.map((panelIds) => this._createSequenceFrame(stripId, panelIds, frameDelay));
+    const frames = panelSequence.map((panelId) => this._createSequenceFrame(stripId, panelId, frameDelay));
     frames.push(this._createLastSequenceFrame(stripId, frameDelay));
     const animation = new PanelAnimation(frames, this._finishPlaySequence.bind(this));
 
     this.store.playAnimation(animation);
   }
 
-  _createSequenceFrame(stripId, panelIds, frameDelay) {
+  _createSequenceFrame(stripId, panelId, frameDelay) {
     return this._createFrame(stripId, frameDelay, () => {
-      for (let panelId of panelIds) {
-        this._lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
-        this._lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
-      }
+      this._lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
+      this._lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
     });
   }
 
@@ -249,6 +281,14 @@ export default class SimonGameLogic {
 
   set _level(value) {
     return this.data.set('level', value);
+  }
+
+  get _targetPanel() {
+    return this.data.get('targetPanel');
+  }
+
+  set _targetPanel(value) {
+    return this.data.set('targetPanel', value);
   }
 
   get isReadyAndNotAnimating() {
