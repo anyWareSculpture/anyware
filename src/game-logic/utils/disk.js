@@ -10,16 +10,16 @@ export default class Disk extends TrackedData {
     });
   }
 
-  setTargetSpeed(speed) {
-    return this.set('targetSpeed', speed);
+  setTargetSpeed(speed, props) {
+    return this.set('targetSpeed', speed, props);
   }
 
   getTargetSpeed() {
     return this.get('targetSpeed');
   }
 
-  rotateTo(position) {
-    this.set('position', position);
+  rotateTo(position, props) {
+    this.set('position', position, props);
   }
 
   getPosition() {
@@ -30,8 +30,8 @@ export default class Disk extends TrackedData {
     this.setTargetSpeed(0);
   }
 
-  setUser(user) {
-    this.set('user', user);
+  setUser(user, props) {
+    this.set('user', user, props);
   }
 
   getUser() {
