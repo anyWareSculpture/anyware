@@ -37,5 +37,4 @@ Sculptures have some local state as well.
    * `_replayTimeout`
    * `_receivedInput`
    * `_targetSequenceIndex`
-   * `_targetSequence`
    * Transition timeout?
