@@ -2,13 +2,19 @@ import PanelsActionCreator from '../actions/panels-action-creator';
 import DisksActionCreator from '../actions/disks-action-creator';
 import SculptureActionCreator from '../actions/sculpture-action-creator';
 import Disk from '../utils/disk';
+import TrackedData from '../utils/tracked-data';
 
 const DEFAULT_LEVEL = 0;
 
 export default class DiskGameLogic {
   // These are automatically added to the sculpture store
   static trackedProperties = {
-    level: DEFAULT_LEVEL
+    level: DEFAULT_LEVEL,
+    disks: new TrackedData({
+      disk0: new Disk(),
+      disk1: new Disk(),
+      disk2: new Disk()
+    }),
   };
 
   constructor(store, config) {
@@ -34,7 +40,7 @@ export default class DiskGameLogic {
     this._complete = false;
 
     // Set initial position
-    const disks = this.store.data.get('disks');
+    const disks = this.data.get('disks');
     for (let diskId of Object.keys(this._levelConfig)) {
       const disk = disks.get(diskId);
       disk.rotateTo(this._levelConfig[diskId]);
@@ -71,7 +77,8 @@ export default class DiskGameLogic {
     const actionHandlers = {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this),
-      [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this)
+      [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
+      [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
     };
 
     const actionHandler = actionHandlers[payload.actionType];
@@ -94,7 +101,7 @@ export default class DiskGameLogic {
     // The event doesn't concern us - use default behavior
     if (diskId === undefined) return; 
 
-    const disk = this.store.data.get('disks').get(diskId);
+    const disk = this.data.get('disks').get(diskId);
 
     // For each strip change:
     //   Find highest positive activated panel
@@ -155,7 +162,7 @@ export default class DiskGameLogic {
   _actionDiskUpdate(payload) {
     const {diskId, position} = payload;
 
-    const disks = this.store.data.get('disks');
+    const disks = this.data.get('disks');
     const disk = disks.get(diskId);
 
     if (typeof position !== 'undefined') {
@@ -174,6 +181,44 @@ export default class DiskGameLogic {
       // - Lock this disk in position; disable any future interaction
       // - From now on, allow Disk 1 to trigger a Single Disk Success Event
       this._checkWinConditions();
+    }
+  }
+
+  /*!
+   * Merge remote state
+   */
+  _actionMergeState(payload) {
+    if (payload.hasOwnProperty('disk')) this._mergeDisk(payload.disk, payload.metadata.props.disk);
+  }
+
+  _mergeDisk(diskChanges, props = {}) {
+    // Master owns the level field
+    if (!this.store.isMaster) {
+      if (diskChanges.hasOwnProperty('level')) {
+        this.data.set('level', diskChanges.level, props.level);
+      }
+    }
+
+    if (!diskChanges.disks) return;
+
+    const disksChanges = diskChanges.disks;
+    const disksProps = props.disks;
+
+    const currDisks = this.data.get('disks');
+
+    for (let diskId of Object.keys(disksChanges)) {
+      const changedDisk = disksChanges[diskId];
+      const diskProps = disksProps[diskId];
+      const currDisk = currDisks.get(diskId);
+      if (changedDisk.hasOwnProperty('position')) {
+        currDisk.rotateTo(changedDisk.position, diskProps.position);
+      }
+      if (changedDisk.hasOwnProperty('user')) {
+        currDisk.setUser(changedDisk.user, diskProps.user);
+      }
+      if (changedDisk.hasOwnProperty('targetSpeed')) {
+        currDisk.setTargetSpeed(changedDisk.targetSpeed, diskProps.targetSpeed);
+      }
     }
   }
 
@@ -211,7 +256,7 @@ export default class DiskGameLogic {
    */
   _checkWinConditions() {
     let totalError = 0;
-    const disks = this.store.data.get('disks');
+    const disks = this.data.get('disks');
     let isMoving = false;
     for (let diskId of disks) {
       const err = this.getDiskError(diskId);
@@ -231,14 +276,14 @@ export default class DiskGameLogic {
     // We cannot calculate the score of a complete game as we don't have a valid level
     if (this._complete) return 0;
 
-    const disks = this.store.data.get('disks');
+    const disks = this.data.get('disks');
     let pos = disks.get(diskId).getPosition();
     if (pos > 180) pos -= 360;
     return Math.abs(pos);
   }
 
   getDiskSpeed(diskId) {
-    const disks = this.store.data.get('disks');
+    const disks = this.data.get('disks');
     return disks.get(diskId).getTargetSpeed();
   }
 
@@ -272,7 +317,7 @@ export default class DiskGameLogic {
   }
 
   _stopAllDisks() {
-    const disks = this.store.data.get('disks');
+    const disks = this.data.get('disks');
 
     for (let diskId of disks) {
       disks.get(diskId).stop();

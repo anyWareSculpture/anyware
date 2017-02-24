@@ -219,13 +219,14 @@ export default class AudioView {
 //        changes.disk.level < this.config.DISK_GAME.LEVELS.length) {
 //    }
 
-    if (changes.disks) {
-      const disks = this.store.data.get('disks');
+    if (changes.disk && changes.disk.disks) {
+      const disksChanges = changes.disk.disks;
+      const disks = this.store.data.get('disk').get('disks');
 
       for (let disk of ['disk0', 'disk1', 'disk2']) {
-        if (changes.disks.hasOwnProperty(disk) &&
-            changes.disks[disk].hasOwnProperty('targetSpeed')) {
-          if (changes.disks[disk].targetSpeed === 0) this.sounds.disk[disk].fadeOut();
+        if (disksChanges.hasOwnProperty(disk) &&
+            disksChanges[disk].hasOwnProperty('targetSpeed')) {
+          if (disksChanges[disk].targetSpeed === 0) this.sounds.disk[disk].fadeOut();
           else this.sounds.disk[disk].fadeIn();
         }
       }

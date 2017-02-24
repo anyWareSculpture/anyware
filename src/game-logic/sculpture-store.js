@@ -7,10 +7,8 @@ import DiskGameLogic from './logic/disk-game-logic';
 import SimonGameLogic from './logic/simon-game-logic';
 import SculptureActionCreator from './actions/sculpture-action-creator';
 import PanelsActionCreator from './actions/panels-action-creator';
-import DisksActionCreator from './actions/disks-action-creator';
 import TrackedData from './utils/tracked-data';
 import LightArray from './utils/light-array';
-import Disk from './utils/disk';
 
 export default class SculptureStore extends events.EventEmitter {
   static EVENT_CHANGE = "change";
@@ -49,11 +47,6 @@ export default class SculptureStore extends events.EventEmitter {
         [this.config.LIGHTS.RGB_STRIPS]: 2,
         [this.config.LIGHTS.HANDSHAKE_STRIP]: 4,
         [this.config.LIGHTS.ART_LIGHTS_STRIP]: 3
-      }),
-      disks: new TrackedData({
-        disk0: new Disk(),
-        disk1: new Disk(),
-        disk2: new Disk()
       }),
       handshake: new TrackedData(HandshakeGameLogic.trackedProperties),
       mole: new TrackedData(MoleGameLogic.trackedProperties),
@@ -299,7 +292,6 @@ export default class SculptureStore extends events.EventEmitter {
       [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
       [SculptureActionCreator.HANDSHAKE_ACTION]: this._actionHandshakeAction.bind(this),
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
-      [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this)
     };
 
     const actionHandler = actionHandlers[payload.actionType];
@@ -333,8 +325,6 @@ export default class SculptureStore extends events.EventEmitter {
       currentGame: this._mergeCurrentGame.bind(this),
       handshakes: this._mergeHandshakes.bind(this),
       lights: this._mergeLights.bind(this),
-//      disks: this._mergeDisks.bind(this),
-//      disk: this._mergeDiskGame.bind(this),
 //      simon: this._mergeSimonGame.bind(this),
     };
 
@@ -380,16 +370,6 @@ export default class SculptureStore extends events.EventEmitter {
 //    else {
 //      lightArray.setToDefaultColor(stripId, panelId);
 //    }
-  }
-
-  _actionDiskUpdate(payload) {
-    let {diskId, position} = payload;
-
-    if (typeof diskId === 'undefined') return;
-
-    if (typeof position !== 'undefined') {
-      this.data.get('disks').get(diskId).rotateTo(position);
-    }
   }
 
   _mergeStatus(newStatus) {
@@ -445,28 +425,6 @@ export default class SculptureStore extends events.EventEmitter {
         }
       }
     }
-  }
-
-  _mergeDisks(disks) {
-    const currDisks = this.data.get('disks');
-
-    for (let diskId of Object.keys(disks)) {
-      const disk = disks[diskId];
-      const currDisk = currDisks.get(diskId);
-      if (disk.hasOwnProperty('position')) {
-        currDisk.rotateTo(disk.position);
-      }
-      if (disk.hasOwnProperty('user')) {
-        currDisk.setUser(disk.user);
-      }
-      if (disk.hasOwnProperty('targetSpeed')) {
-        currDisk.setTargetSpeed(disk.targetSpeed);
-      }
-    }
-  }
-
-  _mergeDiskGame(disk) {
-    // FIXME: Implement
   }
 
   _mergeSimonGame(simon) {
