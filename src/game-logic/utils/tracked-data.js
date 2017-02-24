@@ -125,7 +125,8 @@ export default class TrackedData {
 
     for (let propName of Object.keys(this._changes)) {
       changes[propName] = this.get(propName);
-      props[propName] = this._props[propName];
+      // Make a copy of the props so nobody changes it later
+      props[propName] = { ...this._props[propName] };
     }
 
     return {changes, props};
