@@ -1,3 +1,4 @@
+import assert from 'assert';
 import SculptureStore from '../sculpture-store';
 import SculptureActionCreator from '../actions/sculpture-action-creator';
 
@@ -14,6 +15,7 @@ export default class HandshakeGameLogic {
     this.store = store;
     this.config = config;
     this.gameConfig = config.HANDSHAKE_GAME;
+    this.transitionTimeout = null;
 
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
   }
@@ -31,12 +33,10 @@ export default class HandshakeGameLogic {
   }
 
   isComplete() {
-    this.data.get('state') === HandshakeGameLogic.STATE_ACTIVATING;
+    return this.data.get('state') === HandshakeGameLogic.STATE_ACTIVATING;
   }
 
   handleActionPayload(payload) {
-    if (this.isComplete()) return;
-
     const actionHandlers = {
       [SculptureActionCreator.HANDSHAKE_ACTION]: this._actionHandshakeAction.bind(this),
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
@@ -46,16 +46,22 @@ export default class HandshakeGameLogic {
     if (actionHandler) actionHandler(payload);
   }
 
+  /**
+   * Handle local handshake. We can only transition from WAITING to ACTIVATING, not back.
+   */
   _actionHandshakeAction(payload) {
-    if (payload.state === SculptureStore.HANDSHAKE_ACTIVE) {
+    if (payload.state === SculptureStore.HANDSHAKE_ACTIVE && !this.isComplete()) {
+      assert(!this.transitionTimeout);
       this.data.set('state', HandshakeGameLogic.STATE_ACTIVATING);
-      setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
+      this.transitionTimeout = setTimeout(() => {
+        this.transitionTimeout = null;
+        this.sculptureActionCreator.sendStartNextGame();
+      }, this.gameConfig.TRANSITION_OUT_TIME);
     }
   }
 
   /**
-   * FIXME: We need to resolve the race condition of two sculptures sending a handshake at the same time
-   * to avoid both sculptures operating as master.
+   * Merge handshake state
    */
   _actionMergeState(payload) {
     if (!payload.handshake) return; // Only handle handshake state
@@ -65,8 +71,12 @@ export default class HandshakeGameLogic {
     const handshakeProps = payload.metadata.props.handshake;
 
     if (handshakeChanges.hasOwnProperty('state')) {
+      // Resolve race condition based on timestamp
+      if (this.transitionTimeout && handshakeData.hasNewerValue('state', handshakeChanges.state, handshakeProps.state)) {
+        clearTimeout(this.transitionTimeout);
+        this.transitionTimeout = null;
+      }
       handshakeData.set('state', handshakeChanges.state, handshakeProps.state);
     }
   }
-
 }
