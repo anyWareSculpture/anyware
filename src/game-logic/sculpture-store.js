@@ -40,6 +40,7 @@ export default class SculptureStore extends events.EventEmitter {
         sculpture1: SculptureStore.HANDSHAKE_OFF,
         sculpture2: SculptureStore.HANDSHAKE_OFF,
         sculpture3: SculptureStore.HANDSHAKE_OFF,
+        anyware: SculptureStore.HANDSHAKE_OFF, // For off-line single player
       }),
       lights: new LightArray({
         // stripId : number of panels
