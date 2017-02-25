@@ -192,6 +192,7 @@ export default class DefaultConfig {
   }
 
   applyLocalConfig(config) {
+    if (!config) return;
     for (let key of Object.keys(config)) {
       const obj = config[key];
       // FIXME: How to apply lower-level config keys? e.g. {MOLE_GAME: {GAME_END: 10}}
