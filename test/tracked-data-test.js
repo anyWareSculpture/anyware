@@ -136,4 +136,18 @@ describe('TrackedData', () => {
     expect(Array.from(data.getChangedPropertyNames())).to.eql(['value', 'object']);
   });
 
+  it('can check for changes', () => {
+    const data = new TrackedData({
+      value: 42,
+      object: new TrackedData({
+        subvalue: 23
+      })
+    });
+    data.clearChanges();
+    data.get('object').set('subvalue', 24);
+    expect(data.hasChanges()).to.be.true;
+    expect(data.hasChanges('value')).to.be.false;
+    expect(data.hasChanges('object')).to.be.true;
+  });
+
 });

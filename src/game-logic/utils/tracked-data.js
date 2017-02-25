@@ -75,10 +75,17 @@ export default class TrackedData {
 
   /**
    * @returns {Boolean} Returns true if there is at least one changed property
+   * @param {String} name - (optional) check if the given property was changed
    */
-  hasChanges() {
+  hasChanges(name) {
     const changedNames = this.getChangedPropertyNames();
-    return !changedNames.next().done;
+    if (name) {
+      for (let n of changedNames) if (n === name) return true;
+      return false;
+    }
+    else {
+      return !changedNames.next().done;
+    }
   }
 
   /**
