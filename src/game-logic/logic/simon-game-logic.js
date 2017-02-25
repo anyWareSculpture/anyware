@@ -177,8 +177,12 @@ export default class SimonGameLogic {
           const changedPanel = changedPanels[panelId];
           const panelProps = props[stripId].panels[panelId];
           if (changedPanel.hasOwnProperty("active") && changedPanel.active) {
-            // Simon-specific merge on panel activity changes
-            this._handlePanelPress(stripId, panelId);
+            // Accept this as a panel press if it's recorded as a change
+            const panel = this._lights.getPanel(stripId, panelId);
+            if (panel._changes.hasOwnProperty('active')) {
+              // Simon-specific merge on panel activity changes
+              this._handlePanelPress(stripId, panelId);
+            }
           }
         }
       }
@@ -280,6 +284,7 @@ export default class SimonGameLogic {
   }
 
   set _level(value) {
+    this.store.reassertChanges(); // Make sure changes are merged by all slaves
     return this.data.set('level', value);
   }
 
@@ -288,6 +293,7 @@ export default class SimonGameLogic {
   }
 
   set _targetPanel(value) {
+    this.store.reassertChanges(); // Make sure changes are merged by all slaves
     return this.data.set('targetPanel', value);
   }
 
