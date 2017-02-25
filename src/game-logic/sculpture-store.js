@@ -9,7 +9,6 @@ import SculptureActionCreator from './actions/sculpture-action-creator';
 import PanelsActionCreator from './actions/panels-action-creator';
 import DisksActionCreator from './actions/disks-action-creator';
 import TrackedData from './utils/tracked-data';
-import TrackedSet from './utils/tracked-set';
 import LightArray from './utils/light-array';
 import Disk from './utils/disk';
 
