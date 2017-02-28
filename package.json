@@ -8,6 +8,7 @@
     "mocha": "mocha",
     "test": "npm run lint && npm run mocha",
     "build": "babel src -d lib --source-maps inline",
+    "watch": "npm run build -- --watch",
     "submit-coverage": "gulp submit-coverage",
     "prepublish": "npm run build"
   },
@@ -48,6 +49,7 @@
     "sinon": "^1.17.7"
   },
   "dependencies": {
+    "assign-deep": "^0.4.5",
     "lodash": "^4.13.1",
     "mqtt": "^2.3.0"
   }

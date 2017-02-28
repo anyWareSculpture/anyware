@@ -10,10 +10,10 @@ import PanelsActionCreator from './actions/panels-action-creator';
 import DisksActionCreator from './actions/disks-action-creator';
 import TrackedData from './utils/tracked-data';
 import LightArray from './utils/light-array';
-import Disk from './utils/disk';
 
 export default class SculptureStore extends events.EventEmitter {
   static EVENT_CHANGE = "change";
+  static EVENT_LOCAL_CHANGE = "local-change";
 
   static STATUS_READY = "ready";
   static STATUS_LOCKED = "locked";
@@ -50,16 +50,18 @@ export default class SculptureStore extends events.EventEmitter {
         [this.config.LIGHTS.HANDSHAKE_STRIP]: 4,
         [this.config.LIGHTS.ART_LIGHTS_STRIP]: 3
       }),
-      disks: new TrackedData({
-        disk0: new Disk(),
-        disk1: new Disk(),
-        disk2: new Disk()
-      }),
       handshake: new TrackedData(HandshakeGameLogic.trackedProperties),
       mole: new TrackedData(MoleGameLogic.trackedProperties),
       disk: new TrackedData(DiskGameLogic.trackedProperties),
       simon: new TrackedData(SimonGameLogic.trackedProperties)
     });
+
+    // This is a sub-store for local (non-shared) disk positions
+    this.diskPositions = {
+      disk0: 0,
+      disk1: 0,
+      disk2: 0,
+    };
 
     this._reassertChanges = false;
     this._master = false;
@@ -299,13 +301,11 @@ export default class SculptureStore extends events.EventEmitter {
       [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
       [SculptureActionCreator.HANDSHAKE_ACTION]: this._actionHandshakeAction.bind(this),
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
-      [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this)
+      [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this),
     };
 
     const actionHandler = actionHandlers[payload.actionType];
-    if (actionHandler) {
-      actionHandler(payload);
-    }
+    if (actionHandler) actionHandler(payload);
   }
 
   _actionLogin({sculptureId}) {
@@ -333,8 +333,6 @@ export default class SculptureStore extends events.EventEmitter {
       currentGame: this._mergeCurrentGame.bind(this),
       handshakes: this._mergeHandshakes.bind(this),
       lights: this._mergeLights.bind(this),
-//      disks: this._mergeDisks.bind(this),
-//      disk: this._mergeDiskGame.bind(this),
 //      simon: this._mergeSimonGame.bind(this),
     };
 
@@ -382,14 +380,14 @@ export default class SculptureStore extends events.EventEmitter {
 //    }
   }
 
+  /**
+   * This is only called by local disk position changes and represents the actually 
+   * displayed disk state.
+   */
   _actionDiskUpdate(payload) {
-    let {diskId, position} = payload;
-
-    if (typeof diskId === 'undefined') return;
-
-    if (typeof position !== 'undefined') {
-      this.data.get('disks').get(diskId).rotateTo(position);
-    }
+    const {diskId, position} = payload;
+    this.diskPositions[diskId] = position;
+    this.emit(SculptureStore.EVENT_LOCAL_CHANGE);
   }
 
   _mergeStatus(newStatus) {
@@ -447,28 +445,6 @@ export default class SculptureStore extends events.EventEmitter {
     }
   }
 
-  _mergeDisks(disks) {
-    const currDisks = this.data.get('disks');
-
-    for (let diskId of Object.keys(disks)) {
-      const disk = disks[diskId];
-      const currDisk = currDisks.get(diskId);
-      if (disk.hasOwnProperty('position')) {
-        currDisk.rotateTo(disk.position);
-      }
-      if (disk.hasOwnProperty('user')) {
-        currDisk.setUser(disk.user);
-      }
-      if (disk.hasOwnProperty('targetSpeed')) {
-        currDisk.setTargetSpeed(disk.targetSpeed);
-      }
-    }
-  }
-
-  _mergeDiskGame(disk) {
-    // FIXME: Implement
-  }
-
   _mergeSimonGame(simon) {
     // FIXME: Implement
   }
@@ -479,5 +455,12 @@ export default class SculptureStore extends events.EventEmitter {
     index = (index + 1) % this.config.GAMES_SEQUENCE.length;
 
     return this.config.GAMES_SEQUENCE[index];
+  }
+
+  /**
+   * Getter for the local disk position state. Use this to get the actual position to display
+   */
+  getDiskPosition(diskId) {
+    return this.diskPositions[diskId];
   }
 }

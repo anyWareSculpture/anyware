@@ -15,6 +15,7 @@
 
 import COLORS from '../constants/colors';
 import GAMES from '../constants/games';
+import assign from 'assign-deep';
 
 export default class DefaultConfig {
   constructor({
@@ -30,6 +31,11 @@ export default class DefaultConfig {
 
     // The ID of this sculpture
     this.me = me || this.defaultSculptureId;
+
+    this.DEBUG = {
+      status: false,     // Persistent status icons
+      console: false,    // Console debug output
+    };
 
     // Local sculptures will time out after this number of seconds without interaction
     this.ACTIVITY_TIMEOUT = 60;
@@ -122,11 +128,11 @@ export default class DefaultConfig {
     };
 
     this.DISK_GAME = {
-      MAX_SPEED: 360 / 5, // degrees/sec
+      SPEEDS: [6, 15, 21, 30, 72], // degrees/sec
       ABSOLUTE_TOLERANCE: 8, // sum of degrees tolerance for the absolute disk positions
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_COLOR: COLORS.WHITE,
-      CONTROL_PANEL_INTENSITY: 20,
+      CONTROL_PANEL_INTENSITIES: [10, 20, 30, 40, 50],
       CONFLICT_INTENSITY: 20,
       ACTIVE_CONTROL_PANEL_INTENSITY: 100,
       SHADOW_LIGHTS: {
@@ -138,6 +144,12 @@ export default class DefaultConfig {
         // level 0
         // disks: { diskId: initial position }
         { disk0: -90, disk1: 90, disk2: 120 },
+        // level 1
+        // disks: { diskId: initial position }
+        { disk0: 90, disk1: -90, disk2: -120 },
+        // level 2
+        // disks: { diskId: initial position }
+        { disk0: 180, disk1: 45, disk2: -90 },
       ],
       CONTROL_MAPPINGS: {
         STRIP_TO_DISK: {
@@ -192,12 +204,7 @@ export default class DefaultConfig {
   }
 
   applyLocalConfig(config) {
-    if (!config) return;
-    for (let key of Object.keys(config)) {
-      const obj = config[key];
-      // FIXME: How to apply lower-level config keys? e.g. {MOLE_GAME: {GAME_END: 10}}
-      this[key] = obj;
-    }
+    assign(this, config);
   }
 }
 

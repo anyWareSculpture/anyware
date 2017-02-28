@@ -6,11 +6,9 @@ const MAX_DECEL = 300;      // degrees/sec^2
 const between = (num, first, last) => (first < last ? num >= first && num <= last : num >= last && num <= first);
 
 export default class DiskModel extends events.EventEmitter {
-  static MAX_SPEED = 360 / 15; // degrees/sec
-
   constructor() {
     super();
-    this.pos = 0; // clockwise degrees
+    this._pos = 0; // clockwise degrees
     this.lasttick = 0;
     this.stop();
   }
@@ -22,89 +20,101 @@ export default class DiskModel extends events.EventEmitter {
   stop() {
     this.acceleration = 0;
     this.speed = 0;
-    this.targetSpeed = 0; // Wanted speed (signed; positive is clockwise)
+    this._targetSpeed = 0; // Wanted speed (signed; positive is clockwise)
   }
 
   tick() {
-    // dtms = ms since last tick
-    const now = Date.now();
-    const dtms = now - this.lasttick;
-    this.lasttick = now;
+    let newpos;
 
-    // dt = sec since last tick
-    const dt = dtms / 1000;
-
-    // Without acceleration
-
-    // ds = v * dt;
-//    let newpos = (this.pos + this.speed * dt) % 360;
-//    if (newpos < 0) newpos += 360;
-
-    // With acceleration
-
-    // ds = v0 * t + 1/2 * a * t^2
-    let newpos = this.pos + this.speed * dt + 0.5 * this.acceleration * dt*dt;
-    if (newpos < 0) newpos += 360;
-    newpos = newpos % 360;
-    if (this.targetPos !== undefined && between(this.targetPos, this.pos, newpos)) {
-      newpos = this.targetPos;
-      delete this.targetPos;
-      this.acceleration = 0;
-      this.speed = 0;
+    if (this._targetPos !== undefined) {
+      newpos = this._targetPos;
+      delete this._targetPos;
     }
     else {
-      // v = v0 + a * t
-      const newspeed = this.speed + this.acceleration * dt;
+      // dtms = ms since last tick
+      const now = Date.now();
+      const dtms = now - this.lasttick;
+      this.lasttick = now;
       
-      // Clamp on overshoot
-      if (between(this.targetSpeed, this.speed, newspeed)) {
-        this.speed = this.targetSpeed;
+      // dt = sec since last tick
+      const dt = dtms / 1000;
+      
+      // Without acceleration
+      
+      // ds = v * dt;
+      //    let newpos = (this._pos + this.speed * dt) % 360;
+      //    if (newpos < 0) newpos += 360;
+      
+      // With acceleration
+      
+      // ds = v0 * t + 1/2 * a * t^2
+      newpos = this._pos + this.speed * dt + 0.5 * this.acceleration * dt*dt;
+      if (newpos < 0) newpos += 360;
+      newpos = newpos % 360;
+      if (this._targetPos !== undefined && between(this._targetPos, this._pos, newpos)) {
+        newpos = this._targetPos;
+        delete this._targetPos;
         this.acceleration = 0;
+        this.speed = 0;
       }
       else {
-        this.speed = newspeed;
+        // v = v0 + a * t
+        const newspeed = this.speed + this.acceleration * dt;
+        
+        // Clamp on overshoot
+        if (between(this._targetSpeed, this.speed, newspeed)) {
+          this.speed = this._targetSpeed;
+          this.acceleration = 0;
+        }
+        else {
+          this.speed = newspeed;
+        }
       }
     }
 
     // Emit position if it changed.
     // Positions are quantized prior to emitting to avoid flooding with events
-    if (newpos !== this.pos) {
-      const quantizedNew = Math.round(newpos);
-      const quantizedPos = Math.round(this.pos);
+    if (newpos !== this._pos) {
+      const quantizedNew = Math.round(newpos*2)/2;
+      const quantizedPos = Math.round(this._pos*2)/2;
 
-      this.pos = newpos;
-      if (quantizedNew !== quantizedPos) this.emit('position', this.pos);
+      this._pos = newpos;
+      if (quantizedNew !== quantizedPos) {
+        this.emit('position', this._pos);
+      }
     }
   }
 
   get position() {
-    return this.pos;
+    return this._pos;
   }
 
-  // NB! Sets absolute position, overriding the physical model
-  set position(pos) {
-    this.pos = pos;
+  /**
+   * Sets absolute position, overriding the physical model
+   * Will be updated on the next tick
+   */
+  set targetPosition(pos) {
+    this._targetPos = pos;
+  }
+
+  get targetPosition() {
+    return this._targetPos;
   }
 
   /**
    * Set target speed in degrees/sec.
    * Positive values is clockwise speed, negative values is counter-clockwise speed
    */
-  setTargetSpeed(targetSpeed) {
-    this.targetSpeed = targetSpeed;
+  set targetSpeed(targetSpeed) {
+    this._targetSpeed = targetSpeed;
     this.acceleration = targetSpeed === this.speed ? 0 : targetSpeed > this.speed ? MAX_ACCEL : -MAX_DECEL;
   }
 
-  // Set target position. This will override direction and move towards the given position
-  setTargetPosition(targetPos) {
-    this.targetPos = targetPos;
-    // Find shortest target position, and accelerate in that direction
-    const diff = (targetPos - this.pos + 180 + 360) % 360 - 180;
-    this.acceleration = Math.sign(diff) * MAX_ACCEL;
-    this.targetSpeed = Math.sign(diff) * DiskModel.MAX_SPEED;
+  get targetSpeed() {
+    return this._targetSpeed;
   }
 
   clearTargetPosition() {
-    delete this.targetPos;
+    delete this._targetPos;
   }
 }
