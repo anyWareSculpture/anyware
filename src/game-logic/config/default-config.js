@@ -138,6 +138,12 @@ export default class DefaultConfig {
         // level 0
         // disks: { diskId: initial position }
         { disk0: -90, disk1: 90, disk2: 120 },
+        // level 1
+        // disks: { diskId: initial position }
+        { disk0: 90, disk1: -90, disk2: -120 },
+        // level 2
+        // disks: { diskId: initial position }
+        { disk0: 180, disk1: 45, disk2: -90 },
       ],
       CONTROL_MAPPINGS: {
         STRIP_TO_DISK: {
