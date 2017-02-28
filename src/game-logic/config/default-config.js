@@ -15,6 +15,7 @@
 
 import COLORS from '../constants/colors';
 import GAMES from '../constants/games';
+import assign from 'assign-deep';
 
 export default class DefaultConfig {
   constructor({
@@ -30,6 +31,11 @@ export default class DefaultConfig {
 
     // The ID of this sculpture
     this.me = me || this.defaultSculptureId;
+
+    this.DEBUG = {
+      status: false,     // Persistent status icons
+      console: false,    // Console debug output
+    };
 
     // Local sculptures will time out after this number of seconds without interaction
     this.ACTIVITY_TIMEOUT = 60;
@@ -198,12 +204,7 @@ export default class DefaultConfig {
   }
 
   applyLocalConfig(config) {
-    if (!config) return;
-    for (let key of Object.keys(config)) {
-      const obj = config[key];
-      // FIXME: How to apply lower-level config keys? e.g. {MOLE_GAME: {GAME_END: 10}}
-      this[key] = obj;
-    }
+    assign(this, config);
   }
 }
 

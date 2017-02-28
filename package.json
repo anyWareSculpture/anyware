@@ -49,6 +49,7 @@
     "sinon": "^1.17.7"
   },
   "dependencies": {
+    "assign-deep": "^0.4.5",
     "lodash": "^4.13.1",
     "mqtt": "^2.3.0"
   }
