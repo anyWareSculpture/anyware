@@ -3,13 +3,12 @@ import DisksActionCreator from '../actions/disks-action-creator';
 import SculptureActionCreator from '../actions/sculpture-action-creator';
 import Disk from '../utils/disk';
 import TrackedData from '../utils/tracked-data';
-
-const DEFAULT_LEVEL = 0;
+import DiskModel from '../utils/DiskModel';
 
 export default class DiskGameLogic {
   // These are automatically added to the sculpture store
   static trackedProperties = {
-    level: DEFAULT_LEVEL,
+    level: 0,
     disks: new TrackedData({
       disk0: new Disk(),
       disk1: new Disk(),
@@ -22,9 +21,18 @@ export default class DiskGameLogic {
     this.config = config;
     this.gameConfig = config.DISK_GAME;
 
+    this.physicalDisks = {
+      disk0: new DiskModel(),
+      disk1: new DiskModel(),
+      disk2: new DiskModel(),
+    };
+
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
+    this.diskActions = new DisksActionCreator(this.store.dispatcher);
 
     this._complete = false;
+
+    this.startDisks();
   }
 
   get data() {
@@ -36,15 +44,8 @@ export default class DiskGameLogic {
   }
 
   start() {
-    this._level = DEFAULT_LEVEL;
+    this._level = 0;
     this._complete = false;
-
-    // Set initial position
-    const disks = this.data.get('disks');
-    for (let diskId of Object.keys(this._levelConfig)) {
-      const disk = disks.get(diskId);
-      disk.rotateTo(this._levelConfig[diskId]);
-    }
 
     // Activate shadow lights
     for (let stripId of Object.keys(this.gameConfig.SHADOW_LIGHTS)) {
@@ -59,6 +60,38 @@ export default class DiskGameLogic {
     for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
       this._setDiskColor(stripId, this.gameConfig.CONTROL_PANEL_INTENSITY, this.gameConfig.CONTROL_PANEL_COLOR);
     }
+
+    this.startLevel();
+  }
+
+  startLevel() {
+    // Set initial position
+    const disks = this.data.get('disks');
+    for (let diskId of Object.keys(this._levelConfig)) {
+      const disk = disks.get(diskId);
+      const pos = this._levelConfig[diskId];
+      disk.setPosition(pos);
+      this.physicalDisks[diskId].position = pos;
+    }
+  }
+
+  // Start physical disk model
+  startDisks() {
+    Object.keys(this.physicalDisks).forEach((diskId) => {
+      this.physicalDisks[diskId].start();
+      this.physicalDisks[diskId].on('position', (pos) => {
+        this.sendDiskUpdate(diskId, pos);
+      });
+    });
+    this.interval = setInterval(() => {
+      Object.keys(this.physicalDisks).forEach((key) => this.physicalDisks[key].tick());
+    }, 30);
+  }
+
+  endDisks() {
+    clearInterval(this.interval);
+    delete this.interval;
+    Object.keys(this.physicalDisks).forEach((key) => this.physicalDisks[key].removeAllListeners('position'));
   }
 
   // FIXME: These end() methods may be obsolete now since everything is reset before every game anyway
@@ -85,6 +118,32 @@ export default class DiskGameLogic {
     if (actionHandler) {
       actionHandler(payload);
     }
+  }
+
+  /* FIXME: Handle start of game
+
+    // Handle game changes
+    if (changes.hasOwnProperty('currentGame')) {
+      // Reset on start of playing the disk game and on start of games cycle
+      if (changes.currentGame === GAMES.DISK || changes.currentGame === GAMES.HANDSHAKE) {
+        setTimeout(this.resetDisks.bind(this), 0);
+      }
+    }
+  
+   */
+
+
+  resetDisks() {
+    Object.keys(this.physicalDisks).forEach((diskId) => {
+      this.physicalDisks[diskId].stop();
+      const pos = this.disks.get(diskId).get('position');
+      this.physicalDisks[diskId].position = pos;
+      this.sendDiskUpdate(diskId, pos);
+    });
+  }
+
+  sendDiskUpdate(diskId, position) {
+    this.diskActions.sendDiskUpdate(diskId, { position });
   }
 
   /**
@@ -138,7 +197,16 @@ export default class DiskGameLogic {
         for (let i=0;i<=negativePanel;i++) panelIds.push(negativePanels[i]);
       }
 
-      disk.setTargetSpeed(speed * this.gameConfig.MAX_SPEED / 5);
+      const newspeed = speed * this.gameConfig.MAX_SPEED / 5
+      disk.setTargetSpeed(newspeed);
+      this.physicalDisks[diskId].targetSpeed = newspeed;
+
+      // On speed changes, publish position
+      disk.setPosition(this.store.getDiskPosition(diskId));
+      // ..and check win condition if master
+      if (this.store.isMaster && !this.store.isStatusSuccess) {
+        this._checkWinConditions();
+      }
 
       const lightArray = this._lights;
       lightArray.setIntensity(stripId, null, this.gameConfig.CONTROL_PANEL_INTENSITY);
@@ -160,26 +228,11 @@ export default class DiskGameLogic {
    * Called when disks move (comes from the physical disk model)
    */
   _actionDiskUpdate(payload) {
+    if (this._complete) return;
+    // FIXME: Only needed for emulator?
     const {diskId, position} = payload;
-
-    const disks = this.data.get('disks');
-    const disk = disks.get(diskId);
-
-    if (typeof position !== 'undefined') {
-      disk.rotateTo(position);
-    }
-
-    if (!this.store.isStatusSuccess) {
-      // FIXME:
-      // Instead of just checking for the win condition, we want to:
-      // - If Disk 0 or Disk 2 (the disks with the boundary part of the pattern) is in the
-      //   correct location for a minimum amount of time, we trigger the Single Disk Success event
-
-      // Single Disk Success Event
-      // - Play success sounds (AudioView)
-      // - UI LEDS and disk LED turns location color
-      // - Lock this disk in position; disable any future interaction
-      // - From now on, allow Disk 1 to trigger a Single Disk Success Event
+    this.physicalDisks[diskId].position = position;
+    if (this.store.isMaster && !this.store.isStatusSuccess) {
       this._checkWinConditions();
     }
   }
@@ -211,13 +264,18 @@ export default class DiskGameLogic {
       const diskProps = disksProps[diskId];
       const currDisk = currDisks.get(diskId);
       if (changedDisk.hasOwnProperty('position')) {
-        currDisk.rotateTo(changedDisk.position, diskProps.position);
+        currDisk.setPosition(changedDisk.position, diskProps.position);
+        this.physicalDisks[diskId].position = changedDisk.position;
+        if (this.store.isMaster && !this.store.isStatusSuccess) {
+          this._checkWinConditions();
+        }
       }
       if (changedDisk.hasOwnProperty('user')) {
         currDisk.setUser(changedDisk.user, diskProps.user);
       }
       if (changedDisk.hasOwnProperty('targetSpeed')) {
         currDisk.setTargetSpeed(changedDisk.targetSpeed, diskProps.targetSpeed);
+        this.physicalDisks[diskId].targetSpeed = changedDisk.targetSpeed;
       }
     }
   }
@@ -276,8 +334,7 @@ export default class DiskGameLogic {
     // We cannot calculate the score of a complete game as we don't have a valid level
     if (this._complete) return 0;
 
-    const disks = this.data.get('disks');
-    let pos = disks.get(diskId).getPosition();
+    let pos = this.getLocalDiskPosition(diskId);
     if (pos > 180) pos -= 360;
     return Math.abs(pos);
   }
@@ -303,6 +360,8 @@ export default class DiskGameLogic {
   }
 
   _winGame() {
+    if (this.store.isStatusSuccess) return;
+
     this.store.data.get('lights').deactivateAll();
     this._stopAllDisks();
 
@@ -311,6 +370,9 @@ export default class DiskGameLogic {
     let level = this._level + 1;
     if (level >= this._levels) {
       this._complete = true;
+    }
+    else {
+      this.startLevel();
     }
 
     this._level = level;
@@ -339,4 +401,9 @@ export default class DiskGameLogic {
   set _level(value) {
     return this.data.set('level', value);
   }
+
+  getLocalDiskPosition(diskId) {
+    return this.physicalDisks[diskId].position;
+  }
+
 }

@@ -7,11 +7,13 @@ import DiskGameLogic from './logic/disk-game-logic';
 import SimonGameLogic from './logic/simon-game-logic';
 import SculptureActionCreator from './actions/sculpture-action-creator';
 import PanelsActionCreator from './actions/panels-action-creator';
+import DisksActionCreator from './actions/disks-action-creator';
 import TrackedData from './utils/tracked-data';
 import LightArray from './utils/light-array';
 
 export default class SculptureStore extends events.EventEmitter {
   static EVENT_CHANGE = "change";
+  static EVENT_LOCAL_CHANGE = "local-change";
 
   static STATUS_READY = "ready";
   static STATUS_LOCKED = "locked";
@@ -53,6 +55,13 @@ export default class SculptureStore extends events.EventEmitter {
       disk: new TrackedData(DiskGameLogic.trackedProperties),
       simon: new TrackedData(SimonGameLogic.trackedProperties)
     });
+
+    // This is a sub-store for local (non-shared) disk positions
+    this.diskPositions = {
+      disk0: 0,
+      disk1: 0,
+      disk2: 0,
+    };
 
     this._reassertChanges = false;
     this._master = false;
@@ -292,12 +301,11 @@ export default class SculptureStore extends events.EventEmitter {
       [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
       [SculptureActionCreator.HANDSHAKE_ACTION]: this._actionHandshakeAction.bind(this),
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
+      [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this),
     };
 
     const actionHandler = actionHandlers[payload.actionType];
-    if (actionHandler) {
-      actionHandler(payload);
-    }
+    if (actionHandler) actionHandler(payload);
   }
 
   _actionLogin({sculptureId}) {
@@ -372,6 +380,16 @@ export default class SculptureStore extends events.EventEmitter {
 //    }
   }
 
+  /**
+   * This is only called by local disk position changes and represents the actually 
+   * displayed disk state.
+   */
+  _actionDiskUpdate(payload) {
+    const {diskId, position} = payload;
+    this.diskPositions[diskId] = position;
+    this.emit(SculptureStore.EVENT_LOCAL_CHANGE);
+  }
+
   _mergeStatus(newStatus) {
     this.data.set('status', newStatus);
   }
@@ -437,5 +455,12 @@ export default class SculptureStore extends events.EventEmitter {
     index = (index + 1) % this.config.GAMES_SEQUENCE.length;
 
     return this.config.GAMES_SEQUENCE[index];
+  }
+
+  /**
+   * Getter for the local disk position state. Use this to get the actual position to display
+   */
+  getDiskPosition(diskId) {
+    return this.diskPositions[diskId];
   }
 }

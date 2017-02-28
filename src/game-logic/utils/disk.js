@@ -18,7 +18,7 @@ export default class Disk extends TrackedData {
     return this.get('targetSpeed');
   }
 
-  rotateTo(position, props) {
+  setPosition(position, props) {
     this.set('position', position, props);
   }
 

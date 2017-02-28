@@ -107,7 +107,10 @@ export default class AudioView {
     console.log(`${this._promises.length} promises created`);
     Promise.all(this._promises)
       // Don't listen to events until we've loaded all sounds
-      .then(() => this.store.on(SculptureStore.EVENT_CHANGE, this._handleChanges.bind(this)))
+      .then(() => {
+        this.store.on(SculptureStore.EVENT_CHANGE, this._handleChanges.bind(this));
+        this.store.on(SculptureStore.EVENT_LOCAL_CHANGE, this._handleLocalChanges.bind(this));
+      })
       .then(() => callback(null))
       .catch(callback.bind(null));
   }
@@ -133,6 +136,10 @@ export default class AudioView {
     if (this.store.isPlayingMoleGame) this._handleMoleGame(changes);
     if (this.store.isPlayingDiskGame) this._handleDiskGame(changes);
     if (this.store.isPlayingSimonGame) this._handleSimonGame(changes);
+  }
+
+  _handleLocalChanges() {
+    if (this.store.isPlayingDiskGame) this._handleLocalDiskGame();
   }
 
   _handleHandshakeGame(changes) {
@@ -231,14 +238,19 @@ export default class AudioView {
         }
       }
 
-      const diskgame = this.store.currentGameLogic;
-      for (let diskId of ['disk0', 'disk1', 'disk2']) {
-        const err = diskgame.getDiskError(diskId);
-        const pulseFreq = this._calcFreq(err);
-        if (this.sounds.disk[diskId].source) {
-          this.sounds.disk[diskId].source.loopEnd = (pulseFreq === 0 ? 0 : 1/pulseFreq);
-        }
+    }
+    // FIXME level success and final success
+  }
+
+  _handleLocalDiskGame() {
+    const diskgame = this.store.currentGameLogic;
+    for (let diskId of ['disk0', 'disk1', 'disk2']) {
+      const err = diskgame.getDiskError(diskId);
+      const pulseFreq = this._calcFreq(err);
+      if (this.sounds.disk[diskId].source) {
+        this.sounds.disk[diskId].source.loopEnd = (pulseFreq === 0 ? 0 : 1/pulseFreq);
       }
+    }
 //      for (let disk of ['disk0', 'disk1', 'disk2']) {
 //        const score = diskgame.getDiskScore(disk);
 //        const pulseFreq = this._calcSingleFreq(score);
@@ -255,8 +267,6 @@ export default class AudioView {
       if (this.sounds.disk.disk1.source) this.sounds.disk.disk1.source.loopEnd = (pulseFreq === 0 ? 0 : 1/pulseFreq);
       if (this.sounds.disk.disk2.source) this.sounds.disk.disk2.source.loopEnd = (pulseFreq === 0 ? 0 : 1/pulseFreq);
       */
-    }
-    // FIXME level success and final success
   }
 
   _calcSingleFreq(score) {
