@@ -26,43 +26,51 @@ export default class DiskModel extends events.EventEmitter {
   }
 
   tick() {
-    // dtms = ms since last tick
-    const now = Date.now();
-    const dtms = now - this.lasttick;
-    this.lasttick = now;
+    let newpos;
 
-    // dt = sec since last tick
-    const dt = dtms / 1000;
-
-    // Without acceleration
-
-    // ds = v * dt;
-//    let newpos = (this._pos + this.speed * dt) % 360;
-//    if (newpos < 0) newpos += 360;
-
-    // With acceleration
-
-    // ds = v0 * t + 1/2 * a * t^2
-    let newpos = this._pos + this.speed * dt + 0.5 * this.acceleration * dt*dt;
-    if (newpos < 0) newpos += 360;
-    newpos = newpos % 360;
-    if (this._targetPos !== undefined && between(this._targetPos, this._pos, newpos)) {
+    if (this._targetPos !== undefined) {
       newpos = this._targetPos;
       delete this._targetPos;
-      this.acceleration = 0;
-      this.speed = 0;
     }
     else {
-      // v = v0 + a * t
-      const newspeed = this.speed + this.acceleration * dt;
+      // dtms = ms since last tick
+      const now = Date.now();
+      const dtms = now - this.lasttick;
+      this.lasttick = now;
       
-      // Clamp on overshoot
-      if (between(this._targetSpeed, this.speed, newspeed)) {
-        this.speed = this._targetSpeed;
+      // dt = sec since last tick
+      const dt = dtms / 1000;
+      
+      // Without acceleration
+      
+      // ds = v * dt;
+      //    let newpos = (this._pos + this.speed * dt) % 360;
+      //    if (newpos < 0) newpos += 360;
+      
+      // With acceleration
+      
+      // ds = v0 * t + 1/2 * a * t^2
+      newpos = this._pos + this.speed * dt + 0.5 * this.acceleration * dt*dt;
+      if (newpos < 0) newpos += 360;
+      newpos = newpos % 360;
+      if (this._targetPos !== undefined && between(this._targetPos, this._pos, newpos)) {
+        newpos = this._targetPos;
+        delete this._targetPos;
         this.acceleration = 0;
+        this.speed = 0;
       }
       else {
-        this.speed = newspeed;
+        // v = v0 + a * t
+        const newspeed = this.speed + this.acceleration * dt;
+        
+        // Clamp on overshoot
+        if (between(this._targetSpeed, this.speed, newspeed)) {
+          this.speed = this._targetSpeed;
+          this.acceleration = 0;
+        }
+        else {
+          this.speed = newspeed;
+        }
       }
     }
 
@@ -83,10 +91,12 @@ export default class DiskModel extends events.EventEmitter {
     return this._pos;
   }
 
-  // NB! Sets absolute position, overriding the physical model
-  set position(pos) {
-    this._pos = pos;
-    setTimeout(() => this.emit('position', this._pos), 0); // Make sure we're emitting any changes
+  /**
+   * Sets absolute position, overriding the physical model
+   * Will be updated on the next tick
+   */
+  set targetPosition(pos) {
+    this._targetPos = pos;
   }
 
   /**

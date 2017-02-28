@@ -71,7 +71,7 @@ export default class DiskGameLogic {
       const disk = disks.get(diskId);
       const pos = this._levelConfig[diskId];
       disk.setPosition(pos);
-      this.physicalDisks[diskId].position = pos;
+      this.physicalDisks[diskId].targetPosition = pos;
     }
   }
 
@@ -137,7 +137,7 @@ export default class DiskGameLogic {
     Object.keys(this.physicalDisks).forEach((diskId) => {
       this.physicalDisks[diskId].stop();
       const pos = this.disks.get(diskId).get('position');
-      this.physicalDisks[diskId].position = pos;
+      this.physicalDisks[diskId].targetPosition = pos;
       this.sendDiskUpdate(diskId, pos);
     });
   }
@@ -231,7 +231,7 @@ export default class DiskGameLogic {
     if (this._complete) return;
     // FIXME: Only needed for emulator?
     const {diskId, position} = payload;
-    this.physicalDisks[diskId].position = position;
+    this.physicalDisks[diskId].targetPosition = position;
     if (this.store.isMaster && !this.store.isStatusSuccess) {
       this._checkWinConditions();
     }
@@ -265,7 +265,7 @@ export default class DiskGameLogic {
       const currDisk = currDisks.get(diskId);
       if (changedDisk.hasOwnProperty('position')) {
         currDisk.setPosition(changedDisk.position, diskProps.position);
-        this.physicalDisks[diskId].position = changedDisk.position;
+        this.physicalDisks[diskId].TargetPosition = changedDisk.position;
         if (this.store.isMaster && !this.store.isStatusSuccess) {
           this._checkWinConditions();
         }
