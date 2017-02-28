@@ -99,6 +99,10 @@ export default class DiskModel extends events.EventEmitter {
     this._targetPos = pos;
   }
 
+  get targetPosition() {
+    return this._targetPos;
+  }
+
   /**
    * Set target speed in degrees/sec.
    * Positive values is clockwise speed, negative values is counter-clockwise speed
@@ -112,20 +116,7 @@ export default class DiskModel extends events.EventEmitter {
     return this._targetSpeed;
   }
 
-  // Set target position. This will override direction and move towards the given position
-  set targetPosition(targetPos) {
-    this._targetPos = targetPos;
-    // Find shortest target position, and accelerate in that direction
-    const diff = (targetPos - this._pos + 180 + 360) % 360 - 180;
-    this.acceleration = Math.sign(diff) * MAX_ACCEL;
-    this._targetSpeed = Math.sign(diff) * DiskModel.MAX_SPEED;
-  }
-
   clearTargetPosition() {
     delete this._targetPos;
-  }
-
-  get targetPosition() {
-    return this._targetPos;
   }
 }
