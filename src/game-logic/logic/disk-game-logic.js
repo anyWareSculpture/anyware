@@ -5,6 +5,9 @@ import Disk from '../utils/disk';
 import TrackedData from '../utils/tracked-data';
 import DiskModel from '../utils/DiskModel';
 
+const positivePanels = ['5','6','7','8','9'];
+const negativePanels = ['4','3','2','1','0'];
+
 export default class DiskGameLogic {
   // These are automatically added to the sculpture store
   static trackedProperties = {
@@ -58,7 +61,11 @@ export default class DiskGameLogic {
     // Activate UI indicators
     const lightArray = this._lights;
     for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
-      this._setDiskColor(stripId, this.gameConfig.CONTROL_PANEL_INTENSITY, this.gameConfig.CONTROL_PANEL_COLOR);
+      lightArray.setColor(stripId, null, this.gameConfig.CONTROL_PANEL_COLOR);
+      for (let i=0;i<5;i++) {
+        lightArray.setIntensity(stripId, positivePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
+        lightArray.setIntensity(stripId, negativePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
+      }
     }
 
     this.startLevel();
@@ -173,8 +180,6 @@ export default class DiskGameLogic {
     const lightArray = this._lights;
     const panels = lightArray.get(stripId).get('panels');
     const isActive = (panelId) => panels.get(panelId).get('active');
-    const positivePanels = ['5','6','7','8','9'];
-    const negativePanels = ['4','3','2','1','0'];
     let positivePanel = positivePanels.findIndex(isActive);
     let negativePanel = negativePanels.findIndex(isActive);
 
@@ -184,6 +189,7 @@ export default class DiskGameLogic {
     }
     else {
       let speed = 0;
+      let sign = 1;
       let panelIds = [];
       if (positivePanel === -1 && negativePanel === -1) {
         speed = 0;
@@ -193,11 +199,12 @@ export default class DiskGameLogic {
         for (let i=0;i<=positivePanel;i++) panelIds.push(positivePanels[i]);
       }
       else {
-        speed = -(negativePanel + 1);
+        speed = (negativePanel + 1);
+        sign = -1;
         for (let i=0;i<=negativePanel;i++) panelIds.push(negativePanels[i]);
       }
 
-      const newspeed = speed * this.gameConfig.MAX_SPEED / 5
+      const newspeed = speed === 0 ? 0 : sign * this.gameConfig.SPEEDS[speed - 1];
       disk.setTargetSpeed(newspeed);
       this.physicalDisks[diskId].targetSpeed = newspeed;
 
@@ -209,18 +216,20 @@ export default class DiskGameLogic {
       }
 
       const lightArray = this._lights;
-      lightArray.setIntensity(stripId, null, this.gameConfig.CONTROL_PANEL_INTENSITY);
-      lightArray.setColor(stripId, null, this.gameConfig.CONTROL_PANEL_COLOR);
       const setPanels = (panels, index) => {
         for (let i=0;i<5;i++) {
           if (index >= i) {
             lightArray.setIntensity(stripId, panels[i], this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
             lightArray.setColor(stripId, panels[i], this.store.locationColor);
           }
+          else {
+            lightArray.setIntensity(stripId, panels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
+            lightArray.setColor(stripId, panels[i], this.gameConfig.CONTROL_PANEL_COLOR);
+          }
         }
       };
-      if (speed > 0) setPanels(positivePanels, positivePanel);
-      else if (speed < 0) setPanels(negativePanels, negativePanel);
+      setPanels(positivePanels, sign > 0 ? positivePanel : -1);
+      setPanels(negativePanels, sign < 0 ? negativePanel : -1);
     }
   }
 
