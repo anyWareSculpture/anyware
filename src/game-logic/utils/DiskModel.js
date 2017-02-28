@@ -6,8 +6,6 @@ const MAX_DECEL = 300;      // degrees/sec^2
 const between = (num, first, last) => (first < last ? num >= first && num <= last : num >= last && num <= first);
 
 export default class DiskModel extends events.EventEmitter {
-  static MAX_SPEED = 360 / 15; // degrees/sec
-
   constructor() {
     super();
     this._pos = 0; // clockwise degrees
@@ -77,8 +75,8 @@ export default class DiskModel extends events.EventEmitter {
     // Emit position if it changed.
     // Positions are quantized prior to emitting to avoid flooding with events
     if (newpos !== this._pos) {
-      const quantizedNew = Math.round(newpos);
-      const quantizedPos = Math.round(this._pos);
+      const quantizedNew = Math.round(newpos*2)/2;
+      const quantizedPos = Math.round(this._pos*2)/2;
 
       this._pos = newpos;
       if (quantizedNew !== quantizedPos) {
