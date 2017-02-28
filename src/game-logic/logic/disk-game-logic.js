@@ -265,7 +265,7 @@ export default class DiskGameLogic {
       const currDisk = currDisks.get(diskId);
       if (changedDisk.hasOwnProperty('position')) {
         currDisk.setPosition(changedDisk.position, diskProps.position);
-        this.physicalDisks[diskId].TargetPosition = changedDisk.position;
+        this.physicalDisks[diskId].targetPosition = changedDisk.position;
         if (this.store.isMaster && !this.store.isStatusSuccess) {
           this._checkWinConditions();
         }
