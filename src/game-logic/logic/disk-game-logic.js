@@ -74,9 +74,9 @@ export default class DiskGameLogic {
   startLevel() {
     // Set initial position
     const disks = this.data.get('disks');
-    for (let diskId of Object.keys(this._levelConfig)) {
+    for (let diskId of Object.keys(this._levelConfig.disks)) {
       const disk = disks.get(diskId);
-      const pos = this._levelConfig[diskId];
+      const pos = this._levelConfig.disks[diskId];
       disk.setPosition(pos);
       this.physicalDisks[diskId].targetPosition = pos;
     }
@@ -322,18 +322,12 @@ export default class DiskGameLogic {
    * - Each marker must have it's rules match against the position range of all 3 disks
    */
   _checkWinConditions() {
-    let totalError = 0;
     const disks = this.data.get('disks');
-    let isMoving = false;
-    for (let diskId of disks) {
-      const err = this.getDiskError(diskId);
-//      console.debug(`${diskId} error: ${err}`);
-      totalError += err;
-
-      if (Math.abs(this.getDiskSpeed(diskId)) > 0) isMoving = true;
-    }
+    const score = this.getScore(disks);
+    const isMoving = Array.from(disks).some((diskId) => Math.abs(this.getDiskSpeed(diskId)) > 0);
+    
 //    console.debug(`Total error: ${totalError}`);
-    if (!isMoving && totalError <= this.gameConfig.ABSOLUTE_TOLERANCE) {
+    if (!isMoving && score <= this.gameConfig.ABSOLUTE_TOLERANCE) {
       this._winGame();
     }
   }
@@ -343,9 +337,28 @@ export default class DiskGameLogic {
     // We cannot calculate the score of a complete game as we don't have a valid level
     if (this._complete) return 0;
 
-    let pos = this.getLocalDiskPosition(diskId);
-    if (pos > 180) pos -= 360;
-    return Math.abs(pos);
+    if (this._levelConfig.rule === 'absolute') {
+      let pos = this.getLocalDiskPosition(diskId);
+      if (pos > 180) pos -= 360;
+      return Math.abs(pos);
+    }
+    else { // this._levelConfig.rule === 'relative'
+      // Central and outer disk: get angle to middle disk
+      // Middle disk: get smallest of angles to central and outer disks
+
+      let pos = 0;
+      if (diskId == 'disk1') { // Middle disk
+        pos = Math.min.apply(Math, [
+          Math.abs(this.getLocalDiskPosition(diskId) - this.getLocalDiskPosition('disk0')),
+          Math.abs(this.getLocalDiskPosition(diskId) - this.getLocalDiskPosition('disk2'))
+        ].map((pos) => pos > 180 ? 360 - pos : pos));
+      }
+      else { // Central or Outer disk
+        pos = Math.abs(this.getLocalDiskPosition(diskId) - this.getLocalDiskPosition('disk1'));
+        if (pos > 180) pos = 360 - pos;
+      }
+      return pos;
+    }
   }
 
   getDiskSpeed(diskId) {
@@ -361,11 +374,19 @@ export default class DiskGameLogic {
     // We cannot calculate the score of a complete game as we don't have a valid level
     if (this._complete) return 0;
 
-    let distance = 0;
-    for (let diskId of Object.keys(this._targetPositions)) {
-      distance += this.getDiskScore(diskId);
+    let score = 0;
+    if (this._levelConfig.rule === 'absolute') {
+      for (let diskId of disks) {
+        const err = this.getDiskError(diskId);
+        score += err;
+      }
     }
-    return distance;
+    else { // this._levelConfig.rule === 'relative'
+      score = Math.max.apply(Math, [Math.abs(this.getLocalDiskPosition('disk0') - this.getLocalDiskPosition('disk1')),
+                            Math.abs(this.getLocalDiskPosition('disk0') - this.getLocalDiskPosition('disk2'))]);
+    }
+
+    return score;
   }
 
   _winGame() {
