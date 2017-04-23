@@ -333,7 +333,6 @@ export default class SculptureStore extends events.EventEmitter {
       currentGame: this._mergeCurrentGame.bind(this),
       handshakes: this._mergeHandshakes.bind(this),
       lights: this._mergeLights.bind(this),
-//      simon: this._mergeSimonGame.bind(this),
     };
 
     for (let propName of Object.keys(payload)) {
@@ -443,10 +442,6 @@ export default class SculptureStore extends events.EventEmitter {
         }
       }
     }
-  }
-
-  _mergeSimonGame(simon) {
-    // FIXME: Implement
   }
 
   _getNextGame() {
