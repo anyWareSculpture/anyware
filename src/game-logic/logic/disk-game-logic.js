@@ -347,7 +347,7 @@ export default class DiskGameLogic {
       // Middle disk: get smallest of angles to central and outer disks
 
       let pos = 0;
-      if (diskId == 'disk1') { // Middle disk
+      if (diskId === 'disk1') { // Middle disk
         pos = Math.min.apply(Math, [
           Math.abs(this.getLocalDiskPosition(diskId) - this.getLocalDiskPosition('disk0')),
           Math.abs(this.getLocalDiskPosition(diskId) - this.getLocalDiskPosition('disk2'))
@@ -382,8 +382,10 @@ export default class DiskGameLogic {
       }
     }
     else { // this._levelConfig.rule === 'relative'
-      score = Math.max.apply(Math, [Math.abs(this.getLocalDiskPosition('disk0') - this.getLocalDiskPosition('disk1')),
-                            Math.abs(this.getLocalDiskPosition('disk0') - this.getLocalDiskPosition('disk2'))]);
+      score = Math.max.apply(Math, [
+        Math.abs(this.getLocalDiskPosition('disk0') - this.getLocalDiskPosition('disk1')),
+        Math.abs(this.getLocalDiskPosition('disk0') - this.getLocalDiskPosition('disk2'))
+      ]);
     }
 
     return score;
