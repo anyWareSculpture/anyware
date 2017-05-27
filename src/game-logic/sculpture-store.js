@@ -48,7 +48,7 @@ export default class SculptureStore extends events.EventEmitter {
         [this.config.LIGHTS.STRIP_C]: 10,
         [this.config.LIGHTS.RGB_STRIPS]: 2,
         [this.config.LIGHTS.HANDSHAKE_STRIP]: 4,
-        [this.config.LIGHTS.ART_LIGHTS_STRIP]: 3
+        [this.config.LIGHTS.ART_LIGHTS_STRIP]: 4,
       }),
       handshake: new TrackedData(HandshakeGameLogic.trackedProperties),
       mole: new TrackedData(MoleGameLogic.trackedProperties),

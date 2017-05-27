@@ -137,7 +137,7 @@ export default class DefaultConfig {
       ACTIVE_CONTROL_PANEL_INTENSITY: 100,
       SHADOW_LIGHTS: {
         // stripId: [panelId..]
-        '6': ['0', '1', '2']
+        [this.LIGHTS.ART_LIGHTS_STRIP]: ['0', '1', '2', '3']
       },
       SHADOW_LIGHT_INTENSITY: 100,
       LEVELS: [
