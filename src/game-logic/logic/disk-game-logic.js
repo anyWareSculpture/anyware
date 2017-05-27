@@ -275,7 +275,7 @@ export default class DiskGameLogic {
         if (diskChanges.hasOwnProperty(field)) {
           this.data.set(field, diskChanges[field], props[field]);
         }
-      })
+      });
     }
 
     if (!diskChanges.disks) return;
