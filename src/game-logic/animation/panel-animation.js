@@ -7,9 +7,6 @@ export default class PanelAnimation {
   constructor(frames, completeCallback) {
     this.frames = frames;
     this.completeCallback = completeCallback;
-    this.sculptureActionCreator = null;
-
-    this.currentFrame = -1;
     this.state = PanelAnimation.STOPPED;
   }
 
@@ -48,6 +45,7 @@ export default class PanelAnimation {
   play(dispatcher) {
     this.before();
     this.state = PanelAnimation.RUNNING;
+    this.currentFrame = -1;
     this.sculptureActionCreator = new SculptureActionCreator(dispatcher);
 
     this.playNextFrame();
@@ -59,7 +57,7 @@ export default class PanelAnimation {
    */
   after() {
     this.stop();
-    this.completeCallback();
+    if (this.completeCallback) this.completeCallback();
   }
 
   /**
@@ -76,7 +74,6 @@ export default class PanelAnimation {
       const frame = this.frames[this.currentFrame];
       setTimeout(() => {
         this.executeAsAction(() => frame.run());
-
         this.playNextFrame();
       }, frame.timeOffset);
     }

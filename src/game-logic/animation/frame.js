@@ -6,7 +6,8 @@ export default class Frame {
    * @param {Number} timeOffset - The time to wait before playing this frame
    * @constructor
    */
-  constructor(timeOffset=DEFAULT_TIME_OFFSET) {
+  constructor(runMethod, timeOffset=DEFAULT_TIME_OFFSET) {
+    this.runMethod = runMethod;
     this.timeOffset = timeOffset;
   }
 
@@ -14,5 +15,6 @@ export default class Frame {
    * Runs the frame
    */
   run() {
+    this.runMethod();
   }
 }
