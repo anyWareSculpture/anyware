@@ -88,7 +88,8 @@ export default class AudioView {
         disk0: new Sound({url: 'sounds/Game_02/G02_Disk_Loop_G2.wav', loop: true, gain: 0.3, fadeIn: 2}),
         lighteffect: new Sound({url: 'sounds/Game_02/G02_Lights_01.wav'}),
         success: new Sound({url: 'sounds/Game_02/G02_Success_01.wav'}),
-        show: new Sound({url: 'sounds/Game_02/G02_Success_final_01.wav', gain: 0.5})
+        show: new Sound({url: 'sounds/Game_02/G02_Success_final_01.wav', gain: 0.5}),
+        shadowTransition: new Sound({url: 'sounds/Game_02/G02_Shadow_Transition.wav', gain: 0.5}),
       },
       simon: {
         panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_03/G03_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.5}))),
@@ -197,7 +198,10 @@ export default class AudioView {
   }
 
   _handleDiskGame(changes) {
-    if (changes.status === SculptureStore.STATUS_SUCCESS) {
+    if (changes.disk && changes.disk.hasOwnProperty('winning')) {
+      console.log(`Sound Winning: ${changes.disk.winning}`);
+    }
+    if (changes.disk && changes.disk.hasOwnProperty('winning') && changes.disk.winning) {
       // End of game
       if (this.store.data.get('disk').get('level') >= this.config.DISK_GAME.LEVELS.length) {
         this.sounds.disk.disk0.stop();
@@ -240,6 +244,13 @@ export default class AudioView {
 
     }
     // FIXME level success and final success
+
+    // Shadow transition sound
+    const lightChanges = changes.lights;
+    const stripId = '6';
+    if (lightChanges && lightChanges.hasOwnProperty(stripId)) {
+      this.sounds.disk.shadowTransition.play();
+    }
   }
 
   _handleLocalDiskGame() {
