@@ -136,7 +136,7 @@ export default class MoleGameLogic {
       this._colorPanel(payload);
 
       // Only for master:
-      if (this.store.isMaster) {
+      if (this.store.isMaster()) {
         this._remainingPanels.delete(this._getPanelKey(payload));
         // If we have a timeout on this panel, kill the timeout
         this._removeTimeout(this._getPanelKey(payload));
@@ -178,7 +178,7 @@ export default class MoleGameLogic {
     const moleProps = payload.metadata.props.mole;
 
     // Master owns the panelCount field
-    if (!this.store.isMaster) {
+    if (!this.store.isMaster()) {
       if (moleChanges.hasOwnProperty('panelCount')) {
         moleData.set('panelCount', moleChanges.panelCount, moleProps.panelCount);
       }
@@ -193,7 +193,7 @@ export default class MoleGameLogic {
         const oldstate = panels.getPanelStateByKey(panelKey);
 
         // Slaves just merge
-        if (!this.store.isMaster) {
+        if (!this.store.isMaster()) {
           panels.setPanelStateByKey(panelKey, newstate, moleProps.panels[panelKey]);
         }
         else {

@@ -225,7 +225,7 @@ export default class DiskGameLogic {
       // On speed changes, publish position
       disk.setPosition(this.store.getDiskPosition(diskId));
       // ..and check win condition if master
-      if (this.store.isMaster && this.store.isReady) {
+      if (this.store.isMaster() && this.store.isReady) {
         this._checkWinConditions();
       }
 
@@ -255,7 +255,7 @@ export default class DiskGameLogic {
     // FIXME: Only needed for emulator?
     const {diskId, position} = payload;
     this.physicalDisks[diskId].targetPosition = position;
-    if (this.store.isMaster && this.store.isReady) {
+    if (this.store.isMaster() && this.store.isReady) {
       this._checkWinConditions();
     }
   }
@@ -269,7 +269,7 @@ export default class DiskGameLogic {
 
   _mergeDisk(diskChanges, props = {}) {
     // Master owns the fields: level, active, winning
-    if (!this.store.isMaster) {
+    if (!this.store.isMaster()) {
       const fields = ['level', 'active', 'winning'];
       fields.forEach((field) => {
         if (diskChanges.hasOwnProperty(field)) {
@@ -293,7 +293,7 @@ export default class DiskGameLogic {
       if (changedDisk.hasOwnProperty('position')) {
         currDisk.setPosition(changedDisk.position, diskProps.position);
         this.physicalDisks[diskId].targetPosition = changedDisk.position;
-        if (this.store.isMaster && this.store.isReady) {
+        if (this.store.isMaster() && this.store.isReady) {
           this._checkWinConditions();
         }
       }

@@ -105,8 +105,13 @@ export default class SculptureStore extends events.EventEmitter {
     return !this.currentGame;
   }
 
-  get isMaster() {
+  isMaster() {
     return this._master;
+  }
+
+  setMaster(master) {
+    this._master = master;
+    this.emit(SculptureStore.EVENT_LOCAL_CHANGE);
   }
 
   /**
@@ -129,6 +134,10 @@ export default class SculptureStore extends events.EventEmitter {
   get isPanelAnimationRunning() {
     const panelAnimation = this.panelAnimation;
     return panelAnimation ? panelAnimation.isRunning : false;
+  }
+
+  getStatus() {
+    return this.data.get('status');
   }
 
   /**
@@ -212,12 +221,12 @@ export default class SculptureStore extends events.EventEmitter {
     // end any previous game
     if (this.currentGameLogic) {
       this.currentGameLogic.end();
-      this._master = false;
+      this.setMaster(false);
     }
     this._resetGamePanels();
 
     this.data.set('currentGame', game);
-    this._master = true;
+    this.setMaster(true);
     this.currentGameLogic = new GameLogic(this, this.config);
     this.currentGameLogic.start();
   }
@@ -389,8 +398,10 @@ export default class SculptureStore extends events.EventEmitter {
     this.emit(SculptureStore.EVENT_LOCAL_CHANGE);
   }
 
-  _mergeStatus(newStatus) {
-    this.data.set('status', newStatus);
+  _mergeStatus(status, props) {
+    if (!this.isMaster()) {
+      this.data.set('status', status, props);
+    }
   }
 
   _mergeCurrentGame(currentGame, props) {
@@ -408,7 +419,7 @@ export default class SculptureStore extends events.EventEmitter {
     this.data.set('currentGame', currentGame, props.currentGame);
 
     if (!(this.currentGameLogic instanceof GameLogic)) {
-      this._master = false;
+      this.setMaster(false);
       this.currentGameLogic = new GameLogic(this, this.config);
     }
   }

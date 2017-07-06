@@ -93,7 +93,7 @@ export default class SimonGameLogic {
    * FIXME: Handle the final status animation separately?
    */
   _actionFinishStatusAnimation() {
-    if (!this.store.isMaster) return;
+    if (!this.store.isMaster()) return;
 
     if (this._complete) {
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
@@ -119,7 +119,7 @@ export default class SimonGameLogic {
       this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.INACTIVE_INTENSITY);
     }
 
-    if (this.store.isMaster && pressed) this._handlePanelPress(stripId, panelId);
+    if (this.store.isMaster() && pressed) this._handlePanelPress(stripId, panelId);
   }
 
   /**
@@ -161,7 +161,7 @@ export default class SimonGameLogic {
 
   _mergeSimon(simonChanges, props) {
     // Master owns all local fields
-    if (!this.store.isMaster) {
+    if (!this.store.isMaster()) {
       if (simonChanges.hasOwnProperty('level')) {
         this.data.set('level', simonChanges.level, props.level);
       }
@@ -173,7 +173,7 @@ export default class SimonGameLogic {
 
   _mergeLights(lightsChanges, props) {
     // Master is responsible for merging panel actions
-    if (this.store.isMaster) {
+    if (this.store.isMaster()) {
       for (let stripId of Object.keys(lightsChanges)) {
         const changedPanels = lightsChanges[stripId].panels;
         for (let panelId of Object.keys(changedPanels)) {
