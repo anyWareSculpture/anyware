@@ -113,7 +113,7 @@ export default class AudioView {
         this.store.on(SculptureStore.EVENT_LOCAL_CHANGE, this._handleLocalChanges.bind(this));
       })
       .then(() => callback(null))
-      .catch(callback.bind(null));
+      .catch((reason) => callback(reason));
   }
 
   /*
