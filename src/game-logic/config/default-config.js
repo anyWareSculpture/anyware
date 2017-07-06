@@ -184,6 +184,8 @@ export default class DefaultConfig {
           panelSequence: ['3', '6', '2', '9']
         }
       ],
+      // Can be set to null to disable the RGB strips
+      RGB_STRIP: this.LIGHTS.RGB_STRIPS,
       // The intensity of the panels when they are pressed or when the sequence is playing
       TARGET_PANEL_INTENSITY: 100,
       // The intensity of the panels that the user can use to play the sequence
