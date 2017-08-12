@@ -306,7 +306,7 @@ export default class AudioView {
       return map(score, 100, 50, 4, 10);
     }
     else {
-      return map(score, 50, 0, 10, 60);
+      return map(score, 50, 0, 10, 32);
     }
   }
 
