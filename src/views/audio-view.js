@@ -89,7 +89,7 @@ export default class AudioView {
         lighteffect: new Sound({url: 'sounds/Game_02/G02_Lights_01.wav'}),
         success: new Sound({url: 'sounds/Game_02/G02_Success_01.wav'}),
         show: new Sound({url: 'sounds/Game_02/G02_Success_final_01.wav', gain: 0.5}),
-        shadowTransition: new Sound({url: 'sounds/Game_02/G02_Shadow_Transition.wav', gain: 0.5}),
+        shadowTransition: new Sound({url: 'sounds/Game_02/G02_Lights_01.wav', gain: 2.0}),
       },
       simon: {
         panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_03/G03_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.5}))),
