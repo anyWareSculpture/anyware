@@ -7,9 +7,6 @@ import DiskModel from '../utils/DiskModel';
 import PanelAnimation from '../animation/panel-animation';
 import Frame from '../animation/frame';
 
-const positivePanels = ['5','6','7','8','9'];
-const negativePanels = ['4','3','2','1','0'];
-
 export default class DiskGameLogic {
   // These are automatically added to the sculpture store
   static trackedProperties = {
@@ -40,24 +37,17 @@ export default class DiskGameLogic {
     const lightArray = this._lights;
     const initFrames = [
       new Frame(() => {
-        lightArray.setIntensity('6', '0', this.gameConfig.SHADOW_LIGHT_INTENSITY);
-        lightArray.setIntensity('6', '2', this.gameConfig.SHADOW_LIGHT_INTENSITY);
+        lightArray.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '0', this.gameConfig.SHADOW_LIGHT_INTENSITY);
+        lightArray.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '2', this.gameConfig.SHADOW_LIGHT_INTENSITY);
       }, 0),
       new Frame(() => {
-        lightArray.setIntensity('6', '1', this.gameConfig.SHADOW_LIGHT_INTENSITY);
+        lightArray.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '1', this.gameConfig.SHADOW_LIGHT_INTENSITY);
       }, 1000),
       new Frame(() => {
-        lightArray.setIntensity('6', '3', this.gameConfig.SHADOW_LIGHT_INTENSITY);
+        lightArray.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '3', this.gameConfig.SHADOW_LIGHT_INTENSITY);
       }, 1000),
       new Frame(() => {
-        // Activate UI indicators
-        for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
-          lightArray.setColor(stripId, null, this.gameConfig.CONTROL_PANEL_COLOR);
-          for (let i=0;i<5;i++) {
-            lightArray.setIntensity(stripId, positivePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
-            lightArray.setIntensity(stripId, negativePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
-          }
-        }
+        // FIXME: Ensure that all panels are black?
         this.startLevel();
       }, 2000),
     ];
@@ -183,67 +173,40 @@ export default class DiskGameLogic {
 
     const disk = this.data.get('disks').get(diskId);
 
-    // For each strip change:
-    //   Find highest positive activated panel
-    //   Find highest negative activated panel
-    //   if both positive and negative:
-    //     Set conflict
-    //   else 
-    //     set target speed, or 0 if no panels are active
-
     const lightArray = this._lights;
     const panels = lightArray.get(stripId).get('panels');
-    const isActive = (panelId) => panels.get(panelId).get('active');
-    let positivePanel = positivePanels.findIndex(isActive);
-    let negativePanel = negativePanels.findIndex(isActive);
 
-    if (positivePanel >= 0 && negativePanel >= 0) {
-      // FIXME: Set conflict
-      this._setDiskColor(stripId, this.gameConfig.CONFLICT_INTENSITY, this.config.COLORS.ERROR);
-    }
-    else {
-      let speed = 0;
-      let sign = 1;
-      let panelIds = [];
-      if (positivePanel === -1 && negativePanel === -1) {
-        speed = 0;
+    let activePanelIndex = -1;
+    for (const key of panels) {
+      if (panels.get(key).get('active')) {
+        activePanelIndex = parseInt(key);
+        break;
       }
-      else if (positivePanel >= 0) {
-        speed = (positivePanel + 1);
-        for (let i=0;i<=positivePanel;i++) panelIds.push(positivePanels[i]);
+    }
+    // FIXME: Handle conflicts: First player wins
+    const speed = activePanelIndex + 1;
+    const sign = 1; // FIXME: Different sign per disk (hardcoded for now)
+
+    const newspeed = speed === 0 ? 0 : sign * this.gameConfig.SPEEDS[speed - 1];
+    disk.setTargetSpeed(newspeed);
+    this.physicalDisks[diskId].targetSpeed = newspeed;
+
+    // On speed changes, publish position
+    disk.setPosition(this.store.getDiskPosition(diskId));
+    // ..and check win condition if master
+    if (this.store.isMaster() && this.store.isReady) {
+      this._checkWinConditions();
+    }
+
+    // Control panel feedback
+    for (const key of panels) {
+      if (activePanelIndex >= parseInt(key)) {
+        lightArray.setIntensity(stripId, key, this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
+        lightArray.setColor(stripId, key, this.store.locationColor);
       }
       else {
-        speed = (negativePanel + 1);
-        sign = -1;
-        for (let i=0;i<=negativePanel;i++) panelIds.push(negativePanels[i]);
+        lightArray.setIntensity(stripId, key, 0);
       }
-
-      const newspeed = speed === 0 ? 0 : sign * this.gameConfig.SPEEDS[speed - 1];
-      disk.setTargetSpeed(newspeed);
-      this.physicalDisks[diskId].targetSpeed = newspeed;
-
-      // On speed changes, publish position
-      disk.setPosition(this.store.getDiskPosition(diskId));
-      // ..and check win condition if master
-      if (this.store.isMaster() && this.store.isReady) {
-        this._checkWinConditions();
-      }
-
-      const lightArray = this._lights;
-      const setPanels = (panels, index) => {
-        for (let i=0;i<5;i++) {
-          if (index >= i) {
-            lightArray.setIntensity(stripId, panels[i], this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
-            lightArray.setColor(stripId, panels[i], this.store.locationColor);
-          }
-          else {
-            lightArray.setIntensity(stripId, panels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
-            lightArray.setColor(stripId, panels[i], this.gameConfig.CONTROL_PANEL_COLOR);
-          }
-        }
-      };
-      setPanels(positivePanels, sign > 0 ? positivePanel : -1);
-      setPanels(negativePanels, sign < 0 ? negativePanel : -1);
     }
   }
 
@@ -311,12 +274,6 @@ export default class DiskGameLogic {
     if (this._complete) {
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 4000);
     }
-  }
-
-  _setDiskColor(stripId, intensity, color) {
-    const lightArray = this._lights;
-    lightArray.setIntensity(stripId, null, intensity);
-    lightArray.setColor(stripId, null, color);
   }
 
   /**
@@ -448,22 +405,17 @@ export default class DiskGameLogic {
       console.log(`Game complete`);
       this._complete = true;
       for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
-        for (let i=0;i<10;i++) {
-          this._lights.setIntensity(stripId, positivePanels[i], 0);
-        }
+        this._lights.setIntensity(stripId, null, 0);
       }
       for (let i=0;i<4;i++) {
-        this._lights.setIntensity('6', '' + i, 0);
+        this._lights.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '' + i, 0);
       }
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 5000);
       
     }
     else {
       for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
-        for (let i=0;i<5;i++) {
-          this._lights.setIntensity(stripId, positivePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
-          this._lights.setIntensity(stripId, negativePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
-        }
+        this._lights.setIntensity(stripId, null, 0);
       }
       this.startLevel();
     }
