@@ -3,6 +3,7 @@ import SculptureActionCreator from '../actions/sculpture-action-creator';
 import SimonGameActionCreator from '../actions/simon-game-action-creator';
 import PanelAnimation from '../animation/panel-animation';
 import NormalizeStripFrame from '../animation/normalize-strip-frame';
+import Frame from '../animation/frame';
 
 export default class SimonGameLogic {
   // These are automatically added to the sculpture store
@@ -236,30 +237,20 @@ export default class SimonGameLogic {
   _playSequence(stripId, panelSequence, frameDelay) {
     this._discardInput();
 
-    const frames = panelSequence.map((panelId) => this._createSequenceFrame(stripId, panelId, frameDelay));
-    frames.push(this._createLastSequenceFrame(stripId, frameDelay));
+    const frames = [
+        new NormalizeStripFrame(this._lights, stripId,
+                                this.gameConfig.DEFAULT_SIMON_PANEL_COLOR,
+                                this.gameConfig.AVAILABLE_PANEL_INTENSITY),
+        ...panelSequence.map((panelId) => {
+            return new Frame(() => {
+                this._lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
+                this._lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
+            }, frameDelay !== undefined ? frameDelay : this.gameConfig.SEQUENCE_ANIMATION_FRAME_DELAY);
+        }),
+    ];
     const animation = new PanelAnimation(frames, this._finishPlaySequence.bind(this));
 
     this.store.playAnimation(animation);
-  }
-
-  _createSequenceFrame(stripId, panelId, frameDelay) {
-    return this._createFrame(stripId, frameDelay, () => {
-      this._lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
-      this._lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
-    });
-  }
-
-  _createLastSequenceFrame(stripId, frameDelay) {
-    return this._createFrame(stripId, frameDelay, () => {});
-  }
-
-  _createFrame(stripId, frameDelay, callback) {
-    return new NormalizeStripFrame(this._lights, stripId,
-      this.gameConfig.DEFAULT_SIMON_PANEL_COLOR,
-      this.gameConfig.AVAILABLE_PANEL_INTENSITY,
-      callback,
-      frameDelay !== undefined ? frameDelay : this.gameConfig.SEQUENCE_ANIMATION_FRAME_DELAY);
   }
 
   _finishPlaySequence() {
