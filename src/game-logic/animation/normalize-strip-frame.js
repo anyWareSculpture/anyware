@@ -1,5 +1,3 @@
-const DEFAULT_TIME_OFFSET = 1000; // ms
-
 export default class NormalizeStripFrame {
   /**
    * Creates a frame that normalizes the entire strip to a single color and intensity
@@ -11,7 +9,7 @@ export default class NormalizeStripFrame {
    * @param {Number} timeOffset - The time to wait before playing this frame
    * @constructor
    */
-  constructor(lightArray, stripId, color, intensity, runMethod, timeOffset=DEFAULT_TIME_OFFSET) {
+  constructor(lightArray, stripId, color, intensity, runMethod, timeOffset = 0) {
     this.lightArray = lightArray;
     this.stripId = stripId;
     this.color = color;
@@ -27,6 +25,6 @@ export default class NormalizeStripFrame {
     this.lightArray.setColor(this.stripId, null, this.color);
     this.lightArray.setIntensity(this.stripId, null, this.intensity);
 
-    this.runMethod();
+    if (this.runMethod) this.runMethod();
   }
 }
