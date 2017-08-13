@@ -169,7 +169,7 @@ export default class MoleGameLogic {
             }
           });
         });
-      }, 1000),
+      }, 4500),
       new Frame(() => {
         this.config.GAME_STRIPS.forEach(stripId => {
           this._lights.setIntensity(stripId, null, 0);
