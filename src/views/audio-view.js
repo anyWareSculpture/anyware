@@ -159,7 +159,10 @@ export default class AudioView {
 
   _handleMoleGame(changes) {
     const lightChanges = changes.lights;
-    if (!lightChanges || !this.store.isReady) return;
+    const moleChanges = changes.mole;
+    if (!lightChanges && !moleChanges || !this.store.isReady) return;
+
+    const molegame = this.store.currentGameLogic;
 
     /*
       Mole game sounds:
@@ -167,30 +170,23 @@ export default class AudioView {
       changes.mole.panels.<id> == STATE_IGNORED: Just turned -> success?
       state.mole.panels.<id> == STATE_OFF: failure
     */
+
+    if (moleChanges && moleChanges.panelCount > 0) {
+      if (moleChanges.panelCount === this.config.MOLE_GAME.GAME_END) {
+        this.sounds.simon.success.play();
+      }
+      else {
+        this.sounds.mole.success.play();
+      }
+    }
+
     // If a panel got activated (changes.lights.<stripId>.panels.<panelId>.active === true)
     for (let stripId in lightChanges) {
       for (let panelId in lightChanges[stripId].panels) {
         const panelChange = lightChanges[stripId].panels[panelId];
         // FIXME: To get correct multi-player sounds, we should listen only for STATE changes,
         // as the active flag might not be correctly set
-        if (panelChange.active === true) {
-          const panelkey = `${stripId},${panelId}`;
-          if (changes.mole && changes.mole.panels) {
-            const state = changes.mole.panels[panelkey];
-            if (state === TrackedPanels.STATE_IGNORED) { // Panel was turned -> success
-              this.sounds.mole.success.play();
-            }
-          }
-          else {
-            if (this.config.MOLE_GAME.ENABLE_FAILURE_SOUND) {
-              const state = this.store.data.get('mole').get('panels').get(panelkey);
-              if (!state || state === TrackedPanels.STATE_OFF) {
-                this.sounds.mole.failure.play();
-              }
-            }
-          }
-        }
-        else if (panelChange.intensity > 90) {
+        if (panelChange.active === false && panelChange.intensity > 90) {
           this.sounds.mole.panels[stripId][panelId].play();
         }
       }
