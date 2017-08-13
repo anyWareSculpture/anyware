@@ -9,6 +9,7 @@ export default class SimonGameLogic {
   // These are automatically added to the sculpture store
   static trackedProperties = {
     level: 0,
+    pattern: 0,
     targetPanel: null,
   };
 
@@ -25,6 +26,7 @@ export default class SimonGameLogic {
 
     this._inputTimeout = null;
     this._replayTimeout = null;
+    this._replayCount = 0;
   }
 
   get data() {
@@ -47,6 +49,7 @@ export default class SimonGameLogic {
       this._lights.setColor(this.gameConfig.RGB_STRIP, '1', 'rgb1');
     }
     this.data.set('level', 0);
+    this.data.set('pattern', 0);
     this._playCurrentSequence();
   }
 
@@ -108,14 +111,13 @@ export default class SimonGameLogic {
     if (this._complete || !this.store.isReady) return;
 
     const {stripId, panelId, pressed} = payload;
-    const targetStripId = this._currentLevelData.stripId;
 
     // Presses on current strip stays on, other strips are free play
     if (pressed) {
       this._lights.setColor(stripId, panelId, this.store.locationColor);
       this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.ACTIVE_INTENSITY);
     }
-    else if (targetStripId !== stripId) {
+    else if (stripId !== this.currentStrip) {
       this._lights.setToDefaultColor(stripId, panelId);
       this._lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.INACTIVE_INTENSITY);
     }
@@ -127,12 +129,14 @@ export default class SimonGameLogic {
    * Handle panel press (locally or through merge) - master only
    */
   _handlePanelPress(stripId, panelId) {
-    const {stripId: targetStripId, panelSequence} = this._currentLevelData;
+    const {stripId: targetStripId, panelSequences} = this._currentLevelData;
+    const panelSequence = panelSequences[this._pattern];
 
     // Only handle current game strips from here on
     if (targetStripId !== stripId) return;
 
     if (!this._receivedInput) {
+      this._replayCount = 0;
       this._receivedInput = true;
       this._setInputTimeout();
     }
@@ -145,6 +149,7 @@ export default class SimonGameLogic {
     this._targetSequenceIndex += 1;
 
     if (this._targetSequenceIndex >= panelSequence.length) {
+      // FIXME: If we hit the last panel twice, we trigger sendLevelWon() twice, skipping a level
       setTimeout(() => this.simonGameActionCreator.sendLevelWon(), 1000);
     }
     else {
@@ -165,6 +170,9 @@ export default class SimonGameLogic {
     if (!this.store.isMaster()) {
       if (simonChanges.hasOwnProperty('level')) {
         this.data.set('level', simonChanges.level, props.level);
+      }
+      if (simonChanges.hasOwnProperty('pattern')) {
+        this.data.set('pattern', simonChanges.pattern, props.pattern);
       }
       if (simonChanges.hasOwnProperty('targetPanel')) {
         this.data.set('targetPanel', simonChanges.targetPanel, props.targetPanel);
@@ -217,18 +225,20 @@ export default class SimonGameLogic {
 
     this.store.setSuccessStatus();
 
-    let level = this._level + 1;
-    if (level >= this._levels) {
+    const level = this._level + 1;
+    if (level >= this._numLevels) {
       this._complete = true;
     }
 
     this._level = level;
+    this._pattern = 0;
     // Make sure changes are merged by all slaves
     this.store.reassertChanges();
   }
 
   _playCurrentSequence() {
-    const {stripId, panelSequence, frameDelay} = this._currentLevelData;
+    const {stripId, panelSequences, frameDelay} = this._currentLevelData;
+    const panelSequence = panelSequences[this._pattern];
 
     this._playSequence(stripId, panelSequence, frameDelay);
     this._targetPanel = panelSequence[this._targetSequenceIndex];
@@ -255,6 +265,11 @@ export default class SimonGameLogic {
 
   _finishPlaySequence() {
     clearTimeout(this._replayTimeout);
+    this._replayCount += 1;
+    if (this._replayCount >= 3) {
+        this._pattern = (this._pattern + 1) % this._numPatterns;
+        this._replayCount = 0;
+    }
 
     const level = this._level;
     this._replayTimeout = setTimeout(() => {
@@ -264,13 +279,12 @@ export default class SimonGameLogic {
     }, this.gameConfig.DELAY_BETWEEN_PLAYS);
   }
 
-  get _levels() {
-    return this.gameConfig.PATTERN_LEVELS.length;
+  get _currentLevelData() {
+    return this.gameConfig.PATTERN_LEVELS[this._level];
   }
 
-  get _currentLevelData() {
-    const level = this._level;
-    return this.gameConfig.PATTERN_LEVELS[level];
+  get _numLevels() {
+    return this.gameConfig.PATTERN_LEVELS.length;
   }
 
   get _level() {
@@ -280,6 +294,19 @@ export default class SimonGameLogic {
   set _level(value) {
     this.store.reassertChanges(); // Make sure changes are merged by all slaves
     return this.data.set('level', value);
+  }
+
+  get _numPatterns() {
+    return this.gameConfig.PATTERN_LEVELS[this._level].panelSequences.length;
+  }
+
+  get _pattern() {
+    return this.data.get('pattern');
+  }
+
+  set _pattern(pattern) {
+    this.store.reassertChanges(); // Make sure changes are merged by all slaves
+    return this.data.set('pattern', pattern);
   }
 
   get _targetPanel() {

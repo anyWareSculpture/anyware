@@ -170,18 +170,30 @@ export default class DefaultConfig {
           stripId: this.LIGHTS.STRIP_C,
           // Each array of panel IDs is lit up one at a time
           // Each array within this array is called a "frame" in the "sequence"
-          panelSequence: ['4', '5', '6'],
+          panelSequences: [
+            ['1', '2', '3'],
+            ['4', '5', '6'],
+            ['7', '8', '9'],
+          ],
           frameDelay: 750 // Overriding default frame delay to make first level slower
         },
         // level 1 sequence
         {
           stripId: this.LIGHTS.STRIP_B,
-          panelSequence: ['1', '8', '6']
+          panelSequences: [
+            ['1', '8', '6'],
+            ['2', '7', '0'],
+            ['4', '9', '5'],
+          ],
         },
         // level 2 sequence
         {
           stripId: this.LIGHTS.STRIP_A,
-          panelSequence: ['3', '6', '2', '9']
+          panelSequences: [
+            ['3', '6', '2', '9'],
+            ['5', '1', '8', '7'],
+            ['0', '4', '7', '6'],
+          ],
         }
       ],
       // Can be set to null to disable the RGB strips
