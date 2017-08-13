@@ -123,8 +123,6 @@ export default class DefaultConfig {
       INACTIVE_PANEL_INTENSITY: 0,
       // The intensity to use on ignored panels (panels turned to location color)
       COLORED_PANEL_INTENSITY: 75,
-      // We don't use failure sounds in the default setup due to too many accidental touches
-      ENABLE_FAILURE_SOUND: false
     };
 
     this.DISK_GAME = {
