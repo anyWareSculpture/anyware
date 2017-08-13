@@ -150,12 +150,12 @@ export default class MoleGameLogic {
    */
   _advanceGame() {
     let panelCount = this.data.get("panelCount") + 1;
+    this.data.set('panelCount', panelCount);
     if (panelCount === this.gameConfig.GAME_END) {
       this._lights.deactivateAll();
       this.store.setSuccessStatus();
     }
     else {
-      this.data.set('panelCount', panelCount);
       // Determine whether to add, remove of keep # of simultaneous panels
       const addPanels = 1 + (this.gameConfig.NUM_ACTIVE_PANELS[panelCount] ? this.gameConfig.NUM_ACTIVE_PANELS[panelCount] : 0);
       
