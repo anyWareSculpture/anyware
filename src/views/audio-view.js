@@ -178,15 +178,14 @@ export default class AudioView {
       else {
         this.sounds.mole.success.play();
       }
+      return
     }
 
     // If a panel got activated (changes.lights.<stripId>.panels.<panelId>.active === true)
     for (let stripId in lightChanges) {
       for (let panelId in lightChanges[stripId].panels) {
         const panelChange = lightChanges[stripId].panels[panelId];
-        // FIXME: To get correct multi-player sounds, we should listen only for STATE changes,
-        // as the active flag might not be correctly set
-        if (panelChange.active === false && panelChange.intensity > 90) {
+        if (panelChange.active !== true && panelChange.intensity > 90) {
           this.sounds.mole.panels[stripId][panelId].play();
         }
       }
