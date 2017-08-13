@@ -4,6 +4,8 @@ import SculptureActionCreator from '../actions/sculpture-action-creator';
 import MoleGameActionCreator from '../actions/mole-game-action-creator';
 import TrackedPanels from '../utils/tracked-panels';
 import COLORS from '../constants/colors';
+import PanelAnimation from '../animation/panel-animation';
+import Frame from '../animation/frame';
 
 export default class MoleGameLogic {
   // These are automatically added to the sculpture store
@@ -32,6 +34,7 @@ export default class MoleGameLogic {
     // FIXME: This is a temporary fix for a firmware bug not respecting intensity
     this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, null, COLORS.BLACK);
 
+    this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
     this.moleGameActionCreator = new MoleGameActionCreator(this.store.dispatcher);
   }
 
@@ -75,21 +78,11 @@ export default class MoleGameLogic {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [MoleGameActionCreator.AVAIL_PANEL]: this._actionAvailPanel.bind(this),
       [MoleGameActionCreator.DEAVAIL_PANEL]: this._actionDeavailPanel.bind(this),
-      [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
     };
 
     const actionHandler = actionHandlers[payload.actionType];
     if (actionHandler) actionHandler(payload);
-  }
-
-  /**
-   * We only have a status animation at the end of the game
-   */
-  _actionFinishStatusAnimation() {
-    this._complete = true;
-    // There is currently no transition out, so we can synchronously start the next game
-    this.store.moveToNextGame();
   }
 
   /**
@@ -145,6 +138,51 @@ export default class MoleGameLogic {
     }
   }
 
+  _winGame() {
+    // Count all panel colors
+    const colorCount = { };
+    this.config.GAME_STRIPS.forEach(stripId => {
+      const panelIds = this._lights.get(stripId).panelIds;
+      panelIds.forEach((panelId) => {
+        const col = this._lights.getColor(stripId, panelId);
+        colorCount[col] = (colorCount[col] || 0) + 1;
+      });
+    });
+
+    // Determine winning color
+    const winningColor = Object.entries(colorCount).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    console.log(`Winning color: ${winningColor}`);
+
+    // Transition animation: 
+    // 1) Turn off non-winning colors
+    // 2) Turn off all colors and start next game
+    const transitionFrames = [
+      new Frame(() => {
+        this._lights.deactivateAll();
+      }, 0),
+      new Frame(() => {
+        this.config.GAME_STRIPS.forEach(stripId => {
+          const panelIds = this._lights.get(stripId).panelIds;
+          panelIds.forEach((panelId) => {
+            if (this._lights.getColor(stripId, panelId) !== winningColor) {
+              this._lights.setIntensity(stripId, panelId, 0);
+            }
+          });
+        });
+      }, 1000),
+      new Frame(() => {
+        this.config.GAME_STRIPS.forEach(stripId => {
+          this._lights.setIntensity(stripId, null, 0);
+        });
+        this._complete = true;
+        setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 1000);
+      }, 5000),
+    ];
+
+    const transitionAnimation = new PanelAnimation(transitionFrames);
+    this.store.playAnimation(transitionAnimation);
+  }
+
   /**
    * Advance game. Should only be called by master
    */
@@ -152,8 +190,7 @@ export default class MoleGameLogic {
     let panelCount = this.data.get("panelCount") + 1;
     this.data.set('panelCount', panelCount);
     if (panelCount === this.gameConfig.GAME_END) {
-      this._lights.deactivateAll();
-      this.store.setSuccessStatus();
+      this._winGame();
     }
     else {
       // Determine whether to add, remove of keep # of simultaneous panels
