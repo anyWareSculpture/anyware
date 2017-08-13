@@ -244,6 +244,7 @@ export default class MoleGameLogic {
               else if (oldstate === TrackedPanels.STATE_OFF && !this._panels[panelKey].moveDelay) {
                 console.log('merged after new panel');
                 this._remainingPanels.delete(panelKey);
+                // FIXME: If this is the last panel, we may need to go to _winGame()
                 this.data.set('panelCount', this.data.get("panelCount") + 1);
                 this._lights.setIntensity(this._panels[panelKey].stripId, this._panels[panelKey].panelId, this.gameConfig.COLORED_PANEL_INTENSITY);
               }
