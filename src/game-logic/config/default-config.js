@@ -14,6 +14,7 @@
  */
 
 import COLORS from '../constants/colors';
+import WEBCOLORS from '../constants/webColors';
 import GAMES from '../constants/games';
 import assign from 'assign-deep';
 
@@ -216,6 +217,10 @@ export default class DefaultConfig {
 
   getLocationColor(loc) {
     return this.COLORS.LOCATIONS[loc];
+  }
+
+  getWebColor(name) {
+    return this.WEBCOLORS[name];
   }
 
   applyLocalConfig(config) {
