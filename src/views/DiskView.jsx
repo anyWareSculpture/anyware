@@ -51,6 +51,9 @@ export default class DiskView extends React.Component {
       disk0: 0,
       disk1: 0,
       disk2: 0,
+      disk0Color: '#000000',
+      disk1Color: '#000000',
+      disk2Color: '#000000',
       level: 0,
       active: false,
       showCircle: false,
@@ -94,6 +97,11 @@ export default class DiskView extends React.Component {
       if (changes.disk.hasOwnProperty('level')) {
         this.setState({level: changes.disk.level});
       }
+      // Show location color of moving disks
+      for (const diskId of this.disks) {
+        const colorId = this.props.config.getLocationColor(this.disks.get(diskId).getUser());
+        this.setState({ [`${diskId}Color`]: this.props.config.getWebColor(colorId) });
+      }
     }
   }
 
@@ -128,6 +136,7 @@ export default class DiskView extends React.Component {
                       transform: `rotate(${this.state[diskId]}deg)`,
                       opacity: this.state.showPuzzle ? 1 : 0,
                       transition: "opacity 2s ease-in",
+                      stroke: this.state[`${diskId}Color`],
                     }}/>;
       }) }
       </g>
