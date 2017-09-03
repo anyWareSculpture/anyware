@@ -279,7 +279,7 @@ export default class DiskGameLogic {
     }
 
     if (!diskChanges.disks) return;
-    if (this._winning) return;
+    if (this.store.isMaster() && this._winning) return;
 
     const disksChanges = diskChanges.disks;
     const disksProps = props.disks;
