@@ -183,6 +183,11 @@ export default class DiskGameLogic {
 
     const disk = this.data.get('disks').get(diskId);
 
+    // Ignore non-owner interactions
+    if (disk.getUser() !== "" && disk.getUser() !== this.store.me) {
+        return;
+    }
+
     // For each strip change:
     //   Find highest positive activated panel
     //   Find highest negative activated panel
@@ -219,6 +224,8 @@ export default class DiskGameLogic {
       }
 
       const newspeed = speed === 0 ? 0 : sign * this.gameConfig.SPEEDS[speed - 1];
+
+      disk.setUser(newspeed > 0 ? this.store.me : '');
       disk.setTargetSpeed(newspeed);
       this.physicalDisks[diskId].targetSpeed = newspeed;
 
