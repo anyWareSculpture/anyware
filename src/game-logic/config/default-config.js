@@ -220,7 +220,7 @@ export default class DefaultConfig {
   }
 
   getWebColor(name) {
-    return this.WEBCOLORS[name];
+    return WEBCOLORS[name];
   }
 
   applyLocalConfig(config) {

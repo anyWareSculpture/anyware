@@ -99,8 +99,13 @@ export default class DiskView extends React.Component {
       }
       // Show location color of moving disks
       for (const diskId of this.disks) {
-        const colorId = this.props.config.getLocationColor(this.disks.get(diskId).getUser());
-        this.setState({ [`${diskId}Color`]: this.props.config.getWebColor(colorId) });
+        const userId = this.disks.get(diskId).getUser();
+        if (userId) {
+          const colorId = this.props.config.getLocationColor(userId);
+          if (colorId) {
+            this.setState({ [`${diskId}Color`]: this.props.config.getWebColor(colorId) });
+          }
+        }
       }
     }
   }
