@@ -185,7 +185,7 @@ export default class DiskGameLogic {
 
     // Ignore non-owner interactions
     if (disk.getUser() !== "" && disk.getUser() !== this.store.me) {
-        return;
+      return;
     }
 
     // For each strip change:

@@ -248,15 +248,15 @@ export default class SimonGameLogic {
     this._discardInput();
 
     const frames = [
-        new NormalizeStripFrame(this._lights, stripId,
-                                this.gameConfig.DEFAULT_SIMON_PANEL_COLOR,
-                                this.gameConfig.AVAILABLE_PANEL_INTENSITY),
-        ...panelSequence.map((panelId) => {
-            return new Frame(() => {
-                this._lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
-                this._lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
-            }, frameDelay !== undefined ? frameDelay : this.gameConfig.SEQUENCE_ANIMATION_FRAME_DELAY);
-        }),
+      new NormalizeStripFrame(this._lights, stripId,
+                              this.gameConfig.DEFAULT_SIMON_PANEL_COLOR,
+                              this.gameConfig.AVAILABLE_PANEL_INTENSITY),
+      ...panelSequence.map((panelId) => {
+        return new Frame(() => {
+          this._lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
+          this._lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
+        }, frameDelay !== undefined ? frameDelay : this.gameConfig.SEQUENCE_ANIMATION_FRAME_DELAY);
+      }),
     ];
     const animation = new PanelAnimation(frames, this._finishPlaySequence.bind(this));
 
@@ -267,8 +267,8 @@ export default class SimonGameLogic {
     clearTimeout(this._replayTimeout);
     this._replayCount += 1;
     if (this._replayCount >= 3) {
-        this._pattern = (this._pattern + 1) % this._numPatterns;
-        this._replayCount = 0;
+      this._pattern = (this._pattern + 1) % this._numPatterns;
+      this._replayCount = 0;
     }
 
     const level = this._level;

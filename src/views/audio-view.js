@@ -178,7 +178,7 @@ export default class AudioView {
       else {
         this.sounds.mole.success.play();
       }
-      return
+      return;
     }
 
     // If a panel got activated (changes.lights.<stripId>.panels.<panelId>.active === true)
