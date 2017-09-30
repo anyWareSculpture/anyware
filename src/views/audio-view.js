@@ -1,44 +1,3 @@
-/**
- *  Startup or transition into Handshake game
- *  o Start ambient sound
- *   Handshake interaction:
- *  o play handshake play
- *  o stop ambient sound
- *   Mole Game:
- *  We have 3 sounds
- *  1) Light activated: Panel comes on with 'neutral' color using ACTIVE_PANEL_INTENSITY
- *  2) Success interaction: panel turn active and state == TrackedPanels.STATE_IGNORED
- *  3) Fail interaction: panel turn active and state == TrackedPanels.STATE_OFF
- *  Q: Sound on light deactivated? (similar to 1) but opposite)
- *   Success animation
- *  o Play Success sound (missing)
- *   Transition animation to Disk Game
- *  o For each light on event, play lighteffect sound (4 events)
- *  o FIXME: Some sort of demo/helper to clarify interaction
- *   Disk Game
- *  o Start ambient sound (FIXME: Fading vs. loop, new sound from Alain?)
- *  o Start loop sound (loop)
- *  o Start distance sound (loop)
- *  o Calculate distance from success (positive and negative distance)
- *    -> use distance to modulate pitch of distance sound
- *  Level success animation
- *  o On success of level 1 and 2, play success sound
- *  o On perimeter light on event, play lighteffect sound
- *   Success animation
- *  o On success of level 3, play show sound
- *  o For each light off event, play lighteffect sound (3 events)
- *   Transition animation to Simon Game
- *  o No sounds
- *   Simon Game
- *  o On animation playback, play panel sounds
- *  o On correct local interaction, play panel sounds
- *  o On free play, play panel sounds
- *  o On fail local interaction, play failure sound
- *  o On level success, play success sound
- *   Light show and transition back to Start State
- *  o play show sound
- */
-
 import _ from 'lodash';
 
 import SculptureStore from '../game-logic/sculpture-store';
@@ -78,7 +37,8 @@ export default class AudioView {
       },
       mole: {
         success: new Sound({url: 'sounds/Game_01/G01_Success_01.wav', gain: 0.5}),
-        failure: new Sound({url: 'sounds/Game_01/G01_Negative_01.wav', gain: 0.5}),
+        lastPanelSuccess: new Sound({url: 'sounds/Game_01/G01_Success_30e.wav', gain: 0.5}),
+        ping: new Sound({url: 'sounds/Game_01/G01_Success_01b.wav', gain: 0.5}),
         panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_01/G01_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.33})))
       },
       disk: {
@@ -166,19 +126,27 @@ export default class AudioView {
 
     /*
       Mole game sounds:
-      o If a panel got activated (changes.lights.<stripId>.panels.<panelId>.active === true)
-      changes.mole.panels.<id> == STATE_IGNORED: Just turned -> success?
-      state.mole.panels.<id> == STATE_OFF: failure
+      o Panel activated (white light -> ping)
+      o Correct panel touched (location color -> success)
+      o Last panel touched (final sound)
+      o End of game sound (remaining lights off -> ping)
     */
 
+    // Correct panel touched
     if (moleChanges && moleChanges.panelCount > 0) {
       if (moleChanges.panelCount === this.config.MOLE_GAME.GAME_END) {
-        this.sounds.simon.success.play();
+        // Last panel
+        this.sounds.mole.lastPanelSuccess.play();
       }
       else {
+        // Mid-game panel
         this.sounds.mole.success.play();
       }
       return;
+    }
+
+    if (moleChanges && moleChanges.complete) {
+      this.sounds.mole.ping.play();
     }
 
     // If a panel got activated (changes.lights.<stripId>.panels.<panelId>.active === true)
