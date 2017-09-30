@@ -42,14 +42,12 @@ export default class AudioView {
         panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_01/G01_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.33})))
       },
       disk: {
-        ambient: new Sound({url: 'sounds/Game_02/G02_Amb_Breath_Loop_01.wav', loop: true}),
+        fadein: new Sound({url: 'sounds/Game_02/G02_Apparition_01.wav'}),
         disk2: new Sound({url: 'sounds/Game_02/G02_Disk_Loop_C2.wav', loop: true, gain: 0.3, fadeIn: 2}),
         disk1: new Sound({url: 'sounds/Game_02/G02_Disk_Loop_Eb2.wav', loop: true, gain: 0.3, fadeIn: 2}),
         disk0: new Sound({url: 'sounds/Game_02/G02_Disk_Loop_G2.wav', loop: true, gain: 0.3, fadeIn: 2}),
-        lighteffect: new Sound({url: 'sounds/Game_02/G02_Lights_01.wav'}),
         success: new Sound({url: 'sounds/Game_02/G02_Success_01.wav'}),
         show: new Sound({url: 'sounds/Game_02/G02_Success_final_01.wav', gain: 0.5}),
-        shadowTransition: new Sound({url: 'sounds/Game_02/G02_Lights_01.wav', gain: 2.0}),
       },
       simon: {
         panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_03/G03_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.5}))),
@@ -161,6 +159,10 @@ export default class AudioView {
   }
 
   _handleDiskGame(changes) {
+    // Level activated (fading in starts)
+    if (changes.disk && changes.disk.active) {
+        this.sounds.disk.fadein.play();
+    }
     if (changes.disk && changes.disk.hasOwnProperty('winning')) {
       console.log(`Sound Winning: ${changes.disk.winning}`);
     }
@@ -212,7 +214,6 @@ export default class AudioView {
     const lightChanges = changes.lights;
     const stripId = '6';
     if (lightChanges && lightChanges.hasOwnProperty(stripId)) {
-      this.sounds.disk.shadowTransition.play();
     }
   }
 
