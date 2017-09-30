@@ -429,7 +429,7 @@ export default class DiskGameLogic {
     const levelFrames = [
       new Frame(() => {
         this._active = false;
-      }, 1000),
+      }, 3000),
       ...panelFrames,
       new Frame(() => {
         this._winning = false;
@@ -463,9 +463,10 @@ export default class DiskGameLogic {
         this._lights.setIntensity('6', '' + i, 0);
       }
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 5000);
-      
+      this._level = level;
     }
     else {
+      this._level = level;
       for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
         for (let i=0;i<5;i++) {
           this._lights.setIntensity(stripId, positivePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
@@ -474,8 +475,6 @@ export default class DiskGameLogic {
       }
       this.startLevel();
     }
-    
-    this._level = level;
   }
 
   _stopAllDisks() {
