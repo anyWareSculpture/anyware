@@ -11,15 +11,14 @@ export default class MoleGameLogic {
   // These are automatically added to the sculpture store
   static trackedProperties = {
     panelCount: 0, // Game progress (0..30)
-    panels: new TrackedPanels()  // panel -> state
+    panels: new TrackedPanels(),  // panel -> state
+    complete: false,
   };
 
   constructor(store, config) {
     this.store = store;
     this.config = config;
     this.gameConfig = config.MOLE_GAME;
-
-    this._complete = false;
 
     // Unique panel objects: panelKey -> panel
     this._panels = {};
@@ -47,7 +46,7 @@ export default class MoleGameLogic {
    */
   start() {
     this._initRemainingPanels();
-    this._complete = false;
+    this.data.set('complete', false);
     this.data.set('panelCount', 0);
     this.data.get('panels').clear();
     this._registerMoveDelay(0); // Request a new active panel immediately
@@ -72,7 +71,7 @@ export default class MoleGameLogic {
    * We're _not_ allowed to dispatch actions synchronously.
    */
   handleActionPayload(payload) {
-    if (this._complete) return;
+    if (this.data.get("complete")) return;
 
     const actionHandlers = {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
@@ -138,6 +137,9 @@ export default class MoleGameLogic {
     }
   }
 
+  /**
+   * Trigger winning of game. Should only be called by master
+   */
   _winGame() {
     // Count all panel colors
     const colorCount = { };
@@ -154,12 +156,12 @@ export default class MoleGameLogic {
     console.log(`Winning color: ${winningColor}`);
 
     // Transition animation: 
-    // 1) Turn off non-winning colors
-    // 2) Turn off all colors and start next game
     const transitionFrames = [
+      // Disable interaction
       new Frame(() => {
         this._lights.deactivateAll();
       }, 0),
+    // 1) Turn off non-winning colors
       new Frame(() => {
         this.config.GAME_STRIPS.forEach(stripId => {
           const panelIds = this._lights.get(stripId).panelIds;
@@ -170,12 +172,13 @@ export default class MoleGameLogic {
           });
         });
       }, 4500),
+    // 2) Turn off all remaining colors and start next game
       new Frame(() => {
         this.config.GAME_STRIPS.forEach(stripId => {
           this._lights.setIntensity(stripId, null, 0);
         });
-        this._complete = true;
-        setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 1000);
+        this.data.set('complete', true);
+        setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 3000);
       }, 5000),
     ];
 
