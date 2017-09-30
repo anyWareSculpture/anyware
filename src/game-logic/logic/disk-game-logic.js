@@ -345,6 +345,8 @@ export default class DiskGameLogic {
   /**
    * Win conditions:
    * - Each marker must have it's rules match against the position range of all 3 disks
+   * 
+   * Should only be called by master
    */
   _checkWinConditions() {
     const disks = this.data.get('disks');
@@ -416,6 +418,9 @@ export default class DiskGameLogic {
     return score;
   }
 
+  /**
+   * Should only be called by master
+   */
   _playLevelAnimation() {
     console.log(`Playing level animation for ${this._level}`);
     this._winning = true;
@@ -441,6 +446,9 @@ export default class DiskGameLogic {
 
   }
 
+  /**
+   * Should only be called by master
+   */
   _winLevel() {
     this.store.data.get('lights').deactivateAll();
     this._stopAllDisks();
@@ -448,6 +456,9 @@ export default class DiskGameLogic {
     this._playLevelAnimation();
   }
 
+  /**
+   * Should only be called by master
+   */
   _nextLevel() {
     console.log(`Increasing level...`);
     let level = this._level + 1;
