@@ -11,11 +11,18 @@ const positivePanels = ['5','6','7','8','9'];
 const negativePanels = ['4','3','2','1','0'];
 
 export default class DiskGameLogic {
+  static STATE_OFF = "off";
+  static STATE_INIT = "init";
+  static STATE_FADE_IN = "fade-in";
+  static STATE_SHUFFLE = "shuffle";
+  static STATE_ACTIVE = "active";
+  static STATE_WINNING = "winning";
+  static STATE_POST_LEVEL = "post-level";
+
   // These are automatically added to the sculpture store
   static trackedProperties = {
     level: 0,
-    active: false,
-    winning: false,
+    state: DiskGameLogic.STATE_OFF,
     disks: new TrackedData({
       disk0: new Disk(),
       disk1: new Disk(),
@@ -58,8 +65,14 @@ export default class DiskGameLogic {
             lightArray.setIntensity(stripId, negativePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
           }
         }
-        this.startLevel();
+        this.fadeInLevel();
       }, 2000),
+      new Frame(() => {
+        this.shuffleLevel();
+      }, 3000),
+      new Frame(() => {
+        this.activateLevel();
+      }, 3000),
     ];
     this._initAnimation = new PanelAnimation(initFrames);
 
@@ -83,7 +96,13 @@ export default class DiskGameLogic {
     this.store.playAnimation(this._initAnimation);
   }
 
-  startLevel() {
+  fadeInLevel() {
+    this._state = DiskGameLogic.STATE_FADE_IN;
+  }
+
+  shuffleLevel() {
+    this._state = DiskGameLogic.STATE_SHUFFLE;
+
     // Set initial position
     const disks = this.data.get('disks');
     for (let diskId of Object.keys(this._levelConfig.disks)) {
@@ -92,8 +111,10 @@ export default class DiskGameLogic {
       disk.setPosition(pos);
       this.physicalDisks[diskId].targetPosition = pos;
     }
+  }
 
-    this._active = true;
+  activateLevel() {
+    this._state = DiskGameLogic.STATE_ACTIVE;
   }
 
   // Start physical disk model
@@ -172,7 +193,7 @@ export default class DiskGameLogic {
    */
   _actionPanelPressed(payload) {
     // FIXME: Break up this method
-    if (this._complete || !this._active || this._winning) return;
+    if (this._complete || this._state !== DiskGameLogic.STATE_ACTIVE) return;
 
     const controlMappings = this.gameConfig.CONTROL_MAPPINGS;
     const {stripId, panelId} = payload;
@@ -258,7 +279,7 @@ export default class DiskGameLogic {
    * Called when disks move (comes from the physical disk model)
    */
   _actionDiskUpdate(payload) {
-    if (this._complete || this._winning) return;
+    if (this._complete || this._state !== DiskGameLogic.STATE_ACTIVE) return;
     // FIXME: Only needed for emulator?
     const {diskId, position} = payload;
     this.physicalDisks[diskId].targetPosition = position;
@@ -275,9 +296,9 @@ export default class DiskGameLogic {
   }
 
   _mergeDisk(diskChanges, props = {}) {
-    // Master owns the fields: level, active, winning
+    // Master owns the fields: level, state
     if (!this.store.isMaster()) {
-      const fields = ['level', 'active', 'winning'];
+      const fields = ['level', 'state'];
       fields.forEach((field) => {
         if (diskChanges.hasOwnProperty(field)) {
           this.data.set(field, diskChanges[field], props[field]);
@@ -286,7 +307,7 @@ export default class DiskGameLogic {
     }
 
     if (!diskChanges.disks) return;
-    if (this.store.isMaster() && this._winning) return;
+    if (this.store.isMaster() && this._state === DiskGameLogic.STATE_POST_LEVEL) return;
 
     const disksChanges = diskChanges.disks;
     const disksProps = props.disks;
@@ -423,24 +444,71 @@ export default class DiskGameLogic {
    */
   _playLevelAnimation() {
     console.log(`Playing level animation for ${this._level}`);
-    this._winning = true;
+    this._state = DiskGameLogic.STATE_WINNING;
     const lightArray = this._lights;
+
+    const postLevelFrame = new Frame(() => {
+      this._state = DiskGameLogic.STATE_POST_LEVEL;
+    }, 3000);
+
     const numFrames = {0: 3, 1: 6, 2: 10}[this._level];
     const panelFrames = Array.from(Array(numFrames)).map((val, index) => new Frame(() => {
       for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
         lightArray.setIntensity(stripId, '' + index, this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
       }
-    }, 500/numFrames));
+    }, 200));
+
+    let nextLevelFrames;
+    console.log(`Increasing level...`);
+    let level = this._level + 1;
+    if (level >= this._levels) {
+      console.log(`Game complete`);
+      nextLevelFrames = [
+        new Frame(() => {
+          this._level = level;
+          this._complete = true;
+          this._state = DiskGameLogic.STATE_OFF;
+          for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
+            for (let i=0;i<10;i++) {
+              this._lights.setIntensity(stripId, positivePanels[i], 0);
+            }
+          }
+          for (let i=0;i<4;i++) {
+            this._lights.setIntensity('6', '' + i, 0);
+          }
+        }, 200),
+        new Frame(() => {
+          this.sculptureActionCreator.sendStartNextGame();
+        }, 5000),
+      ];
+    }
+    else {
+      nextLevelFrames = [
+        new Frame(() => {
+          this._level = level;
+          // Activate UI indicators
+          for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
+            for (let i=0;i<5;i++) {
+              lightArray.setIntensity(stripId, positivePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
+              lightArray.setIntensity(stripId, negativePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
+            }
+          }
+          this.fadeInLevel();
+        }, 2000),
+        new Frame(() => {
+          this.shuffleLevel();
+        }, 3000),
+        new Frame(() => {
+          this.activateLevel();
+        }, 3000),
+      ];
+    }
     const levelFrames = [
-      new Frame(() => {
-        this._active = false;
-      }, 3000),
+      postLevelFrame,
       ...panelFrames,
-      new Frame(() => {
-        this._winning = false;
-        this._nextLevel();
-      }, this._level === this._levels - 1 ? 0 : 2000),
+      ...nextLevelFrames,
     ];
+
     const levelAnimation = new PanelAnimation(levelFrames);
     this.store.playAnimation(levelAnimation);
 
@@ -454,38 +522,6 @@ export default class DiskGameLogic {
     this._stopAllDisks();
 
     this._playLevelAnimation();
-  }
-
-  /**
-   * Should only be called by master
-   */
-  _nextLevel() {
-    console.log(`Increasing level...`);
-    let level = this._level + 1;
-    if (level >= this._levels) {
-      console.log(`Game complete`);
-      this._complete = true;
-      for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
-        for (let i=0;i<10;i++) {
-          this._lights.setIntensity(stripId, positivePanels[i], 0);
-        }
-      }
-      for (let i=0;i<4;i++) {
-        this._lights.setIntensity('6', '' + i, 0);
-      }
-      setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 5000);
-      this._level = level;
-    }
-    else {
-      this._level = level;
-      for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
-        for (let i=0;i<5;i++) {
-          this._lights.setIntensity(stripId, positivePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
-          this._lights.setIntensity(stripId, negativePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
-        }
-      }
-      this.startLevel();
-    }
   }
 
   _stopAllDisks() {
@@ -512,20 +548,12 @@ export default class DiskGameLogic {
     return this.data.set('level', value);
   }
 
-  get _active() {
-    return this.data.get('active');
+  set _state(value) {
+    return this.data.set('state', value);
   }
 
-  set _active(value) {
-    return this.data.set('active', value);
-  }
-
-  get _winning() {
-    return this.data.get('winning');
-  }
-
-  set _winning(value) {
-    return this.data.set('winning', value);
+  get _state() {
+    return this.data.get('state');
   }
 
   getLocalDiskPosition(diskId) {

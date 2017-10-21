@@ -2,6 +2,7 @@ import _ from 'lodash';
 
 import SculptureStore from '../game-logic/sculpture-store';
 import HandshakeGameLogic from '../game-logic/logic/handshake-game-logic';
+import DiskGameLogic from '../game-logic/logic/disk-game-logic';
 import GAMES from '../game-logic/constants/games';
 import TrackedPanels from '../game-logic/utils/tracked-panels';
 import Disk from '../game-logic/utils/disk';
@@ -49,6 +50,7 @@ export default class AudioView {
         disk0: new Sound({url: 'sounds/Game_02/G02_Disk_Loop_G2.wav', loop: true, gain: 0.3, fadeIn: 2}),
         success: new Sound({url: 'sounds/Game_02/G02_Success_01.wav'}),
         radiate: new Sound({url: 'sounds/Game_02/G02_Radiates_01.wav'}),
+        shuffle: new Sound({url: 'sounds/Game_02/G02_Shuffling_01a.wav'}),
         show: new Sound({url: 'sounds/Game_02/G02_Success_final_01.wav', gain: 0.5}),
       },
       simon: {
@@ -161,25 +163,29 @@ export default class AudioView {
   }
 
   _handleDiskGame(changes) {
-    // Level activated (fading in starts)
-    if (changes.disk && changes.disk.active) {
-      this.sounds.disk.fadein.play();
-    }
-    // Middle of end-of-level sequence (start radiate animation)
-    if (changes.disk && changes.disk.hasOwnProperty('active') && !changes.disk.active) {
-      this.sounds.disk.radiate.play();
-    }
-    if (changes.disk && changes.disk.hasOwnProperty('winning') && changes.disk.winning) {
-      // End of game
-      if (this.store.data.get('disk').get('level') >= this.config.DISK_GAME.LEVELS.length) {
-        this.sounds.disk.disk0.stop();
-        this.sounds.disk.disk1.stop();
-        this.sounds.disk.disk2.stop();
-        this.sounds.disk.show.play();
+    if (changes.disk) {
+      if (changes.disk.state === DiskGameLogic.STATE_FADE_IN) {
+        this.sounds.disk.fadein.play();
       }
-      // End of level
-      else {
-        this.sounds.disk.success.play();
+      if (changes.disk.state === DiskGameLogic.STATE_SHUFFLE) {
+        this.sounds.disk.shuffle.play();
+      }
+      // Middle of end-of-level sequence (start radiate animation)
+      if (changes.disk.state === DiskGameLogic.STATE_POST_LEVEL) {
+        this.sounds.disk.radiate.play();
+      }
+      if (changes.disk.state === DiskGameLogic.STATE_WINNING) {
+        // End of game
+        if (this.store.data.get('disk').get('level') >= this.config.DISK_GAME.LEVELS.length) {
+          this.sounds.disk.disk0.stop();
+          this.sounds.disk.disk1.stop();
+          this.sounds.disk.disk2.stop();
+          this.sounds.disk.show.play();
+        }
+        // End of level
+        else {
+          this.sounds.disk.success.play();
+        }
       }
     }
 

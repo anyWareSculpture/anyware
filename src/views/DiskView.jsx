@@ -1,5 +1,6 @@
 import React from 'react';
 import SculptureStore from '../game-logic/sculpture-store';
+import DiskGameLogic from '../game-logic/logic/disk-game-logic';
 import Graphics from './svg/disk-game.svg';
 
 const diskOrigins = {
@@ -88,11 +89,11 @@ export default class DiskView extends React.Component {
     if (changes.lights && changes.lights[this.props.config.LIGHTS.ART_LIGHTS_STRIP]) {
       this.setState({showCircle: this.lightArray.getIntensity(this.props.config.LIGHTS.ART_LIGHTS_STRIP, '3') > 0});
     }
-    if (changes.disk) {
+    if (changes.disk && changes.disk.state) {
       // Show puzzle when active
-      if (changes.disk.hasOwnProperty('active')) {
-        this.setState({showPuzzle: changes.disk.active});
-      }
+      this.setState({
+        showPuzzle: [DiskGameLogic.STATE_FADE_IN, DiskGameLogic.STATE_SHUFFLE, DiskGameLogic.STATE_ACTIVE, DiskGameLogic.STATE_WINNING].includes(changes.disk.state)
+      });
       // Handle level changes
       if (changes.disk.hasOwnProperty('level')) {
         this.setState({level: changes.disk.level});
