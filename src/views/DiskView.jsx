@@ -129,8 +129,7 @@ export default class DiskView extends React.Component {
             stroke = 5;
           }
         }
-        this.setState({ [`${diskId}Color`]: color,
-                        [`${diskId}Stroke`]: stroke });
+        this.setState({ [`${diskId}Color`]: color, [`${diskId}Stroke`]: stroke });
       }
     }
   }
