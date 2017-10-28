@@ -478,7 +478,7 @@ export default class DiskGameLogic {
           }
         }, 200),
         new Frame(() => {
-          this.sculptureActionCreator.sendStartNextGame();
+          setTimeout(this.sculptureActionCreator.sendStartNextGame, 0);
         }, 5000),
       ];
     }
