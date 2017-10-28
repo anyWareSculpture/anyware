@@ -246,7 +246,7 @@ export default class DiskGameLogic {
 
       const newspeed = speed === 0 ? 0 : sign * this.gameConfig.SPEEDS[speed - 1];
 
-      disk.setUser(newspeed > 0 ? this.store.me : '');
+      disk.setUser(newspeed !== 0 ? this.store.me : '');
       disk.setTargetSpeed(newspeed);
       this.physicalDisks[diskId].targetSpeed = newspeed;
 
