@@ -173,7 +173,7 @@ export default class DiskGameLogic {
     // Handle game changes
     if (changes.hasOwnProperty('currentGame')) {
       // Reset on start of playing the disk game and on start of games cycle
-      if (changes.currentGame === GAMES.DISK || changes.currentGame === GAMES.HANDSHAKE) {
+      if (changes.currentGame === GAMES.DISK) {
         setTimeout(this.resetDisks.bind(this), 0);
       }
     }
