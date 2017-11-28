@@ -57,10 +57,12 @@ export default class SculptureStore extends events.EventEmitter {
     });
 
     // This is a sub-store for local (non-shared) disk positions
-    this.diskPositions = {
-      disk0: 0,
-      disk1: 0,
-      disk2: 0,
+    this.localData = {
+      diskPositions: {
+        disk0: 0,
+        disk1: 0,
+        disk2: 0,
+      },
     };
 
     this._reassertChanges = false;
@@ -102,7 +104,7 @@ export default class SculptureStore extends events.EventEmitter {
    * @returns {Boolean} Returns true if no game is currently being played
    */
   get isPlayingNoGame() {
-    return !this.currentGame;
+    return !this.getCurrentGame();
   }
 
   isMaster() {
@@ -331,8 +333,11 @@ export default class SculptureStore extends events.EventEmitter {
     this._startGame(game);
   }
 
+  /**
+   * Starts the next game in the game sequence
+   */
   _actionStartNextGame() {
-    this.moveToNextGame();
+    this._startGame(this._getNextGame());
   }
 
   _actionResetGame() {
@@ -398,7 +403,7 @@ export default class SculptureStore extends events.EventEmitter {
    */
   _actionDiskUpdate(payload) {
     const {diskId, position} = payload;
-    this.diskPositions[diskId] = position;
+    this.localData.diskPositions[diskId] = position;
     this.emit(SculptureStore.EVENT_LOCAL_CHANGE);
   }
 
@@ -459,9 +464,12 @@ export default class SculptureStore extends events.EventEmitter {
     }
   }
 
+  _getCurrentGame() {
+    return this.data.get("currentGame");
+  }
+
   _getNextGame() {
-    const currentGame = this.data.get("currentGame");
-    let index = this.config.GAMES_SEQUENCE.indexOf(currentGame);
+    let index = this.config.GAMES_SEQUENCE.indexOf(this._getCurrentGame());
     index = (index + 1) % this.config.GAMES_SEQUENCE.length;
 
     return this.config.GAMES_SEQUENCE[index];
@@ -471,6 +479,6 @@ export default class SculptureStore extends events.EventEmitter {
    * Getter for the local disk position state. Use this to get the actual position to display
    */
   getDiskPosition(diskId) {
-    return this.diskPositions[diskId];
+    return this.localData.diskPositions[diskId];
   }
 }
