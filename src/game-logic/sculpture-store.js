@@ -325,9 +325,9 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _actionStartGame(payload) {
-    const game = payload.game;
-    if (!game) {
-      throw new Error(`Unrecognized game: ${payload.game}`);
+    const { game } = payload;
+    if (!game && !this._getCurrentGame()) {
+      throw new Error(`START_GAME: No startable game`);
     }
 
     this._startGame(game);
