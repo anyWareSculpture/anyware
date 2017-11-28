@@ -304,6 +304,7 @@ export default class SculptureStore extends events.EventEmitter {
       [SculptureActionCreator.LOGIN]: this._actionLogin.bind(this),
       [SculptureActionCreator.START_GAME]: this._actionStartGame.bind(this),
       [SculptureActionCreator.START_NEXT_GAME]: this._actionStartNextGame.bind(this),
+      [SculptureActionCreator.RESET_GAME]: this._actionResetGame.bind(this),
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
       [SculptureActionCreator.RESTORE_STATUS]: this._actionRestoreStatus.bind(this),
       [SculptureActionCreator.ANIMATION_FRAME]: this._actionAnimationFrame.bind(this),
@@ -332,6 +333,9 @@ export default class SculptureStore extends events.EventEmitter {
 
   _actionStartNextGame() {
     this.moveToNextGame();
+  }
+
+  _actionResetGame() {
   }
 
   _actionMergeState(payload) {

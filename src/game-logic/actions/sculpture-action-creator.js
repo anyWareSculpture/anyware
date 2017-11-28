@@ -7,6 +7,7 @@ export default class SculptureActionCreator extends BaseActionCreator {
   static MERGE_STATE = "merge-state";
   static START_GAME = "start-game";
   static START_NEXT_GAME = "start-next-game";
+  static RESET_GAME = "reset-game";
   static RESTORE_STATUS = "restore-status";
   static ANIMATION_FRAME = "animation-frame";
   static FINISH_STATUS_ANIMATION = "finish-status-animation";
@@ -24,12 +25,23 @@ export default class SculptureActionCreator extends BaseActionCreator {
     this._dispatch(SculptureActionCreator.MERGE_STATE, state);
   }
 
+  /**
+   * Sends an action asking the sculpture to start a game
+   * @param {String} game - Id of the game to start. If omitted will start the current game
+   */
   sendStartGame(game) {
     this._dispatch(SculptureActionCreator.START_GAME, { game });
   }
 
   sendStartNextGame() {
     this._dispatch(SculptureActionCreator.START_NEXT_GAME);
+  }
+
+  /**
+   * Sends an action asking the sculpture to reset the current game
+   */
+  sendResetGame() {
+    this._dispatch(SculptureActionCreator.RESET_GAME);
   }
 
   sendRestoreStatus() {
