@@ -7,6 +7,9 @@ import COLORS from '../constants/colors';
 import PanelAnimation from '../animation/panel-animation';
 import Frame from '../animation/frame';
 
+/**
+ * Handles both the Minimal State (transitions) and the Mole Game Logic
+ */
 export default class MoleGameLogic {
   // These are automatically added to the sculpture store
   static trackedProperties = {
@@ -15,6 +18,9 @@ export default class MoleGameLogic {
     complete: false,
   };
 
+  /*
+   * The constructor manages transition _into_ the Minimal State
+   */
   constructor(store, config) {
     this.store = store;
     this.config = config;
@@ -42,7 +48,7 @@ export default class MoleGameLogic {
   }
 
   /*!
-   * Starts the game logic. Only one of the sculptures should call this method.
+   * Starts the game logic. Only the master should call this method.
    */
   start() {
     this._initRemainingPanels();

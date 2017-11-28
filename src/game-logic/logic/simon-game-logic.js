@@ -5,6 +5,9 @@ import PanelAnimation from '../animation/panel-animation';
 import NormalizeStripFrame from '../animation/normalize-strip-frame';
 import Frame from '../animation/frame';
 
+/**
+ * Handles both the Colour State (transitions) and the Simon Game Logic
+ */
 export default class SimonGameLogic {
   // These are automatically added to the sculpture store
   static trackedProperties = {
@@ -13,6 +16,9 @@ export default class SimonGameLogic {
     targetPanel: null,
   };
 
+  /*
+   * The constructor manages transition _into_ the Colour State
+   */
   constructor(store, config) {
     this.store = store;
     this.config = config;

@@ -10,6 +10,9 @@ import Frame from '../animation/frame';
 const positivePanels = ['5','6','7','8','9'];
 const negativePanels = ['4','3','2','1','0'];
 
+/**
+ * Handles both the Shadow State (transitions) and the Disk Game Logic
+ */
 export default class DiskGameLogic {
   static STATE_OFF = "off";
   static STATE_INIT = "init";
@@ -30,6 +33,9 @@ export default class DiskGameLogic {
     }),
   };
 
+  /*
+   * The constructor manages transition _into_ the Shadow State
+   */
   constructor(store, config) {
     this.store = store;
     this.config = config;
