@@ -58,6 +58,11 @@ export default class MoleGameLogic {
   }
 
   /**
+
+  _turnOffAllGameStrips() {
+    this.config.GAME_STRIPS.forEach(stripId => this._lights.setIntensity(stripId, null, 0));
+  }
+
    * _remainingPanels is a set of panel keys for panels with STATE_OFF,
    * and are used to select random panels.
    */
@@ -179,9 +184,7 @@ export default class MoleGameLogic {
       }, 4500),
     // 2) Turn off all remaining colors and start next game
       new Frame(() => {
-        this.config.GAME_STRIPS.forEach(stripId => {
-          this._lights.setIntensity(stripId, null, 0);
-        });
+        this._turnOffAllGameStrips();
         this.data.set('complete', true);
         setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 3000);
       }, 5000),
