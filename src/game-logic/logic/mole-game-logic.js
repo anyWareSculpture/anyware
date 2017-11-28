@@ -25,6 +25,8 @@ export default class MoleGameLogic {
     this.store = store;
     this.config = config;
     this.gameConfig = config.MOLE_GAME;
+    this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
+    this.moleGameActionCreator = new MoleGameActionCreator(this.store.dispatcher);
 
     // Unique panel objects: panelKey -> panel
     this._panels = {};
@@ -38,9 +40,6 @@ export default class MoleGameLogic {
     // Force RGB strips to black.
     // FIXME: This is a temporary fix for a firmware bug not respecting intensity
     this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, null, COLORS.BLACK);
-
-    this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
-    this.moleGameActionCreator = new MoleGameActionCreator(this.store.dispatcher);
   }
 
   get data() {
