@@ -75,6 +75,7 @@ export default class AudioView {
         this.store.on(SculptureStore.EVENT_LOCAL_CHANGE, this._handleLocalChanges.bind(this));
       })
       .then(() => callback(null))
+      .then(() => this.sounds.alone.ambient.play()) // Startup in ambient mode
       .catch((reason) => callback(reason));
   }
 
