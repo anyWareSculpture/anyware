@@ -59,10 +59,10 @@ export default class TrackedData {
   }
 
   /**
-   * @returns {Boolean} true if we hold a more recent version of the incoming value
+   * @returns {Boolean} true if we already have a more recent version of the passed value
    */
   hasNewerValue(name, value, props = {}) {
-    return this._props[name] && props.timestamp < this._props[name].timestamp;
+    return this._props[name] && this._props[name].timestamp > props.timestamp;
   }
 
   /**
