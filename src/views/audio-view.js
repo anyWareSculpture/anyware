@@ -38,19 +38,20 @@ export default class AudioView {
       },
       mole: {
         success: new Sound({url: 'sounds/Game_01/G01_Success_01.wav', gain: 0.5}),
-        lastPanelSuccess: new Sound({url: 'sounds/Game_01/G01_Success_30e.wav', gain: 0.5}),
+        lastPanelSuccess: new Sound({url: 'sounds/Game_01/G01_Success_01_30e.wav', gain: 0.5}),
         ping: new Sound({url: 'sounds/Game_01/G01_Success_01b.wav', gain: 0.5}),
         panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_01/G01_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.33})))
       },
       disk: {
-        lightEffect: new Sound({url: 'sounds/Game_02/G02_Lights_01.wav'}),
-        fadein: new Sound({url: 'sounds/Game_02/G02_Apparition_01.wav'}),
+        lightEffect: new Sound({url: 'sounds/Game_02/G02_Lights_03.wav'}),
+        fadein: new Sound({url: 'sounds/Game_02/G02_Apparition_03.wav'}),
         disk2: new Sound({url: 'sounds/Game_02/G02_Disk_Loop_C2.wav', loop: true, gain: 0.3, fadeIn: 2}),
         disk1: new Sound({url: 'sounds/Game_02/G02_Disk_Loop_Eb2.wav', loop: true, gain: 0.3, fadeIn: 2}),
         disk0: new Sound({url: 'sounds/Game_02/G02_Disk_Loop_G2.wav', loop: true, gain: 0.3, fadeIn: 2}),
         success: new Sound({url: 'sounds/Game_02/G02_Success_01.wav'}),
-        radiate: new Sound({url: 'sounds/Game_02/G02_Radiates_01.wav'}),
-        shuffle: new Sound({url: 'sounds/Game_02/G02_Shuffling_01a.wav'}),
+        lock: new Sound({url: 'sounds/Game_02/G02_Lock_03.wav'}),
+        radiate: new Sound({url: 'sounds/Game_02/G02_Radiates_03a.wav'}),
+        shuffle: new Sound({url: 'sounds/Game_02/G02_Shuffling_03.wav'}),
         show: new Sound({url: 'sounds/Game_02/G02_Success_final_01.wav', gain: 0.5}),
       },
       simon: {
