@@ -530,14 +530,6 @@ export default class DiskGameLogic {
     this._playLevelAnimation();
   }
 
-  _stopAllDisks() {
-    const disks = this.data.get('disks');
-
-    for (let diskId of disks) {
-      disks.get(diskId).stop();
-    }
-  }
-
   get _levelConfig() {
     return this.gameConfig.LEVELS[this._level];
   }
@@ -564,6 +556,18 @@ export default class DiskGameLogic {
 
   getLocalDiskPosition(diskId) {
     return this.physicalDisks[diskId].position;
+  }
+
+  _stopAllDisks() {
+    this._forEachDisk((disk) => disk.stop());
+  }
+
+  /**
+   * Call func(disk, diskId) for each Disk in tracked data
+   */
+  _forEachDisk(func) {
+    const disks = this.data.get('disks');
+    for (const diskId of disks) func(disks.get(diskId), diskId);
   }
 
 }
