@@ -165,62 +165,70 @@ export default class AudioView {
   }
 
   _handleDiskGame(changes) {
-    if (changes.disk) {
-      if (changes.disk.state === DiskGameLogic.STATE_FADE_IN) {
+    if (changes.disk !== undefined) {
+      const diskChanges = changes.disk;
+      switch (diskChanges.state) {
+      case DiskGameLogic.STATE_FADE_IN:
         this.sounds.disk.fadein.play();
-      }
-      if (changes.disk.state === DiskGameLogic.STATE_SHUFFLE) {
+        break;
+      case DiskGameLogic.STATE_SHUFFLE:
         this.sounds.disk.shuffle.play();
-      }
-      // Middle of end-of-level sequence (start radiate animation)
-      if (changes.disk.state === DiskGameLogic.STATE_POST_LEVEL) {
+        break;
+      case DiskGameLogic.STATE_ACTIVE:
+        // Start disk sounds in silent mode
+        // FIXME: Add failsafe to avoid starting sounds multiple times (due to loop)
+        for (const diskId of ['disk0', 'disk1', 'disk2']) this.sounds.disk[diskId].play({gain: 0});
+        break;
+      case DiskGameLogic.STATE_POST_LEVEL:
         this.sounds.disk.radiate.play();
-      }
-      if (changes.disk.state === DiskGameLogic.STATE_WINNING) {
+        break;
+      case DiskGameLogic.STATE_WINNING:
+        for (const diskId of ['disk0', 'disk1', 'disk2']) this.sounds.disk[diskId].stop();
         // End of game
         if (this.store.data.get('disk').get('level') >= this.config.DISK_GAME.LEVELS.length) {
-          this.sounds.disk.disk0.stop();
-          this.sounds.disk.disk1.stop();
-          this.sounds.disk.disk2.stop();
           this.sounds.disk.show.play();
         }
         // End of level
         else {
           this.sounds.disk.success.play();
         }
+        break;
       }
-    }
 
-    // On start of disk game
-    // FIXME: Is transition part of the disk game?
-    if (changes.currentGame === GAMES.DISK) {
-      // Start all sounds in silent mode
-      this.sounds.disk.disk0.play({gain: 0});
-      this.sounds.disk.disk1.play({gain: 0});
-      this.sounds.disk.disk2.play({gain: 0});
-    }
+      const currentState = this.store.data.get('disk').get('state');
+      // React to disk movements only when in a movable state
+      if (diskChanges.disks !== undefined &&
+          (currentState === DiskGameLogic.STATE_SHUFFLE ||
+           currentState === DiskGameLogic.STATE_ACTIVE || 
+           currentState === DiskGameLogic.STATE_LOCKING)) {
 
-    // On start of level
-//    if (changes.hasOwnProperty('disk') &&
-//        changes.disk.hasOwnProperty('level') &&
-//        changes.disk.level < this.config.DISK_GAME.LEVELS.length) {
-//    }
+        const disksChanges = diskChanges.disks;
+        for (let diskId of ['disk0', 'disk1', 'disk2']) {
+          if (disksChanges.hasOwnProperty(diskId) &&
+              disksChanges[diskId] !== undefined) {
+            const diskChanges = disksChanges[diskId];
+            const isLocking = diskChanges.hasOwnProperty('autoPosition') && diskChanges.autoPosition !== false;
 
-    if (changes.disk && changes.disk.disks) {
-      const disksChanges = changes.disk.disks;
-      const disks = this.store.data.get('disk').get('disks');
-
-      for (let disk of ['disk0', 'disk1', 'disk2']) {
-        if (disksChanges.hasOwnProperty(disk) &&
-            disksChanges[disk].hasOwnProperty('targetSpeed')) {
-          if (disksChanges[disk].targetSpeed === 0) this.sounds.disk[disk].fadeOut();
-          else this.sounds.disk[disk].fadeIn();
+            if (currentState === DiskGameLogic.STATE_ACTIVE && isLocking) {
+              this.sounds.disk.lock.play();
+              this.sounds.disk[diskId].fadeOut();
+            }
+            else {
+              if (diskChanges.hasOwnProperty('targetSpeed')) {
+                if (diskChanges.targetSpeed === 0) {
+                  this.sounds.disk[diskId].fadeOut();
+                }
+                else if (!isLocking) {
+                  this.sounds.disk[diskId].fadeIn();
+                }
+              }
+            }
+          }
         }
       }
-
     }
-    // FIXME level success and final success
 
+    // FIXME level success and final success
     // Shadow transition sound
     const lightChanges = changes.lights;
     const stripId = '6';

@@ -128,6 +128,7 @@ export default class DefaultConfig {
 
     this.DISK_GAME = {
       SPEEDS: [6, 15, 21, 30, 72], // degrees/sec
+      SINGLE_DISK_TOLERANCE: 10, // tolerance (in degrees) for locking a single disk into place
       ABSOLUTE_TOLERANCE: 8, // sum of degrees tolerance for the absolute disk positions
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_COLOR: COLORS.WHITE,
@@ -147,7 +148,7 @@ export default class DefaultConfig {
         { rule: 'absolute', disks: { disk0: -90, disk1: 90, disk2: 120 } },
 
         // level 1
-        { rule: 'relative', disks: { disk0: 90, disk1: -90, disk2: -120 } },
+        { rule: 'absolute', disks: { disk0: 90, disk1: -90, disk2: -120 } },
 
         // level 2
         { rule: 'absolute', disks: { disk0: 180, disk1: 45, disk2: -90 } },

@@ -108,7 +108,7 @@ export default class DiskView extends React.Component {
       // Show puzzle when active
       if (changes.disk.state) {
         this.setState({
-          showPuzzle: [DiskGameLogic.STATE_FADE_IN, DiskGameLogic.STATE_SHUFFLE, DiskGameLogic.STATE_ACTIVE, DiskGameLogic.STATE_WINNING].includes(changes.disk.state)
+          showPuzzle: [DiskGameLogic.STATE_FADE_IN, DiskGameLogic.STATE_SHUFFLE, DiskGameLogic.STATE_ACTIVE, DiskGameLogic.STATE_LOCKING, DiskGameLogic.STATE_WINNING].includes(changes.disk.state)
         });
       }
       // Handle level changes
