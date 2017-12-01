@@ -40,10 +40,18 @@ export default class MoleGameLogic {
     // Force RGB strips to black.
     // FIXME: This is a temporary fix for a firmware bug not respecting intensity
     this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, null, COLORS.BLACK);
+    this._turnOffAllGameStrips();
   }
 
   get data() {
     return this.store.data.get('mole');
+  }
+
+  /**
+   * Transitions into this game. Calls callback when done.
+   */
+  transition(callback) {
+    if (callback) callback();
   }
 
   /*!
@@ -58,11 +66,26 @@ export default class MoleGameLogic {
   }
 
   /**
+   * Reset game. Will reset the game to the beginning, without starting the game.
+   * Only master should call this function.
+   */
+  reset() {
+    this._turnOffAllGameStrips();
+    for (const panelkey of Object.keys(this._panels)) {
+      this._removeTimeout(panelkey);
+      const panel = this._panels[panelkey];
+      if (panel.moveDelay !== undefined) {
+        clearTimeout(panel.moveDelay);
+        delete panel.moveDelay;
+      }
+    }
+  }
 
   _turnOffAllGameStrips() {
     this.config.GAME_STRIPS.forEach(stripId => this._lights.setIntensity(stripId, null, 0));
   }
 
+  /**
    * _remainingPanels is a set of panel keys for panels with STATE_OFF,
    * and are used to select random panels.
    */
@@ -72,6 +95,7 @@ export default class MoleGameLogic {
   }
 
   end() {
+    this.reset();
     this.config.GAME_STRIPS.forEach(stripId => this._lights.deactivateAll(stripId));
   }
 
@@ -118,6 +142,8 @@ export default class MoleGameLogic {
    * 4) increase/decrease # of simulaneously active panels
    */
   _actionPanelPressed(payload) {
+    if (this.store.iAmAlone()) return;
+
     let {stripId, panelId, pressed} = payload;
 
     const state = this.data.get('panels').getPanelState(stripId, panelId);
@@ -378,7 +404,7 @@ export default class MoleGameLogic {
       console.error('No panel key!');
     }
     this.moleGameActionCreator.sendAvailPanel(this._panels[panelkey]);
-    this._panels[panelkey].timeout = setTimeout(this._panelTimeout.bind(this, this._panels[panelkey]), lifetime);
+    this._panels[panelkey].timeout = setTimeout(() => this._panelTimeout(this._panels[panelkey]), lifetime);
   }
 
   _registerMoveDelay(delay, panelKey = null) {
