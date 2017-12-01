@@ -44,6 +44,13 @@ export default class SimonGameLogic {
   }
 
   /**
+   * Transitions into this game. Calls callback when done.
+   */
+  transition(callback) {
+    if (callback) callback();
+  }
+
+  /**
    * Start game - only run by master
    */
   start() {
@@ -57,6 +64,13 @@ export default class SimonGameLogic {
     this.data.set('level', 0);
     this.data.set('pattern', 0);
     this._playCurrentSequence();
+  }
+
+  /**
+   * Reset game. Will reset the game to the beginning, without starting the game.
+   * Only master should call this function.
+   */
+  reset() {
   }
 
   /**
@@ -114,6 +128,8 @@ export default class SimonGameLogic {
   }
 
   _actionPanelPressed(payload) {
+    if (this.store.iAmAlone()) return;
+
     if (this._complete || !this.store.isReady) return;
 
     const {stripId, panelId, pressed} = payload;
