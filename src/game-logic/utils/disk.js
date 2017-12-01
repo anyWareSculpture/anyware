@@ -7,6 +7,7 @@ export default class Disk extends TrackedData {
       position: position,
       user: "",
       targetSpeed: 0,
+      autoPosition: undefined, // Used for auto-moveTo (shuffle, lock)
     });
   }
 
@@ -26,10 +27,6 @@ export default class Disk extends TrackedData {
     return this.get('position');
   }
 
-  stop() {
-    this.setTargetSpeed(0);
-  }
-
   setUser(user, props) {
     this.set('user', user, props);
   }
@@ -37,4 +34,19 @@ export default class Disk extends TrackedData {
   getUser() {
     return this.get('user');
   }
+
+  // Set to undefined to remove target positioning
+  setAutoPosition(autoPosition, props) {
+    return this.set('autoPosition', autoPosition, props);
+  }
+
+  getAutoPosition() {
+    return this.get('autoPosition');
+  }
+
+  stop() {
+    this.setTargetSpeed(0);
+    this.setAutoPosition(undefined);
+  }
+
 }
