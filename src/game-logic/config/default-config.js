@@ -38,8 +38,8 @@ export default class DefaultConfig {
       console: false,    // Console debug output
     };
 
-    // Local sculptures will time out after this number of seconds without interaction
-    this.ACTIVITY_TIMEOUT = 60;
+    // Will enter alone mode after this numner of seconds
+    this.ALONE_MODE_SECONDS = 60;
 
     // A mapping between sculpture IDs and the colors that represent them
     this.COLORS = {
@@ -54,7 +54,6 @@ export default class DefaultConfig {
 
     // The sequence of the games to be run. The first game is run on startup
     this.GAMES_SEQUENCE = [
-      GAMES.HANDSHAKE,
       GAMES.MOLE,
       GAMES.DISK,
       GAMES.SIMON
@@ -89,11 +88,12 @@ export default class DefaultConfig {
       INACTIVE_INTENSITY: 0
     };
 
-    /******* GAMES CONFIGURATION *******/
-
-    this.HANDSHAKE_GAME = {
+    this.HANDSHAKE = {
       TRANSITION_OUT_TIME: 4000 // Time (ms) from handshake is touched until we start the next game
     };
+
+    /******* GAMES CONFIGURATION *******/
+
     this.MOLE_GAME = {
       GAME_END: 30,
       INITIAL_PANELS: [

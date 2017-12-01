@@ -1,4 +1,5 @@
 import events from 'events';
+import assert from 'assert';
 
 import GAMES from './constants/games';
 import HandshakeGameLogic from './logic/handshake-game-logic';
@@ -11,6 +12,20 @@ import DisksActionCreator from './actions/disks-action-creator';
 import TrackedData from './utils/tracked-data';
 import LightArray from './utils/light-array';
 
+const gameLogicClasses = {
+  [GAMES.MOLE]: MoleGameLogic,
+  [GAMES.DISK]: DiskGameLogic,
+  [GAMES.SIMON]: SimonGameLogic
+};
+
+function getGameLogicClass(game) {
+  const GameLogicClass = gameLogicClasses[game];
+  if (!GameLogicClass) {
+    throw new Error(`Unrecognized game: ${game}`);
+  }
+  return GameLogicClass;
+}
+
 export default class SculptureStore extends events.EventEmitter {
   static EVENT_CHANGE = "change";
   static EVENT_LOCAL_CHANGE = "local-change";
@@ -20,10 +35,6 @@ export default class SculptureStore extends events.EventEmitter {
   static STATUS_SUCCESS = "success";
   static STATUS_FAILURE = "failure";
 
-  static HANDSHAKE_OFF = "off";
-  static HANDSHAKE_ACTIVE = "active";
-  static HANDSHAKE_PRESENT = "present";
-
   constructor(dispatcher, config) {
     super();
 
@@ -32,15 +43,10 @@ export default class SculptureStore extends events.EventEmitter {
 
     this._me = this.config.me;
     this.panelAnimation = null;
+    this.handshakeLogic = new HandshakeGameLogic(this, this.config);
     this.data = new TrackedData({
       status: SculptureStore.STATUS_READY,
       currentGame: null,
-      handshakes: new TrackedData({ // off, active, present
-        sculpture1: SculptureStore.HANDSHAKE_OFF,
-        sculpture2: SculptureStore.HANDSHAKE_OFF,
-        sculpture3: SculptureStore.HANDSHAKE_OFF,
-        anyware: SculptureStore.HANDSHAKE_OFF, // For off-line single player
-      }),
       lights: new LightArray({
         // stripId : number of panels
         [this.config.LIGHTS.STRIP_A]: 10,
@@ -67,18 +73,22 @@ export default class SculptureStore extends events.EventEmitter {
 
     this._reassertChanges = false;
     this._master = false;
-    this.currentGameLogic = null;
     this.dispatchToken = dispatcher.register(this._handleActionPayload.bind(this));
     this.sculptureActionCreator = new SculptureActionCreator(this.dispatcher);
   }
 
-  /**
-   * @returns {Boolean} Returns whether the handshake game is currently being played
-   */
-  get isPlayingHandshakeGame() {
-    return this.currentGameLogic instanceof HandshakeGameLogic;
+  // Synchronous init. Needs to be run on all sculpture to establish a common start state.
+  init() {
+    const game = this._getNextGame();
+    this._setCurrentGame(game);
+    const GameLogicClass = getGameLogicClass(game);
+    this.currentGameLogic = new GameLogicClass(this, this.config);
   }
 
+  iAmAlone() {
+    return this.handshakeLogic.getMyHandshakeState() === HandshakeGameLogic.HANDSHAKE_OFF;
+  }
+    
   /**
    * @returns {Boolean} Returns whether the mole game is currently being played
    */
@@ -98,13 +108,6 @@ export default class SculptureStore extends events.EventEmitter {
    */
   get isPlayingSimonGame() {
     return this.currentGameLogic instanceof SimonGameLogic;
-  }
-
-  /**
-   * @returns {Boolean} Returns true if no game is currently being played
-   */
-  get isPlayingNoGame() {
-    return !this.getCurrentGame();
   }
 
   isMaster() {
@@ -201,36 +204,30 @@ export default class SculptureStore extends events.EventEmitter {
     animation.play(this.dispatcher);
   }
 
-  /**
-   * Starts the next game in the game sequence
-   */
-  moveToNextGame() {
-    this._startGame(this._getNextGame());
-  }
-
   _startGame(game) {
-    const gameLogicClasses = {
-      [GAMES.HANDSHAKE]: HandshakeGameLogic,
-      [GAMES.MOLE]: MoleGameLogic,
-      [GAMES.DISK]: DiskGameLogic,
-      [GAMES.SIMON]: SimonGameLogic
+    const startGame = () => {
+      this.currentGameLogic.start();
+      this.setMaster(true);
     };
-    const GameLogic = gameLogicClasses[game];
-    if (!GameLogic) {
-      throw new Error(`Unrecognized game: ${game}`);
-    }
 
-    // end any previous game
-    if (this.currentGameLogic) {
-      this.currentGameLogic.end();
-      this.setMaster(false);
+    if (!game) {
+      assert(this.currentGameLogic);
+      startGame();
     }
-    this._resetGamePanels();
+    else {
+      const GameLogicClass = getGameLogicClass(game);
 
-    this.data.set('currentGame', game);
-    this.setMaster(true);
-    this.currentGameLogic = new GameLogic(this, this.config);
-    this.currentGameLogic.start();
+      // end any previous game
+      if (this.currentGameLogic) {
+        this.currentGameLogic.end();
+        this.setMaster(false);
+      }
+      this._resetGamePanels();
+
+      this._setCurrentGame(game);
+      this.currentGameLogic = new GameLogicClass(this, this.config);
+      this.currentGameLogic.transition(startGame);
+    }
   }
 
   _resetGamePanels() {
@@ -283,6 +280,7 @@ export default class SculptureStore extends events.EventEmitter {
 
     this._delegateAction(payload);
 
+    this.handshakeLogic.handleActionPayload(payload);
     if (this.currentGameLogic) this.currentGameLogic.handleActionPayload(payload);
 
     // If we're responding after a merge, set the 'mergedFrom' metadata field accordingly:
@@ -311,7 +309,6 @@ export default class SculptureStore extends events.EventEmitter {
       [SculptureActionCreator.RESTORE_STATUS]: this._actionRestoreStatus.bind(this),
       [SculptureActionCreator.ANIMATION_FRAME]: this._actionAnimationFrame.bind(this),
       [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
-      [SculptureActionCreator.HANDSHAKE_ACTION]: this._actionHandshakeAction.bind(this),
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this),
     };
@@ -329,7 +326,6 @@ export default class SculptureStore extends events.EventEmitter {
     if (!game && !this._getCurrentGame()) {
       throw new Error(`START_GAME: No startable game`);
     }
-
     this._startGame(game);
   }
 
@@ -341,6 +337,11 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _actionResetGame() {
+    if (this.currentGameLogic) {
+      this._resetGamePanels();
+      this.currentGameLogic.reset();
+    }
+    this.setMaster(false);
   }
 
   _actionMergeState(payload) {
@@ -349,7 +350,6 @@ export default class SculptureStore extends events.EventEmitter {
     const mergeFunctions = {
       status: this._mergeStatus.bind(this),
       currentGame: this._mergeCurrentGame.bind(this),
-      handshakes: this._mergeHandshakes.bind(this),
       lights: this._mergeLights.bind(this),
     };
 
@@ -375,11 +375,8 @@ export default class SculptureStore extends events.EventEmitter {
     this.restoreStatus();
   }
 
-  _actionHandshakeAction(payload) {
-    this.data.get('handshakes').set(payload.sculptureId, payload.state);
-  }
-
   _actionPanelPressed(payload) {
+    if (this.iAmAlone()) return;
     if (!this.isReady) return;
 
     const lightArray = this.data.get('lights');
@@ -414,32 +411,13 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _mergeCurrentGame(currentGame, props) {
-    const gameLogicClasses = {
-      [GAMES.HANDSHAKE]: HandshakeGameLogic,
-      [GAMES.MOLE]: MoleGameLogic,
-      [GAMES.DISK]: DiskGameLogic,
-      [GAMES.SIMON]: SimonGameLogic
-    };
-    const GameLogic = gameLogicClasses[currentGame];
-    if (!GameLogic) {
-      throw new Error(`Unrecognized game: ${currentGame}`);
-    }
+    const GameLogicClass = getGameLogicClass(currentGame);
 
-    this.data.set('currentGame', currentGame, props.currentGame);
+    this._setCurrentGame(currentGame, props.currentGame);
 
-    if (!(this.currentGameLogic instanceof GameLogic)) {
+    if (!(this.currentGameLogic instanceof GameLogicClass)) {
       this.setMaster(false);
-      this.currentGameLogic = new GameLogic(this, this.config);
-    }
-  }
-
-  /**
-   * Sculptures own their own handshakes[sculptureId] field, so we can
-   * merge directly.
-   */
-  _mergeHandshakes(handshakes, props) {
-    for (let sculptureId of Object.keys(handshakes)) {
-      this.data.get('handshakes').set(sculptureId, handshakes[sculptureId], props[sculptureId]);
+      this.currentGameLogic = new GameLogicClass(this, this.config);
     }
   }
 
@@ -468,10 +446,17 @@ export default class SculptureStore extends events.EventEmitter {
     return this.data.get("currentGame");
   }
 
+  _setCurrentGame(newGame, newProps) {
+    return this.data.set("currentGame", newGame, newProps);
+  }
+
+  /**
+   * Returns the name of the next game.
+   * Note: This works also when the current game is null, since indexOf() returns -1 when not found.
+   */
   _getNextGame() {
     let index = this.config.GAMES_SEQUENCE.indexOf(this._getCurrentGame());
     index = (index + 1) % this.config.GAMES_SEQUENCE.length;
-
     return this.config.GAMES_SEQUENCE[index];
   }
 

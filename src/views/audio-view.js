@@ -97,7 +97,7 @@ export default class AudioView {
   }
 
   _handleChanges(changes) {
-    if (this.store.isPlayingHandshakeGame) this._handleHandshakeGame(changes);
+    this._handleHandshakeGame(changes);
     if (this.store.isPlayingMoleGame) this._handleMoleGame(changes);
     if (this.store.isPlayingDiskGame) this._handleDiskGame(changes);
     if (this.store.isPlayingSimonGame) this._handleSimonGame(changes);
@@ -108,16 +108,16 @@ export default class AudioView {
   }
 
   _handleHandshakeGame(changes) {
-    // On startup, or when Start State becomes active, play ambient sound
-    if (changes.currentGame === GAMES.HANDSHAKE) this.sounds.alone.ambient.play();
-
-    if (changes.handshake && changes.handshake.state === HandshakeGameLogic.STATE_ACTIVATING) {
-      // FIXME: Determine volume based on if _our_ hand initiated the handshake
-//      if (changes.handshakes[this.store.me]) -> max volume, else low volume
-//      gain: (stripId === simongame.currentStrip) ? 1 : 0.1
-
-      this.sounds.alone.ambient.stop();
-      this.sounds.alone.handshake.play();
+    if (changes.handshake && changes.handshake.handshakes) {
+      // Local handshake: Stop ambient and play activation sound
+      if (changes.handshake.handshakes[this.store.me] === HandshakeGameLogic.HANDSHAKE_ACTIVE) {
+        this.sounds.alone.ambient.stop();
+        this.sounds.alone.handshake.play();
+      }
+      // Local timeout: Start ambient
+      else if (changes.handshake.handshakes[this.store.me] === HandshakeGameLogic.HANDSHAKE_OFF) {
+        this.sounds.alone.ambient.play();
+      }
     }
   }
 
