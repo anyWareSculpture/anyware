@@ -25,6 +25,7 @@ export default class DiskModel extends events.EventEmitter {
   constructor() {
     super();
     this._pos = 0; // clockwise degrees
+    this._autoPos = false;
     this.lasttick = 0;
     this.stop();
   }
@@ -65,9 +66,9 @@ export default class DiskModel extends events.EventEmitter {
       
       // ds = v0 * t + 1/2 * a * t^2
       newpos = this._pos + this.speed * dt + 0.5 * this.acceleration * dt*dt;
-      if (this._autoPos !== undefined && angleBetween(this._autoPos, this._pos, newpos)) {
+      if (this._autoPos !== false && angleBetween(this._autoPos, this._pos, newpos)) {
         newpos = this._autoPos;
-        delete this._autoPos;
+        this._autoPos = false;
         this.stop();
         this.emit('autoPositionReached', newpos);
       }
@@ -112,7 +113,7 @@ export default class DiskModel extends events.EventEmitter {
    */
   set targetPosition(pos) {
     this._targetPos = pos;
-    delete this._autoPos;
+    this._autoPos = false;
   }
 
   get targetPosition() {
@@ -140,6 +141,11 @@ export default class DiskModel extends events.EventEmitter {
    * Sets auto position, will make the physical model move towards this position
    */
   set autoPosition(pos) {
+    if (pos === false) {
+      this._autoPos = false;
+      this.targetSpeed = 0; // Kill any speed since targetSpeed is automated by autoPos
+      return;
+    }
     this._autoPos = (pos + 360) % 360;
     let delta = this._autoPos - this._pos;
     this.targetSpeed = Math.sign(delta) * AUTO_SPEED * ((Math.abs(delta) < 180) ? 1 : -1);

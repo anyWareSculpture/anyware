@@ -7,7 +7,8 @@ export default class Disk extends TrackedData {
       position: position,
       user: "",
       targetSpeed: 0,
-      autoPosition: undefined, // Used for auto-moveTo (shuffle, lock)
+      // Used for auto-moveTo (shuffle, lock). Note: We need a real value to make the streaming client transport this
+      autoPosition: false,
     });
   }
 
@@ -40,13 +41,17 @@ export default class Disk extends TrackedData {
     return this.set('autoPosition', autoPosition, props);
   }
 
+  hasAutoPosition() {
+    return this.get('autoPosition') !== false;
+  }
+
   getAutoPosition() {
     return this.get('autoPosition');
   }
 
   stop() {
     this.setTargetSpeed(0);
-    this.setAutoPosition(undefined);
+    this.setAutoPosition(false);
   }
 
 }
