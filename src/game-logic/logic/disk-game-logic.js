@@ -270,21 +270,30 @@ export default class DiskGameLogic {
 
       const newspeed = speed === 0 ? 0 : sign * this.gameConfig.SPEEDS[speed - 1];
 
-      disk.setUser(newspeed !== 0 ? this.store.me : '');
-      disk.setTargetSpeed(newspeed);
-      this.physicalDisks[diskId].targetSpeed = newspeed;
-
-      // On speed changes, publish position
-      disk.setPosition(this.store.getDiskPosition(diskId));
-      // ..and check win condition if master
+      // Check win condition if master
       if (this.store.isMaster() && this.store.isReady) {
         this._checkWinConditions();
       }
 
+      if (newspeed !== 0 && !disk.hasAutoPosition()) {
+
+        disk.setUser(this.store.me);
+      }
+      else {
+        disk.setUser('');
+      }
+      if (!disk.hasAutoPosition()) {
+        disk.setTargetSpeed(newspeed);
+        this.physicalDisks[diskId].targetSpeed = newspeed;
+      }
+
+      // Publish position on any interaction
+      disk.setPosition(this.store.getDiskPosition(diskId));
+
       const lightArray = this._lights;
       const setPanels = (panels, index) => {
         for (let i=0;i<5;i++) {
-          if (index >= i) {
+          if (index >= i && !disk.hasAutoPosition()) {
             lightArray.setIntensity(stripId, panels[i], this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
             lightArray.setColor(stripId, panels[i], this.store.locationColor);
           }
