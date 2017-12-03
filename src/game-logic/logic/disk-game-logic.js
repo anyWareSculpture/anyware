@@ -216,14 +216,13 @@ export default class DiskGameLogic {
     // FIXME: Break up this method
     if (this.store.iAmAlone() || this._state !== DiskGameLogic.STATE_ACTIVE) return;
 
-    const controlMappings = this.gameConfig.CONTROL_MAPPINGS;
     const {stripId, panelId} = payload;
     
-    const diskId = controlMappings.STRIP_TO_DISK[stripId];
+    const diskId = this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK[stripId];
     // The event doesn't concern us - use default behavior
     if (diskId === undefined) return; 
 
-    const disk = this.data.get('disks').get(diskId);
+    const disk = this._getDisk(diskId);
 
     // Ignore non-owner interactions
     if (disk.getUser() !== "" && disk.getUser() !== this.store.me) {
@@ -348,10 +347,8 @@ export default class DiskGameLogic {
       const disksChanges = diskChanges.disks;
       const disksProps = diskProps.disks;
   
-      const currDisks = this.data.get('disks');
-  
       for (let diskId of Object.keys(disksChanges)) {
-        const currDisk = currDisks.get(diskId);
+        const currDisk = this._getDisk(diskId);
         const changedDisk = disksChanges[diskId];
         const changedDiskProps = disksProps[diskId];
 
@@ -420,9 +417,7 @@ export default class DiskGameLogic {
   }
 
   _lockDisk(diskId) {
-    const disks = this.data.get('disks');
-    const disk = disks.get(diskId);
-    disk.setAutoPosition(0);
+    this._getDisk(diskId).setAutoPosition(0);
     this.physicalDisks[diskId].autoPosition = 0;
   }
 
@@ -477,8 +472,7 @@ export default class DiskGameLogic {
   }
 
   getDiskSpeed(diskId) {
-    const disks = this.data.get('disks');
-    return disks.get(diskId).getTargetSpeed();
+    return this._getDisk(diskId).getTargetSpeed();
   }
 
   /**
@@ -614,6 +608,10 @@ export default class DiskGameLogic {
   _forEachDisk(func) {
     const disks = this.data.get('disks');
     for (const diskId of disks) func(disks.get(diskId), diskId);
+  }
+
+  _getDisk(diskId) {
+    return this.data.get('disks').get(diskId);
   }
 
 }
