@@ -131,8 +131,8 @@ export default class DefaultConfig {
       SINGLE_DISK_TOLERANCE: 10, // tolerance (in degrees) for locking a single disk into place
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_COLOR: COLORS.WHITE,
-      CONTROL_PANEL_INTENSITIES: [10, 20, 30, 40, 50],
       CONFLICT_INTENSITY: 20,
+      CONTROL_PANEL_INTENSITY: 50,
       ACTIVE_CONTROL_PANEL_INTENSITY: 100,
       SHADOW_LIGHTS: {
         // stripId: [panelId..]

@@ -57,10 +57,7 @@ export default class DiskGameLogic {
       new Frame(() => {
         // Activate UI indicators
         for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
-          for (let i=0;i<5;i++) {
-            this._lights.setIntensity(stripId, positivePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
-            this._lights.setIntensity(stripId, negativePanels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
-          }
+          this._lights.setIntensity(stripId, null, this.gameConfig.CONTROL_PANEL_INTENSITY);
         }
         this.fadeInLevel();
       }, 0),
@@ -153,6 +150,14 @@ export default class DiskGameLogic {
         this.physicalDisks[diskId].on('position', (position) => {
           this.diskActions.sendDiskUpdate(diskId, { position });
         });
+// FIXME: Don't do this, as it may broadcast the intention to stop disk which are still auto-positioning
+//        this.physicalDisks[diskId].on('autoPositionReached', (position) => {
+//          const disk = this.data.get('disks').get(diskId);
+//          if (!disk.getLocked() && this.store.isMaster()) {
+//            disk.setTargetSpeed(0);
+//            disk.setAutoPosition(false);
+//          }
+//        });
       });
       this.interval = setInterval(() => {
         Object.keys(this.physicalDisks).forEach((key) => this.physicalDisks[key].tick());
@@ -230,6 +235,7 @@ export default class DiskGameLogic {
     }
 
     // Ignore disks in autoPosition mode
+    // FIXME: Instead of ignoring, we should deactivate and turn off (or otherwise highlight) these panels
     if (disk.hasAutoPosition()) return;
 
 
@@ -249,7 +255,7 @@ export default class DiskGameLogic {
 
     if (positivePanel >= 0 && negativePanel >= 0) {
       // FIXME: Set conflict
-      this._setDiskColor(stripId, this.gameConfig.CONFLICT_INTENSITY, this.config.COLORS.ERROR);
+      this._setStripColor(stripId, this.gameConfig.CONFLICT_INTENSITY, this.config.COLORS.ERROR);
     }
     else {
       let speed = 0;
@@ -272,6 +278,7 @@ export default class DiskGameLogic {
 
       // Check win condition if master
       if (this.store.isMaster() && this.store.isReady) {
+        // FIXME: We need to also check win condition whenever a disk updates as deceleration after the user lets go may move it close enough
         this._checkWinConditions();
       }
 
@@ -290,6 +297,9 @@ export default class DiskGameLogic {
       // Publish position on any interaction
       disk.setPosition(this.store.getDiskPosition(diskId));
 
+      // If a disk was locked during this function, don't set panel lights
+      // FIXME: This could be solved in a nicer way
+      if (disk.hasAutoPosition()) return;
       const lightArray = this._lights;
       const setPanels = (panels, index) => {
         for (let i=0;i<5;i++) {
@@ -298,7 +308,7 @@ export default class DiskGameLogic {
             lightArray.setColor(stripId, panels[i], this.store.locationColor);
           }
           else {
-            lightArray.setIntensity(stripId, panels[i], this.gameConfig.CONTROL_PANEL_INTENSITIES[i]);
+            lightArray.setIntensity(stripId, panels[i], this.gameConfig.CONTROL_PANEL_INTENSITY);
             lightArray.setColor(stripId, panels[i], this.gameConfig.CONTROL_PANEL_COLOR);
           }
         }
@@ -350,7 +360,12 @@ export default class DiskGameLogic {
     }
 
     if (!diskChanges.disks) return;
-    // Master controls disk states, unless in active mode
+
+    // Master owns all fields if  this._state is not STATE_ACTIVE
+    // Master owns the disk fields: autoPosition and locked
+    // Master owns all disk fields for disks that are locked
+
+    // Master controls disk states, unless (STATE_ACTIVE && !locked)
     if (!this.store.isMaster() || this._state === DiskGameLogic.STATE_ACTIVE) {
       // Normal merge
       const disksChanges = diskChanges.disks;
@@ -361,37 +376,46 @@ export default class DiskGameLogic {
         const changedDisk = disksChanges[diskId];
         const changedDiskProps = disksProps[diskId];
 
-        if (changedDisk.hasOwnProperty('autoPosition')) {
-          currDisk.setAutoPosition(changedDisk.autoPosition, changedDiskProps.autoPosition);
-          this.physicalDisks[diskId].autoPosition = changedDisk.autoPosition;
+        // autoPosition and locked
+        if (!this.store.isMaster()) {
+            if (changedDisk.hasOwnProperty('autoPosition')) {
+                currDisk.setAutoPosition(changedDisk.autoPosition, changedDiskProps.autoPosition);
+                this.physicalDisks[diskId].autoPosition = changedDisk.autoPosition;
+            }
+
+            if (changedDisk.hasOwnProperty('locked')) {
+                currDisk.setLocked(changedDisk.locked, changedDiskProps.locked);
+            }
         }
 
-        // Ignore disks in autoPosition mode
-        if (currDisk.hasAutoPosition()) {
-          continue;
-        }
+        // locked disks
+        if (!this.store.isMaster() || !currDisk.getLocked()) {
+            if (changedDisk.hasOwnProperty('user')) {
+                currDisk.setUser(changedDisk.user, changedDiskProps.user);
+            }
+            
+            if (changedDisk.hasOwnProperty('targetSpeed')) {
+                currDisk.setTargetSpeed(changedDisk.targetSpeed, changedDiskProps.targetSpeed);
+                this.physicalDisks[diskId].targetSpeed = changedDisk.targetSpeed;
+            }
 
-        if (changedDisk.hasOwnProperty('position')) {
-          currDisk.setPosition(changedDisk.position, changedDiskProps.position);
-          this.physicalDisks[diskId].targetPosition = changedDisk.position;
-          if (this.store.isMaster() && this.store.isReady) {
-            this._checkWinConditions();
-          }
-        }
-        if (changedDisk.hasOwnProperty('user')) {
-          currDisk.setUser(changedDisk.user, changedDiskProps.user);
-        }
-        if (changedDisk.hasOwnProperty('targetSpeed')) {
-          currDisk.setTargetSpeed(changedDisk.targetSpeed, changedDiskProps.targetSpeed);
-          this.physicalDisks[diskId].targetSpeed = changedDisk.targetSpeed;
+            if (changedDisk.hasOwnProperty('position')) {
+                currDisk.setPosition(changedDisk.position, changedDiskProps.position);
+                // Locked disks cannot have target positions as they're either stopped or having an autoPosition
+                if (!currDisk.getLocked()) this.physicalDisks[diskId].targetPosition = changedDisk.position;
+                if (this.store.isMaster() && this.store.isReady) {
+                    this._checkWinConditions();
+                }
+            }
         }
       }
     }
     else {
       // Master control; revert any remote changes
-      this._forEachDisk((disk) => {
+      this._forEachDisk((disk, diskId) => {
         disk.setPosition(disk.getPosition());
         disk.setTargetSpeed(disk.getTargetSpeed());
+        this.physicalDisks[diskId].targetSpeed = disk.getTargetSpeed();
         disk.setUser(disk.getUser());
       });
     }
@@ -403,7 +427,7 @@ export default class DiskGameLogic {
     }
   }
 
-  _setDiskColor(stripId, intensity, color) {
+  _setStripColor(stripId, intensity, color) {
     const lightArray = this._lights;
     lightArray.setIntensity(stripId, null, intensity);
     lightArray.setColor(stripId, null, color);
@@ -425,9 +449,28 @@ export default class DiskGameLogic {
     return err;
   }
 
+
+  //
+  // FIXME: Since the actual lights are merged by sculpture-store, we may end up merging
+  // lights _after_ disks are locked if a slave presses a panel while the locked state is being
+  // propagated.
+  //
   _lockDisk(diskId) {
-    this._getDisk(diskId).setAutoPosition(0);
+    const disk = this._getDisk(diskId);
+    disk.setLocked(true);
+    disk.setAutoPosition(0);
+    disk.setUser('');
     this.physicalDisks[diskId].autoPosition = 0;
+    // Set UI indicators to location color
+    const winningUser = disk.getLastUser() || disk.getUser();
+    const winningColor = this.config.getLocationColor(winningUser);
+    for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
+      if (this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK[stripId] === diskId) {
+          this._setStripColor(stripId, this.gameConfig.CONTROL_PANEL_INTENSITY, winningColor);
+      }
+    }
+    // Make sure changes are merged by all slaves
+    this.store.reassertChanges();
   }
 
   /**
@@ -521,20 +564,26 @@ export default class DiskGameLogic {
       }, 0),
       new Frame(() => {
         this.store.data.get('lights').deactivateAll();
-        this._stopAllDisks();
+        this._forEachDisk((disk) => {
+          disk.stop();
+          disk.setPosition(0);
+          disk.setUser('');
+          disk.setLocked(false);
+        });
         this.disablePhysicalDisks();
         this._state = DiskGameLogic.STATE_WINNING;
-      }, 500),
+      }, 1000),
       new Frame(() => {
         this._state = DiskGameLogic.STATE_POST_LEVEL;
-      }, 3000),
+      }, 2500),
     ];
 
     const lightArray = this._lights;
-    const numFrames = {0: 3, 1: 6, 2: 10}[this._level];
-    const panelFrames = Array.from(Array(numFrames)).map((val, index) => new Frame(() => {
+    const numLights = {0: 3, 1: 6, 2: 10}[this._level];
+    const panelFrames = Array.from(Array(10)).map((val, index) => new Frame(() => {
       for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
-        lightArray.setIntensity(stripId, '' + index, this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
+        lightArray.setIntensity(stripId, '' + index, index < numLights ? this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY : 0);
+        lightArray.setColor(stripId, '' + index, this.gameConfig.CONTROL_PANEL_COLOR);
       }
     }, 200));
 
@@ -605,10 +654,6 @@ export default class DiskGameLogic {
 
   getLocalDiskPosition(diskId) {
     return this.physicalDisks[diskId].position;
-  }
-
-  _stopAllDisks() {
-    this._forEachDisk((disk) => disk.stop());
   }
 
   /**
