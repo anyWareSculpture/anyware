@@ -16,9 +16,6 @@ export default class AudioView {
     AudioAPI.init();
   }
 
-  reset() {
-  }
-
   /**
    * Loads all sounds.
    * @param {function(err)} callback Called when done
@@ -40,7 +37,8 @@ export default class AudioView {
         success: new Sound({url: 'sounds/Game_01/G01_Success_01.wav', gain: 0.5}),
         lastPanelSuccess: new Sound({url: 'sounds/Game_01/G01_Success_01_30e.wav', gain: 0.5}),
         ping: new Sound({url: 'sounds/Game_01/G01_Success_01b.wav', gain: 0.5}),
-        panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_01/G01_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.33})))
+        panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_01/G01_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.33}))),
+        unsuccess: new Sound({url: 'sounds/Game_01/G01_Unsuccess_Gliss_03.wav', gain: 0.5}),
       },
       disk: {
         lightEffect: new Sound({url: 'sounds/Game_02/G02_Lights_03.wav'}),
@@ -55,10 +53,11 @@ export default class AudioView {
         show: new Sound({url: 'sounds/Game_02/G02_Success_final_01.wav', gain: 0.5}),
       },
       simon: {
+        intro: new Sound({url: 'sounds/Game_03/G03_Intro_03.wav', gain: 1}),
         panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_03/G03_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.5}))),
         success: new Sound({url: 'sounds/Game_03/G03_Success_01.wav', gain: 0.5}),
         failure: new Sound({url: 'sounds/Game_03/G03_Unsuccess_01a.wav', gain: 0.5}),
-        show: new Sound({url: 'sounds/Game_03/G03_Light_Show_01.wav', gain: 1})
+        show: new Sound({url: 'sounds/Game_03/G03_Light_Show_01.wav', gain: 1}),
       }
     };
 
@@ -177,12 +176,14 @@ export default class AudioView {
       case DiskGameLogic.STATE_ACTIVE:
         // Start disk sounds in silent mode
         // FIXME: Add failsafe to avoid starting sounds multiple times (due to loop)
+        console.log('disk: Start disk sounds');
         for (const diskId of ['disk0', 'disk1', 'disk2']) this.sounds.disk[diskId].play({gain: 0});
         break;
       case DiskGameLogic.STATE_POST_LEVEL:
         this.sounds.disk.radiate.play();
         break;
       case DiskGameLogic.STATE_WINNING:
+        console.log('disk: Stop disk sounds');
         for (const diskId of ['disk0', 'disk1', 'disk2']) this.sounds.disk[diskId].stop();
         // End of game
         if (this.store.data.get('disk').get('level') >= this.config.DISK_GAME.LEVELS.length) {
@@ -210,15 +211,18 @@ export default class AudioView {
             const isLocking = diskChanges.hasOwnProperty('autoPosition') && diskChanges.autoPosition !== false;
 
             if (currentState === DiskGameLogic.STATE_ACTIVE && isLocking) {
+              console.log('disk: Lock + fade out');
               this.sounds.disk.lock.play();
               this.sounds.disk[diskId].fadeOut();
             }
             else {
               if (diskChanges.hasOwnProperty('targetSpeed')) {
                 if (diskChanges.targetSpeed === 0) {
+                  console.log('disk: Fade out disk sounds');
                   this.sounds.disk[diskId].fadeOut();
                 }
                 else if (!isLocking) {
+                  console.log('disk: Fade in disk sounds');
                   this.sounds.disk[diskId].fadeIn();
                 }
               }
