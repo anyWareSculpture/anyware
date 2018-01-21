@@ -1,20 +1,31 @@
 import assert from 'assert';
 import SculptureStore from '../sculpture-store';
 import SculptureActionCreator from '../actions/sculpture-action-creator';
+import TrackedData from '../utils/tracked-data';
 
 export default class HandshakeGameLogic {
-  static STATE_WAITING = "waiting";
-  static STATE_ACTIVATING = "activating";
+  static GLOBAL_ALONE = "alone";
+  static GLOBAL_PRESENCE = "presence";
+
+  static HANDSHAKE_OFF = "off";
+  static HANDSHAKE_ACTIVE = "active";
+  static HANDSHAKE_PRESENT = "present";
 
   // These are automatically added to the sculpture store
   static trackedProperties = {
-    state: HandshakeGameLogic.STATE_WAITING,
+    state: HandshakeGameLogic.GLOBAL_ALONE,
+    handshakes: new TrackedData({
+      sculpture1: HandshakeGameLogic.HANDSHAKE_OFF,
+      sculpture2: HandshakeGameLogic.HANDSHAKE_OFF,
+      sculpture3: HandshakeGameLogic.HANDSHAKE_OFF,
+      anyware: HandshakeGameLogic.HANDSHAKE_OFF, // For off-line single player
+    }),
   };
 
   constructor(store, config) {
     this.store = store;
     this.config = config;
-    this.gameConfig = config.HANDSHAKE_GAME;
+    this.handshakeConfig = config.HANDSHAKE;
     this.transitionTimeout = null;
 
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
@@ -24,16 +35,22 @@ export default class HandshakeGameLogic {
     return this.store.data.get('handshake');
   }
 
-  start() {
-    this.data.set('state', HandshakeGameLogic.STATE_WAITING);
+  _getHandshakeState(sculptureId) {
+    return this.data.get('handshakes').get(sculptureId);
   }
 
-  end() {
-    this.store.data.get('lights').deactivateAll();
+  getMyHandshakeState() {
+    return this._getHandshakeState(this.store.me);
   }
 
-  isComplete() {
-    return this.data.get('state') === HandshakeGameLogic.STATE_ACTIVATING;
+  _isGlobalAloneMode() {
+    return this.data.get('state') === HandshakeGameLogic.GLOBAL_ALONE;
+  }
+
+  // Return true if all sculptures are off
+  _noActiveSculptures() {
+    const handshakes = this.data.get('handshakes');
+    return Array.from(handshakes).every((sculptureId) => handshakes.get(sculptureId) === HandshakeGameLogic.HANDSHAKE_OFF);
   }
 
   handleActionPayload(payload) {
@@ -47,16 +64,43 @@ export default class HandshakeGameLogic {
   }
 
   /**
-   * Handle local handshake. We can only transition from WAITING to ACTIVATING, not back.
+   * Handle local handshake.
    */
   _actionHandshakeAction(payload) {
-    if (payload.state === SculptureStore.HANDSHAKE_ACTIVE && !this.isComplete()) {
-      assert(!this.transitionTimeout);
-      this.data.set('state', HandshakeGameLogic.STATE_ACTIVATING);
-      this.transitionTimeout = setTimeout(() => {
-        this.transitionTimeout = null;
-        this.sculptureActionCreator.sendStartNextGame();
-      }, this.gameConfig.TRANSITION_OUT_TIME);
+    const {sculptureId, state} = payload;
+
+    // On handshake
+    if (payload.state === HandshakeGameLogic.HANDSHAKE_ACTIVE) {
+      // If we were globally alone, start game
+      if (this._isGlobalAloneMode()) {
+        this.data.set('state', HandshakeGameLogic.GLOBAL_PRESENCE);
+        this.transitionTimeout = setTimeout(() => {
+          this.transitionTimeout = null;
+          this.sculptureActionCreator.sendStartGame();
+        }, this.handshakeConfig.TRANSITION_OUT_TIME);
+      }
+      // If we are locally alone, resume local game
+      else if (this.getMyHandshakeState() === HandshakeGameLogic.HANDSHAKE_OFF) {
+      }
+    }
+
+    // Persist handshakes
+    this.data.get('handshakes').set(sculptureId, state);
+
+    // On handshake timeout
+    if (state === HandshakeGameLogic.HANDSHAKE_OFF) {
+      // If we're now globally alone, reset the game after a delay
+      if (this._noActiveSculptures()) {
+        this.data.set('state', HandshakeGameLogic.GLOBAL_ALONE);
+        if (this.store.isMaster()) {
+          this.transitionTimeout = setTimeout(() => {
+            this.transitionTimeout = null;
+            this.sculptureActionCreator.sendResetGame();
+          }, this.handshakeConfig.TRANSITION_OUT_TIME);
+        }
+      }
+      else {
+      }
     }
   }
 
@@ -66,17 +110,34 @@ export default class HandshakeGameLogic {
   _actionMergeState(payload) {
     if (!payload.handshake) return; // Only handle handshake state
 
-    const handshakeData = this.data;
-    const handshakeChanges = payload.handshake;
-    const handshakeProps = payload.metadata.props.handshake;
-
-    if (handshakeChanges.hasOwnProperty('state')) {
+    // Merge state: Needs synchronization
+    if (payload.handshake.hasOwnProperty('state')) {
       // Resolve race condition based on timestamp
-      if (this.transitionTimeout && handshakeData.hasNewerValue('state', handshakeChanges.state, handshakeProps.state)) {
+      if (this.transitionTimeout && this.data.hasNewerValue('state', payload.handshake.state, payload.metadata.props.handshake.state)) {
         clearTimeout(this.transitionTimeout);
         this.transitionTimeout = null;
       }
-      handshakeData.set('state', handshakeChanges.state, handshakeProps.state);
+
+      if (this.store.isMaster() &&
+          this.data.get('state') === HandshakeGameLogic.GLOBAL_PRESENCE &&
+          payload.handshake.state === HandshakeGameLogic.GLOBAL_ALONE) {
+        this.transitionTimeout = setTimeout(() => {
+          this.transitionTimeout = null;
+          this.sculptureActionCreator.sendResetGame();
+        }, this.handshakeConfig.TRANSITION_OUT_TIME);
+      }
+
+      this.data.set('state', payload.handshake.state, payload.metadata.props.handshake.state);
+    }
+
+    // Merge handshakes: Sculptures own their own handshakes[sculptureId] field, so we can merge directly.
+    if (payload.handshake.hasOwnProperty('handshakes')) {
+      const handshakesData = this.data.get('handshakes');
+      const handshakesChanges = payload.handshake.handshakes;
+      const handshakesProps = payload.metadata.props.handshake.handshakes;
+      for (const sculptureId of Object.keys(handshakesChanges)) {
+        handshakesData.set(sculptureId, handshakesChanges[sculptureId], handshakesProps[sculptureId]);
+      }
     }
   }
 }

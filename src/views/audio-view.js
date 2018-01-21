@@ -2,7 +2,9 @@ import _ from 'lodash';
 
 import SculptureStore from '../game-logic/sculpture-store';
 import HandshakeGameLogic from '../game-logic/logic/handshake-game-logic';
+import MoleGameLogic from '../game-logic/logic/mole-game-logic';
 import DiskGameLogic from '../game-logic/logic/disk-game-logic';
+import SimonGameLogic from '../game-logic/logic/simon-game-logic';
 import GAMES from '../game-logic/constants/games';
 import TrackedPanels from '../game-logic/utils/tracked-panels';
 import Disk from '../game-logic/utils/disk';
@@ -14,9 +16,6 @@ export default class AudioView {
     this.store = store;
     this.config = config;
     AudioAPI.init();
-  }
-
-  reset() {
   }
 
   /**
@@ -40,7 +39,8 @@ export default class AudioView {
         success: new Sound({url: 'sounds/Game_01/G01_Success_01.wav', gain: 0.5}),
         lastPanelSuccess: new Sound({url: 'sounds/Game_01/G01_Success_01_30e.wav', gain: 0.5}),
         ping: new Sound({url: 'sounds/Game_01/G01_Success_01b.wav', gain: 0.5}),
-        panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_01/G01_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.33})))
+        panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_01/G01_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.33}))),
+        unsuccess: new Sound({url: 'sounds/Game_01/G01_Unsuccess_Gliss_02.wav', gain: 0.5}),
       },
       disk: {
         lightEffect: new Sound({url: 'sounds/Game_02/G02_Lights_03.wav'}),
@@ -55,10 +55,11 @@ export default class AudioView {
         show: new Sound({url: 'sounds/Game_02/G02_Success_final_01.wav', gain: 0.5}),
       },
       simon: {
+        intro: new Sound({url: 'sounds/Game_03/G03_Intro_03.wav', gain: 1}),
         panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_03/G03_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.5}))),
         success: new Sound({url: 'sounds/Game_03/G03_Success_01.wav', gain: 0.5}),
         failure: new Sound({url: 'sounds/Game_03/G03_Unsuccess_01a.wav', gain: 0.5}),
-        show: new Sound({url: 'sounds/Game_03/G03_Light_Show_01.wav', gain: 1})
+        show: new Sound({url: 'sounds/Game_03/G03_Light_Show_01.wav', gain: 1}),
       }
     };
 
@@ -76,6 +77,7 @@ export default class AudioView {
         this.store.on(SculptureStore.EVENT_LOCAL_CHANGE, this._handleLocalChanges.bind(this));
       })
       .then(() => callback(null))
+      .then(() => this.sounds.alone.ambient.play()) // Startup in ambient mode
       .catch((reason) => callback(reason));
   }
 
@@ -96,7 +98,7 @@ export default class AudioView {
   }
 
   _handleChanges(changes) {
-    if (this.store.isPlayingHandshakeGame) this._handleHandshakeGame(changes);
+    this._handleHandshakeGame(changes);
     if (this.store.isPlayingMoleGame) this._handleMoleGame(changes);
     if (this.store.isPlayingDiskGame) this._handleDiskGame(changes);
     if (this.store.isPlayingSimonGame) this._handleSimonGame(changes);
@@ -107,16 +109,16 @@ export default class AudioView {
   }
 
   _handleHandshakeGame(changes) {
-    // On startup, or when Start State becomes active, play ambient sound
-    if (changes.currentGame === GAMES.HANDSHAKE) this.sounds.alone.ambient.play();
-
-    if (changes.handshake && changes.handshake.state === HandshakeGameLogic.STATE_ACTIVATING) {
-      // FIXME: Determine volume based on if _our_ hand initiated the handshake
-//      if (changes.handshakes[this.store.me]) -> max volume, else low volume
-//      gain: (stripId === simongame.currentStrip) ? 1 : 0.1
-
-      this.sounds.alone.ambient.stop();
-      this.sounds.alone.handshake.play();
+    if (changes.handshake && changes.handshake.handshakes) {
+      // Local handshake: Stop ambient and play activation sound
+      if (changes.handshake.handshakes[this.store.me] === HandshakeGameLogic.HANDSHAKE_ACTIVE) {
+        this.sounds.alone.ambient.stop();
+        this.sounds.alone.handshake.play();
+      }
+      // Local timeout: Start ambient
+      else if (changes.handshake.handshakes[this.store.me] === HandshakeGameLogic.HANDSHAKE_OFF) {
+        this.sounds.alone.ambient.play();
+      }
     }
   }
 
@@ -148,8 +150,13 @@ export default class AudioView {
       return;
     }
 
-    if (moleChanges && moleChanges.complete) {
-      this.sounds.mole.ping.play();
+    if (moleChanges) {
+      if (moleChanges.state === MoleGameLogic.STATE_FADE) {
+        this.sounds.mole.unsuccess.play();
+      }
+      else if (moleChanges.state === MoleGameLogic.STATE_COMPLETE) {
+        this.sounds.mole.ping.play();
+      }
     }
 
     // If a panel got activated (changes.lights.<stripId>.panels.<panelId>.active === true)
@@ -164,62 +171,75 @@ export default class AudioView {
   }
 
   _handleDiskGame(changes) {
-    if (changes.disk) {
-      if (changes.disk.state === DiskGameLogic.STATE_FADE_IN) {
+    if (changes.disk !== undefined) {
+      const diskChanges = changes.disk;
+      switch (diskChanges.state) {
+      case DiskGameLogic.STATE_FADE_IN:
         this.sounds.disk.fadein.play();
-      }
-      if (changes.disk.state === DiskGameLogic.STATE_SHUFFLE) {
+        break;
+      case DiskGameLogic.STATE_SHUFFLE:
         this.sounds.disk.shuffle.play();
-      }
-      // Middle of end-of-level sequence (start radiate animation)
-      if (changes.disk.state === DiskGameLogic.STATE_POST_LEVEL) {
+        break;
+      case DiskGameLogic.STATE_ACTIVE:
+        // Start disk sounds in silent mode
+        // FIXME: Add failsafe to avoid starting sounds multiple times (due to loop)
+        console.log('disk: Start disk sounds');
+        for (const diskId of ['disk0', 'disk1', 'disk2']) this.sounds.disk[diskId].play({gain: 0});
+        break;
+      case DiskGameLogic.STATE_POST_LEVEL:
         this.sounds.disk.radiate.play();
-      }
-      if (changes.disk.state === DiskGameLogic.STATE_WINNING) {
+        break;
+      case DiskGameLogic.STATE_WINNING:
+        console.log('disk: Stop disk sounds');
+        for (const diskId of ['disk0', 'disk1', 'disk2']) this.sounds.disk[diskId].stop();
         // End of game
         if (this.store.data.get('disk').get('level') >= this.config.DISK_GAME.LEVELS.length) {
-          this.sounds.disk.disk0.stop();
-          this.sounds.disk.disk1.stop();
-          this.sounds.disk.disk2.stop();
           this.sounds.disk.show.play();
         }
         // End of level
         else {
           this.sounds.disk.success.play();
         }
+        break;
       }
-    }
 
-    // On start of disk game
-    // FIXME: Is transition part of the disk game?
-    if (changes.currentGame === GAMES.DISK) {
-      // Start all sounds in silent mode
-      this.sounds.disk.disk0.play({gain: 0});
-      this.sounds.disk.disk1.play({gain: 0});
-      this.sounds.disk.disk2.play({gain: 0});
-    }
+      const currentState = this.store.data.get('disk').get('state');
+      // React to disk movements only when in a movable state
+      if (diskChanges.disks !== undefined &&
+          (currentState === DiskGameLogic.STATE_SHUFFLE ||
+           currentState === DiskGameLogic.STATE_ACTIVE || 
+           currentState === DiskGameLogic.STATE_LOCKING)) {
 
-    // On start of level
-//    if (changes.hasOwnProperty('disk') &&
-//        changes.disk.hasOwnProperty('level') &&
-//        changes.disk.level < this.config.DISK_GAME.LEVELS.length) {
-//    }
+        const disksChanges = diskChanges.disks;
+        for (let diskId of ['disk0', 'disk1', 'disk2']) {
+          if (disksChanges.hasOwnProperty(diskId) &&
+              disksChanges[diskId] !== undefined) {
+            const diskChanges = disksChanges[diskId];
+            const isLocking = diskChanges.hasOwnProperty('autoPosition') && diskChanges.autoPosition !== false;
 
-    if (changes.disk && changes.disk.disks) {
-      const disksChanges = changes.disk.disks;
-      const disks = this.store.data.get('disk').get('disks');
-
-      for (let disk of ['disk0', 'disk1', 'disk2']) {
-        if (disksChanges.hasOwnProperty(disk) &&
-            disksChanges[disk].hasOwnProperty('targetSpeed')) {
-          if (disksChanges[disk].targetSpeed === 0) this.sounds.disk[disk].fadeOut();
-          else this.sounds.disk[disk].fadeIn();
+            if (currentState === DiskGameLogic.STATE_ACTIVE && isLocking) {
+              console.log('disk: Lock + fade out');
+              this.sounds.disk.lock.play();
+              this.sounds.disk[diskId].fadeOut();
+            }
+            else {
+              if (diskChanges.hasOwnProperty('targetSpeed')) {
+                if (diskChanges.targetSpeed === 0) {
+                  console.log('disk: Fade out disk sounds');
+                  this.sounds.disk[diskId].fadeOut();
+                }
+                else if (!isLocking) {
+                  console.log('disk: Fade in disk sounds');
+                  this.sounds.disk[diskId].fadeIn();
+                }
+              }
+            }
+          }
         }
       }
-
     }
-    // FIXME level success and final success
 
+    // FIXME level success and final success
     // Shadow transition sound
     const lightChanges = changes.lights;
     const stripId = '6';
@@ -286,12 +306,22 @@ export default class AudioView {
   }
 
   _handleSimonGame(changes) {
+    const simonChanges = changes.simon;
+
     const simongame = this.store.currentGameLogic;
     if (changes.status === SculptureStore.STATUS_SUCCESS) {
-      if (simongame.complete) this.sounds.simon.show.play();
+      if (simongame.isComplete()) this.sounds.simon.show.play();
       else this.sounds.simon.success.play();
     }
-    if (changes.status === SculptureStore.STATUS_FAILURE) this.sounds.simon.failure.play();
+    if (changes.status === SculptureStore.STATUS_FAILURE) {
+      this.sounds.simon.failure.play();
+    }
+
+    if (simonChanges) {
+      if (simonChanges.state === SimonGameLogic.STATE_INTRO) {
+        this.sounds.simon.intro.play();
+      }
+    }
 
     const lightChanges = changes.lights;
     if (!lightChanges || !this.store.isReady) return;

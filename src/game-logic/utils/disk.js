@@ -6,7 +6,12 @@ export default class Disk extends TrackedData {
     super({
       position: position,
       user: "",
+      lastUser: "",
       targetSpeed: 0,
+      // Used for auto-moveTo (shuffle, lock). false if no auto position is set 
+      // Note: false since we need a real value to make the streaming client transport this value
+      autoPosition: false,
+      locked: false, // disk is locked (implies master-controlled)
     });
   }
 
@@ -26,15 +31,44 @@ export default class Disk extends TrackedData {
     return this.get('position');
   }
 
-  stop() {
-    this.setTargetSpeed(0);
-  }
-
   setUser(user, props) {
+    const lastUser = this.getUser();
+    if (lastUser !== '') this.set('lastUser', lastUser, props);
     this.set('user', user, props);
   }
 
   getUser() {
     return this.get('user');
   }
+
+  getLastUser() {
+    return this.get('lastUser');
+  }
+
+  // Set to undefined to remove target positioning
+  setAutoPosition(autoPosition, props) {
+    return this.set('autoPosition', autoPosition, props);
+  }
+
+  hasAutoPosition() {
+    return this.get('autoPosition') !== false;
+  }
+
+  getAutoPosition() {
+    return this.get('autoPosition');
+  }
+
+  setLocked(locked, props) {
+    return this.set('locked', locked, props);
+  }
+
+  getLocked() {
+    return this.get('locked');
+  }
+
+  stop() {
+    this.setTargetSpeed(0);
+    this.setAutoPosition(false);
+  }
+
 }

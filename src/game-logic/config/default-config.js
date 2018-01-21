@@ -38,8 +38,8 @@ export default class DefaultConfig {
       console: false,    // Console debug output
     };
 
-    // Local sculptures will time out after this number of seconds without interaction
-    this.ACTIVITY_TIMEOUT = 60;
+    // Will enter alone mode after this numner of seconds
+    this.ALONE_MODE_SECONDS = 60;
 
     // A mapping between sculpture IDs and the colors that represent them
     this.COLORS = {
@@ -54,7 +54,6 @@ export default class DefaultConfig {
 
     // The sequence of the games to be run. The first game is run on startup
     this.GAMES_SEQUENCE = [
-      GAMES.HANDSHAKE,
       GAMES.MOLE,
       GAMES.DISK,
       GAMES.SIMON
@@ -89,11 +88,12 @@ export default class DefaultConfig {
       INACTIVE_INTENSITY: 0
     };
 
-    /******* GAMES CONFIGURATION *******/
-
-    this.HANDSHAKE_GAME = {
+    this.HANDSHAKE = {
       TRANSITION_OUT_TIME: 4000 // Time (ms) from handshake is touched until we start the next game
     };
+
+    /******* GAMES CONFIGURATION *******/
+
     this.MOLE_GAME = {
       GAME_END: 30,
       INITIAL_PANELS: [
@@ -128,11 +128,11 @@ export default class DefaultConfig {
 
     this.DISK_GAME = {
       SPEEDS: [6, 15, 21, 30, 72], // degrees/sec
-      ABSOLUTE_TOLERANCE: 8, // sum of degrees tolerance for the absolute disk positions
+      SINGLE_DISK_TOLERANCE: 10, // tolerance (in degrees) for locking a single disk into place
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_COLOR: COLORS.WHITE,
-      CONTROL_PANEL_INTENSITIES: [10, 20, 30, 40, 50],
       CONFLICT_INTENSITY: 20,
+      CONTROL_PANEL_INTENSITY: 50,
       ACTIVE_CONTROL_PANEL_INTENSITY: 100,
       SHADOW_LIGHTS: {
         // stripId: [panelId..]
@@ -147,7 +147,7 @@ export default class DefaultConfig {
         { rule: 'absolute', disks: { disk0: -90, disk1: 90, disk2: 120 } },
 
         // level 1
-        { rule: 'relative', disks: { disk0: 90, disk1: -90, disk2: -120 } },
+        { rule: 'absolute', disks: { disk0: 90, disk1: -90, disk2: -120 } },
 
         // level 2
         { rule: 'absolute', disks: { disk0: 180, disk1: 45, disk2: -90 } },

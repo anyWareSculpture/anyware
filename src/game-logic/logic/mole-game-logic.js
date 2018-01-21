@@ -7,18 +7,30 @@ import COLORS from '../constants/colors';
 import PanelAnimation from '../animation/panel-animation';
 import Frame from '../animation/frame';
 
+/**
+ * Handles both the Minimal State (transitions) and the Mole Game Logic
+ */
 export default class MoleGameLogic {
+  static STATE_NORMAL = 'normal';     // Game playing
+  static STATE_FADE = 'fade';         // Fade non-winning colors
+  static STATE_COMPLETE = 'complete'; // End of game, turn to black, play ping
+
   // These are automatically added to the sculpture store
   static trackedProperties = {
     panelCount: 0, // Game progress (0..30)
     panels: new TrackedPanels(),  // panel -> state
-    complete: false,
+    state: MoleGameLogic.STATE_NORMAL,
   };
 
+  /*
+   * The constructor manages transition _into_ the Minimal State
+   */
   constructor(store, config) {
     this.store = store;
     this.config = config;
     this.gameConfig = config.MOLE_GAME;
+    this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
+    this.moleGameActionCreator = new MoleGameActionCreator(this.store.dispatcher);
 
     // Unique panel objects: panelKey -> panel
     this._panels = {};
@@ -32,24 +44,49 @@ export default class MoleGameLogic {
     // Force RGB strips to black.
     // FIXME: This is a temporary fix for a firmware bug not respecting intensity
     this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, null, COLORS.BLACK);
-
-    this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
-    this.moleGameActionCreator = new MoleGameActionCreator(this.store.dispatcher);
+    this._turnOffAllGameStrips();
   }
 
   get data() {
     return this.store.data.get('mole');
   }
 
+  /**
+   * Transitions into this game. Calls callback when done.
+   */
+  transition(callback) {
+    if (callback) callback();
+  }
+
   /*!
-   * Starts the game logic. Only one of the sculptures should call this method.
+   * Starts the game logic. Only the master should call this method.
    */
   start() {
     this._initRemainingPanels();
-    this.data.set('complete', false);
+    this.data.set('state', MoleGameLogic.STATE_NORMAL);
     this.data.set('panelCount', 0);
     this.data.get('panels').clear();
     this._registerMoveDelay(0); // Request a new active panel immediately
+  }
+
+  /**
+   * Reset game. Will reset the game to the beginning, without starting the game.
+   * Only master should call this function.
+   */
+  reset() {
+    this._turnOffAllGameStrips();
+    for (const panelkey of Object.keys(this._panels)) {
+      this._removeTimeout(panelkey);
+      const panel = this._panels[panelkey];
+      if (panel.moveDelay !== undefined) {
+        clearTimeout(panel.moveDelay);
+        delete panel.moveDelay;
+      }
+    }
+  }
+
+  _turnOffAllGameStrips() {
+    this.config.GAME_STRIPS.forEach(stripId => this._lights.setIntensity(stripId, null, 0));
   }
 
   /**
@@ -62,6 +99,7 @@ export default class MoleGameLogic {
   }
 
   end() {
+    this.reset();
     this.config.GAME_STRIPS.forEach(stripId => this._lights.deactivateAll(stripId));
   }
 
@@ -71,7 +109,7 @@ export default class MoleGameLogic {
    * We're _not_ allowed to dispatch actions synchronously.
    */
   handleActionPayload(payload) {
-    if (this.data.get("complete")) return;
+    if (this.data.get('state') !== MoleGameLogic.STATE_NORMAL) return;
 
     const actionHandlers = {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
@@ -108,6 +146,8 @@ export default class MoleGameLogic {
    * 4) increase/decrease # of simulaneously active panels
    */
   _actionPanelPressed(payload) {
+    if (this.store.iAmAlone()) return;
+
     let {stripId, panelId, pressed} = payload;
 
     const state = this.data.get('panels').getPanelState(stripId, panelId);
@@ -163,6 +203,7 @@ export default class MoleGameLogic {
       }, 0),
     // 1) Turn off non-winning colors
       new Frame(() => {
+        this.data.set('state', MoleGameLogic.STATE_FADE);
         this.config.GAME_STRIPS.forEach(stripId => {
           const panelIds = this._lights.get(stripId).panelIds;
           panelIds.forEach((panelId) => {
@@ -174,10 +215,8 @@ export default class MoleGameLogic {
       }, 4500),
     // 2) Turn off all remaining colors and start next game
       new Frame(() => {
-        this.config.GAME_STRIPS.forEach(stripId => {
-          this._lights.setIntensity(stripId, null, 0);
-        });
-        this.data.set('complete', true);
+        this._turnOffAllGameStrips();
+        this.data.set('state', MoleGameLogic.STATE_COMPLETE);
         setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 3000);
       }, 5000),
     ];
@@ -370,7 +409,7 @@ export default class MoleGameLogic {
       console.error('No panel key!');
     }
     this.moleGameActionCreator.sendAvailPanel(this._panels[panelkey]);
-    this._panels[panelkey].timeout = setTimeout(this._panelTimeout.bind(this, this._panels[panelkey]), lifetime);
+    this._panels[panelkey].timeout = setTimeout(() => this._panelTimeout(this._panels[panelkey]), lifetime);
   }
 
   _registerMoveDelay(delay, panelKey = null) {

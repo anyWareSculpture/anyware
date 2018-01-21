@@ -24,12 +24,12 @@ const diskConfig = {
   },
   level2: {
     stroke: "#000000",
-    disk0: [453.1, 409.205],
-    disk1: [245.366, 410.247],
-    disk2: [350,230.165],
-    disk0Aesthetic: [143.104,231.203],
-    disk1Aesthetic: [569.5, 232.184],
-    disk2Aesthetic: [350, 587.797],
+    disk0: [143.104,231.203],
+    disk1: [569.5, 232.184],
+    disk2: [350, 587.797],
+    disk0Aesthetic: [453.1, 409.205],
+    disk1Aesthetic: [245.366, 410.247],
+    disk2Aesthetic: [350,230.165],
   },
 };
 
@@ -108,7 +108,7 @@ export default class DiskView extends React.Component {
       // Show puzzle when active
       if (changes.disk.state) {
         this.setState({
-          showPuzzle: [DiskGameLogic.STATE_FADE_IN, DiskGameLogic.STATE_SHUFFLE, DiskGameLogic.STATE_ACTIVE, DiskGameLogic.STATE_WINNING].includes(changes.disk.state)
+          showPuzzle: [DiskGameLogic.STATE_FADE_IN, DiskGameLogic.STATE_SHUFFLE, DiskGameLogic.STATE_ACTIVE, DiskGameLogic.STATE_LOCKING, DiskGameLogic.STATE_WINNING].includes(changes.disk.state)
         });
       }
       // Handle level changes
