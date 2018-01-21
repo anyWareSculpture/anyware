@@ -2,8 +2,9 @@ import _ from 'lodash';
 
 import SculptureStore from '../game-logic/sculpture-store';
 import HandshakeGameLogic from '../game-logic/logic/handshake-game-logic';
-import DiskGameLogic from '../game-logic/logic/disk-game-logic';
 import MoleGameLogic from '../game-logic/logic/mole-game-logic';
+import DiskGameLogic from '../game-logic/logic/disk-game-logic';
+import SimonGameLogic from '../game-logic/logic/simon-game-logic';
 import GAMES from '../game-logic/constants/games';
 import TrackedPanels from '../game-logic/utils/tracked-panels';
 import Disk from '../game-logic/utils/disk';
@@ -305,12 +306,22 @@ export default class AudioView {
   }
 
   _handleSimonGame(changes) {
+    const simonChanges = changes.simon;
+
     const simongame = this.store.currentGameLogic;
     if (changes.status === SculptureStore.STATUS_SUCCESS) {
       if (simongame.isComplete()) this.sounds.simon.show.play();
       else this.sounds.simon.success.play();
     }
-    if (changes.status === SculptureStore.STATUS_FAILURE) this.sounds.simon.failure.play();
+    if (changes.status === SculptureStore.STATUS_FAILURE) {
+        this.sounds.simon.failure.play();
+    }
+
+    if (simonChanges) {
+      if (simonChanges.state === SimonGameLogic.STATE_INTRO) {
+        this.sounds.simon.intro.play();
+      }
+    }
 
     const lightChanges = changes.lights;
     if (!lightChanges || !this.store.isReady) return;

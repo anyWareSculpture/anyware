@@ -9,11 +9,17 @@ import Frame from '../animation/frame';
  * Handles both the Colour State (transitions) and the Simon Game Logic
  */
 export default class SimonGameLogic {
+  static STATE_NONE = 'none';         // Initial state
+  static STATE_INTRO = 'intro';       // Intro: Turn on colors
+  static STATE_NORMAL = 'normal';     // Normal game play logic
+  static STATE_COMPLETE = 'complete'; // End of game
+
   // These are automatically added to the sculpture store
   static trackedProperties = {
     level: 0,
     pattern: 0,
     targetPanel: null,
+    state: SimonGameLogic.STATE_NONE,
   };
 
   /*
@@ -47,20 +53,28 @@ export default class SimonGameLogic {
    * Transitions into this game. Calls callback when done.
    */
   transition(callback) {
-    if (callback) callback();
+    const initFrames = [
+      new Frame(() => {
+        this.data.set('state', SimonGameLogic.STATE_INTRO);
+        // Activate RGB Strips
+        if (this.gameConfig.RGB_STRIP) {
+          this.lights.setIntensity(this.gameConfig.RGB_STRIP, '0', 100);
+          this.lights.setColor(this.gameConfig.RGB_STRIP, '0', 'rgb0');
+          this.lights.setIntensity(this.gameConfig.RGB_STRIP, '1', 100);
+          this.lights.setColor(this.gameConfig.RGB_STRIP, '1', 'rgb1');
+        }
+      }, 0),
+      new Frame(() => {
+      }, 5000),
+    ];
+    this.store.playAnimation(new PanelAnimation(initFrames, callback));
   }
 
   /**
    * Start game - only run by master
    */
   start() {
-    // Activate RGB Strips
-    if (this.gameConfig.RGB_STRIP) {
-      this.lights.setIntensity(this.gameConfig.RGB_STRIP, '0', 100);
-      this.lights.setColor(this.gameConfig.RGB_STRIP, '0', 'rgb0');
-      this.lights.setIntensity(this.gameConfig.RGB_STRIP, '1', 100);
-      this.lights.setColor(this.gameConfig.RGB_STRIP, '1', 'rgb1');
-    }
+    this.data.set('state', SimonGameLogic.STATE_NORMAL);
     this.data.set('level', 0);
     this.data.set('pattern', 0);
     this._playCurrentSequence();
@@ -86,7 +100,7 @@ export default class SimonGameLogic {
   }
 
   isComplete() {
-    return this._complete;
+    return this.data.get('state') === SimonGameLogic.STATE_COMPLETE;
   }
 
   getCurrentStrip() {
@@ -110,7 +124,7 @@ export default class SimonGameLogic {
   }
 
   _actionReplaySimonPattern() {
-    if (!this._complete) this._playCurrentSequence();
+    if (!this.isComplete()) this._playCurrentSequence();
   }
 
   /**
@@ -120,7 +134,7 @@ export default class SimonGameLogic {
   _actionFinishStatusAnimation() {
     if (!this.store.isMaster()) return;
 
-    if (this._complete) {
+    if (this.isComplete()) {
       setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
     }
     else {
@@ -131,7 +145,7 @@ export default class SimonGameLogic {
   _actionPanelPressed(payload) {
     if (this.store.iAmAlone()) return;
 
-    if (this._complete || !this.store.isReady) return;
+    if (this.isComplete() || !this.store.isReady) return;
 
     const {stripId, panelId, pressed} = payload;
 
@@ -250,7 +264,7 @@ export default class SimonGameLogic {
 
     const level = this.getLevel() + 1;
     if (level >= this.getNumLevels()) {
-      this._complete = true;
+      this.data.set('state', SimonGameLogic.STATE_COMPLETE);
     }
 
     this.setLevel(level);
