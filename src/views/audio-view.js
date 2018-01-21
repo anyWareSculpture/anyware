@@ -151,12 +151,12 @@ export default class AudioView {
     }
 
     if (moleChanges) {
-        if (moleChanges.state === MoleGameLogic.STATE_FADE) {
-            this.sounds.mole.unsuccess.play();
-        }
-        else if (moleChanges.state === MoleGameLogic.STATE_COMPLETE) {
-            this.sounds.mole.ping.play();
-        }
+      if (moleChanges.state === MoleGameLogic.STATE_FADE) {
+        this.sounds.mole.unsuccess.play();
+      }
+      else if (moleChanges.state === MoleGameLogic.STATE_COMPLETE) {
+        this.sounds.mole.ping.play();
+      }
     }
 
     // If a panel got activated (changes.lights.<stripId>.panels.<panelId>.active === true)
@@ -314,7 +314,7 @@ export default class AudioView {
       else this.sounds.simon.success.play();
     }
     if (changes.status === SculptureStore.STATUS_FAILURE) {
-        this.sounds.simon.failure.play();
+      this.sounds.simon.failure.play();
     }
 
     if (simonChanges) {

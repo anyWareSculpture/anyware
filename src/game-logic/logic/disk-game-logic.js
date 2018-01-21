@@ -378,35 +378,36 @@ export default class DiskGameLogic {
 
         // autoPosition and locked
         if (!this.store.isMaster()) {
-            if (changedDisk.hasOwnProperty('autoPosition')) {
-                currDisk.setAutoPosition(changedDisk.autoPosition, changedDiskProps.autoPosition);
-                this.physicalDisks[diskId].autoPosition = changedDisk.autoPosition;
-            }
+          if (changedDisk.hasOwnProperty('autoPosition')) {
+            currDisk.setAutoPosition(changedDisk.autoPosition, changedDiskProps.autoPosition);
+            this.physicalDisks[diskId].autoPosition = changedDisk.autoPosition;
+          }
 
-            if (changedDisk.hasOwnProperty('locked')) {
-                currDisk.setLocked(changedDisk.locked, changedDiskProps.locked);
-            }
+          if (changedDisk.hasOwnProperty('locked')) {
+            currDisk.setLocked(changedDisk.locked, changedDiskProps.locked);
+          }
         }
 
         // locked disks
+        const test = (!this.store.isMaster() || !currDisk.getLocked());
         if (!this.store.isMaster() || !currDisk.getLocked()) {
-            if (changedDisk.hasOwnProperty('user')) {
-                currDisk.setUser(changedDisk.user, changedDiskProps.user);
+          if (changedDisk.hasOwnProperty('user')) {
+            currDisk.setUser(changedDisk.user, changedDiskProps.user);
             }
             
-            if (changedDisk.hasOwnProperty('targetSpeed')) {
-                currDisk.setTargetSpeed(changedDisk.targetSpeed, changedDiskProps.targetSpeed);
-                this.physicalDisks[diskId].targetSpeed = changedDisk.targetSpeed;
+          if (changedDisk.hasOwnProperty('targetSpeed')) {
+            currDisk.setTargetSpeed(changedDisk.targetSpeed, changedDiskProps.targetSpeed);
+            this.physicalDisks[diskId].targetSpeed = changedDisk.targetSpeed;
+          }
+            
+          if (changedDisk.hasOwnProperty('position')) {
+            currDisk.setPosition(changedDisk.position, changedDiskProps.position);
+            // Locked disks cannot have target positions as they're either stopped or having an autoPosition
+            if (!currDisk.getLocked()) this.physicalDisks[diskId].targetPosition = changedDisk.position;
+            if (this.store.isMaster() && this.store.isReady) {
+              this._checkWinConditions();
             }
-
-            if (changedDisk.hasOwnProperty('position')) {
-                currDisk.setPosition(changedDisk.position, changedDiskProps.position);
-                // Locked disks cannot have target positions as they're either stopped or having an autoPosition
-                if (!currDisk.getLocked()) this.physicalDisks[diskId].targetPosition = changedDisk.position;
-                if (this.store.isMaster() && this.store.isReady) {
-                    this._checkWinConditions();
-                }
-            }
+          }
         }
       }
     }
@@ -466,7 +467,7 @@ export default class DiskGameLogic {
     const winningColor = this.config.getLocationColor(winningUser);
     for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
       if (this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK[stripId] === diskId) {
-          this._setStripColor(stripId, this.gameConfig.CONTROL_PANEL_INTENSITY, winningColor);
+        this._setStripColor(stripId, this.gameConfig.CONTROL_PANEL_INTENSITY, winningColor);
       }
     }
     // Make sure changes are merged by all slaves
