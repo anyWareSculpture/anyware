@@ -399,7 +399,7 @@ export default class DiskGameLogic {
             currDisk.setTargetSpeed(changedDisk.targetSpeed, changedDiskProps.targetSpeed);
             this.physicalDisks[diskId].targetSpeed = changedDisk.targetSpeed;
           }
-            
+
           if (changedDisk.hasOwnProperty('position')) {
             currDisk.setPosition(changedDisk.position, changedDiskProps.position);
             // Locked disks cannot have target positions as they're either stopped or having an autoPosition
