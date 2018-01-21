@@ -11,11 +11,15 @@ import Frame from '../animation/frame';
  * Handles both the Minimal State (transitions) and the Mole Game Logic
  */
 export default class MoleGameLogic {
+  static STATE_NORMAL = 'normal';     // Game playing
+  static STATE_FADE = 'fade';         // Fade non-winning colors
+  static STATE_COMPLETE = 'complete'; // End of game, turn to black, play ping
+
   // These are automatically added to the sculpture store
   static trackedProperties = {
     panelCount: 0, // Game progress (0..30)
     panels: new TrackedPanels(),  // panel -> state
-    complete: false,
+   state: MoleGameLogic.STATE_NORMAL,
   };
 
   /*
@@ -59,7 +63,7 @@ export default class MoleGameLogic {
    */
   start() {
     this._initRemainingPanels();
-    this.data.set('complete', false);
+    this.data.set('state', MoleGameLogic.STATE_NORMAL);
     this.data.set('panelCount', 0);
     this.data.get('panels').clear();
     this._registerMoveDelay(0); // Request a new active panel immediately
@@ -105,7 +109,7 @@ export default class MoleGameLogic {
    * We're _not_ allowed to dispatch actions synchronously.
    */
   handleActionPayload(payload) {
-    if (this.data.get("complete")) return;
+    if (this.data.get('state') !== MoleGameLogic.STATE_NORMAL) return;
 
     const actionHandlers = {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
@@ -199,6 +203,7 @@ export default class MoleGameLogic {
       }, 0),
     // 1) Turn off non-winning colors
       new Frame(() => {
+        this.data.set('state', MoleGameLogic.STATE_FADE);
         this.config.GAME_STRIPS.forEach(stripId => {
           const panelIds = this._lights.get(stripId).panelIds;
           panelIds.forEach((panelId) => {
@@ -211,7 +216,7 @@ export default class MoleGameLogic {
     // 2) Turn off all remaining colors and start next game
       new Frame(() => {
         this._turnOffAllGameStrips();
-        this.data.set('complete', true);
+        this.data.set('state', MoleGameLogic.STATE_COMPLETE);
         setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 3000);
       }, 5000),
     ];

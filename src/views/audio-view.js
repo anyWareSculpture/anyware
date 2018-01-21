@@ -3,6 +3,7 @@ import _ from 'lodash';
 import SculptureStore from '../game-logic/sculpture-store';
 import HandshakeGameLogic from '../game-logic/logic/handshake-game-logic';
 import DiskGameLogic from '../game-logic/logic/disk-game-logic';
+import MoleGameLogic from '../game-logic/logic/mole-game-logic';
 import GAMES from '../game-logic/constants/games';
 import TrackedPanels from '../game-logic/utils/tracked-panels';
 import Disk from '../game-logic/utils/disk';
@@ -148,8 +149,13 @@ export default class AudioView {
       return;
     }
 
-    if (moleChanges && moleChanges.complete) {
-      this.sounds.mole.ping.play();
+    if (moleChanges) {
+        if (moleChanges.state === MoleGameLogic.STATE_FADE) {
+            this.sounds.mole.unsuccess.play();
+        }
+        else if (moleChanges.state === MoleGameLogic.STATE_COMPLETE) {
+            this.sounds.mole.ping.play();
+        }
     }
 
     // If a panel got activated (changes.lights.<stripId>.panels.<panelId>.active === true)
