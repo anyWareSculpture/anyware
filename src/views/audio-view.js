@@ -39,7 +39,7 @@ export default class AudioView {
         lastPanelSuccess: new Sound({url: 'sounds/Game_01/G01_Success_01_30e.wav', gain: 0.5}),
         ping: new Sound({url: 'sounds/Game_01/G01_Success_01b.wav', gain: 0.5}),
         panels: [0, 1, 2].map(stripId => _.range(10).map(panelId => new Sound({url: `sounds/Game_01/G01_LED_${("0"+(stripId*10+panelId+1)).slice(-2)}.wav`, gain: 0.33}))),
-        unsuccess: new Sound({url: 'sounds/Game_01/G01_Unsuccess_Gliss_03.wav', gain: 0.5}),
+        unsuccess: new Sound({url: 'sounds/Game_01/G01_Unsuccess_Gliss_02.wav', gain: 0.5}),
       },
       disk: {
         lightEffect: new Sound({url: 'sounds/Game_02/G02_Lights_03.wav'}),
