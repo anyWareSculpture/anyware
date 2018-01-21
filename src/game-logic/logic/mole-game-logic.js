@@ -19,7 +19,7 @@ export default class MoleGameLogic {
   static trackedProperties = {
     panelCount: 0, // Game progress (0..30)
     panels: new TrackedPanels(),  // panel -> state
-   state: MoleGameLogic.STATE_NORMAL,
+    state: MoleGameLogic.STATE_NORMAL,
   };
 
   /*
