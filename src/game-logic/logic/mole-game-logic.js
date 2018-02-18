@@ -229,7 +229,7 @@ export default class MoleGameLogic {
    * Advance game. Should only be called by master
    */
   _advanceGame() {
-    let panelCount = this.data.get("panelCount") + 1;
+    let panelCount = this.data.get('panelCount') + 1;
     this.data.set('panelCount', panelCount);
     if (panelCount === this.gameConfig.GAME_END) {
       this._winGame();
@@ -324,7 +324,7 @@ export default class MoleGameLogic {
                 console.log('merged after new panel');
                 this._remainingPanels.delete(panelKey);
                 // FIXME: If this is the last panel, we may need to go to _winGame()
-                this.data.set('panelCount', this.data.get("panelCount") + 1);
+                this.data.set('panelCount', this.data.get('panelCount') + 1);
                 this._lights.setIntensity(this._panels[panelKey].stripId, this._panels[panelKey].panelId, this.gameConfig.COLORED_PANEL_INTENSITY);
               }
               else {
@@ -404,7 +404,7 @@ export default class MoleGameLogic {
 
   _requestPanel(oldPanelKey = null) {
     if (oldPanelKey) delete this._panels[oldPanelKey].moveDelay;
-    const {panelkey, lifetime} = this._nextActivePanel(this.data.get("panelCount"));
+    const {panelkey, lifetime} = this._nextActivePanel(this.data.get('panelCount'));
     if (!panelkey) {
       console.error('No panel key!');
     }
