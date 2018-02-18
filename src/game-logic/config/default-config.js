@@ -216,7 +216,7 @@ export default class DefaultConfig {
   }
 
   getLocationColor(loc) {
-    return this.COLORS.LOCATIONS[loc];
+    return this.COLORS.LOCATIONS[loc] || COLORS.BLACK;
   }
 
   getWebColor(name) {
