@@ -5,8 +5,8 @@ export default class Disk extends TrackedData {
   constructor(position = 0) {
     super({
       position: position,
-      user: "",
-      lastUser: "",
+      user: '',
+      lastUser: '',
       targetSpeed: 0,
       // Used for auto-moveTo (shuffle, lock). false if no auto position is set 
       // Note: false since we need a real value to make the streaming client transport this value
