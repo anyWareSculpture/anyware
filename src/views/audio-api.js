@@ -62,7 +62,14 @@ export class Sound {
 
   // Allows overriding parameters
   play(parameters = {}) {
+
     const params = Object.assign({}, this.params, parameters);
+
+    // Failsafe: If we're playing a looped sound twice, make sure the previous one is stopped
+    // This is to work around an issue where disk game sounds are started multiple times
+    // (due to network congestion?)
+    if (params.loop && this.source) this.stop();
+
     if (params.fadeIn > 0) {
       this.gain.gain.setValueAtTime(0, context.currentTime);
       this.gain.gain.linearRampToValueAtTime(params.gain, context.currentTime + params.fadeIn);
@@ -72,7 +79,7 @@ export class Sound {
     this.source.buffer = this.buffer;
     this.source.loop = params.loop;
     if (params.rate !== 1) this.source.playbackRate.value = params.rate;
-    this.source.loopEnd = params.loopFreq === 0 ? 0 : 1/params.loopFreq;
+    if (params.loop) this.source.loopEnd = params.loopFreq === 0 ? 0 : 1/params.loopFreq;
     this.gain.gain.value = params.gain;
     this.source.connect(this.head);
     if (isNode) this.gain.connect(context.destination);
@@ -88,10 +95,16 @@ export class Sound {
       this.gain.gain.setValueAtTime(volume, context.currentTime);
       this.gain.gain.linearRampToValueAtTime(0, context.currentTime + volume*params.fadeOut);
       this.gain.gain.setValueAtTime(1, context.currentTime + volume*params.fadeOut);
-      if (this.source) this.source.stop(context.currentTime + volume*params.fadeOut);
+      if (this.source) {
+          this.source.stop(context.currentTime + volume*params.fadeOut);
+          delete this.source;
+      }
     }
     else {
-      if (this.source) this.source.stop();
+      if (this.source) {
+          this.source.stop();
+          delete this.source;
+      }
     }
   }
 
