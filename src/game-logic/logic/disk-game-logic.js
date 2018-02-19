@@ -85,14 +85,14 @@ export default class DiskGameLogic {
     const lightArray = this._lights;
     const initFrames = [
       new Frame(() => {
-        lightArray.setIntensity('6', '0', this.gameConfig.SHADOW_LIGHT_INTENSITY);
-        lightArray.setIntensity('6', '2', this.gameConfig.SHADOW_LIGHT_INTENSITY);
+        lightArray.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '0', this.gameConfig.SHADOW_LIGHT_INTENSITY);
+        lightArray.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '2', this.gameConfig.SHADOW_LIGHT_INTENSITY);
       }, 0),
       new Frame(() => {
-        lightArray.setIntensity('6', '1', this.gameConfig.SHADOW_LIGHT_INTENSITY);
+        lightArray.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '1', this.gameConfig.SHADOW_LIGHT_INTENSITY);
       }, 1000),
       new Frame(() => {
-        lightArray.setIntensity('6', '3', this.gameConfig.SHADOW_LIGHT_INTENSITY);
+        lightArray.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '3', this.gameConfig.SHADOW_LIGHT_INTENSITY);
       }, 1000),
       new Frame(() => {
       }, 2000),
@@ -603,7 +603,7 @@ export default class DiskGameLogic {
             }
           }
           for (let i=0;i<4;i++) {
-            this._lights.setIntensity('6', '' + i, 0);
+            this._lights.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '' + i, 0);
           }
         }, 2000),
         new Frame(() => {
