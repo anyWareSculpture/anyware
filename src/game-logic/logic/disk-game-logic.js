@@ -254,8 +254,8 @@ export default class DiskGameLogic {
     let negativePanel = negativePanels.findIndex(isActive);
 
     if (positivePanel >= 0 && negativePanel >= 0) {
-      // FIXME: Set conflict
-      this._setStripColor(stripId, this.gameConfig.CONFLICT_INTENSITY, this.config.COLORS.ERROR);
+      // On conflict, set the entire strip to the location color
+      this._setStripColor(stripId, this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY, this.store.locationColor);
     }
     else {
       let speed = 0;
