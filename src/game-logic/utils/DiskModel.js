@@ -5,7 +5,9 @@ const MAX_DECEL = 300;      // degrees/sec^2
 const AUTO_SPEED = 36;      // degrees/sec
 
 const between = (num, first, last) => (first < last ? num >= first && num <= last : num >= last && num <= first);
-const angleBetween = (num, first, last) => {
+
+// Check if @param num is between @param first and @param last
+const isAngleBetween = (num, first, last) => {
   // Make angles relative to num and normalize to [-180,180]
   let df = (first - num) % 360;
   let dl = (last - num) % 360;
@@ -66,7 +68,7 @@ export default class DiskModel extends events.EventEmitter {
       
       // ds = v0 * t + 1/2 * a * t^2
       newpos = this._pos + this.speed * dt + 0.5 * this.acceleration * dt*dt;
-      if (this._autoPos !== false && angleBetween(this._autoPos, this._pos, newpos)) {
+      if (this._autoPos !== false && isAngleBetween(this._autoPos, this._pos, newpos)) {
         newpos = this._autoPos;
         this._autoPos = false;
         this.stop();
