@@ -150,7 +150,7 @@ export default class DefaultConfig {
         { rule: 'absolute', disks: { disk0: 90, disk1: -90, disk2: -120 } },
 
         // level 2
-        { rule: 'absolute', disks: { disk0: 180, disk1: 45, disk2: -90 } },
+        { rule: 'absolute', disks: { disk0: 170, disk1: 45, disk2: -90 } },
 
       ],
       CONTROL_MAPPINGS: {
