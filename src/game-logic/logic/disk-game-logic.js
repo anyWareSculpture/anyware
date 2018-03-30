@@ -250,71 +250,54 @@ export default class DiskGameLogic {
     const lightArray = this._lights;
     const panels = lightArray.get(stripId).get('panels');
     const isActive = (panelId) => panels.get(panelId).get('active');
-    let positivePanel = positivePanels.findIndex(isActive);
-    let negativePanel = negativePanels.findIndex(isActive);
+    const isPositiveActive = positivePanels.some(isActive);
+    const isNegativeActive = negativePanels.some(isActive);
+    const conflict = isPositiveActive && isNegativeActive;
 
-    if (positivePanel >= 0 && negativePanel >= 0) {
+    let speed = 0;
+    if (isPositiveActive ^ isNegativeActive) {
+      speed = (isNegativeActive ? -1 : 1) * this.gameConfig.SPEED;
+    }
+
+    // Check win condition if master
+    if (this.store.isMaster() && this.store.isReady) {
+      // FIXME: We need to also check win condition whenever a disk updates as deceleration after the user lets go may move it close enough
+      this._checkWinConditions();
+    }
+
+    // Manage ownership
+    if (speed !== 0 && !disk.hasAutoPosition()) {
+      disk.setUser(this.store.me);
+    }
+    else {
+      disk.setUser('');
+    }
+
+    if (!disk.hasAutoPosition()) {
+      disk.setTargetSpeed(speed);
+      this.physicalDisks[diskId].targetSpeed = speed;
+    }
+
+    // Publish position on any interaction
+    disk.setPosition(this.store.getDiskPosition(diskId));
+
+    // If a disk was locked during this function, don't set panel lights
+    // FIXME: This could be solved in a nicer way
+    if (disk.hasAutoPosition()) return;
+
+    if (conflict) {
       // On conflict, set the entire strip to the location color
       this._setStripColor(stripId, this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY, this.store.locationColor);
     }
     else {
-      let speed = 0;
-      let sign = 1;
-      let panelIds = [];
-      if (positivePanel === -1 && negativePanel === -1) {
-        speed = 0;
-      }
-      else if (positivePanel >= 0) {
-        speed = (positivePanel + 1);
-        for (let i=0;i<=positivePanel;i++) panelIds.push(positivePanels[i]);
-      }
-      else {
-        speed = (negativePanel + 1);
-        sign = -1;
-        for (let i=0;i<=negativePanel;i++) panelIds.push(negativePanels[i]);
-      }
-
-      const newspeed = speed === 0 ? 0 : sign * this.gameConfig.SPEEDS[speed - 1];
-
-      // Check win condition if master
-      if (this.store.isMaster() && this.store.isReady) {
-        // FIXME: We need to also check win condition whenever a disk updates as deceleration after the user lets go may move it close enough
-        this._checkWinConditions();
-      }
-
-      if (newspeed !== 0 && !disk.hasAutoPosition()) {
-
-        disk.setUser(this.store.me);
-      }
-      else {
-        disk.setUser('');
-      }
-      if (!disk.hasAutoPosition()) {
-        disk.setTargetSpeed(newspeed);
-        this.physicalDisks[diskId].targetSpeed = newspeed;
-      }
-
-      // Publish position on any interaction
-      disk.setPosition(this.store.getDiskPosition(diskId));
-
-      // If a disk was locked during this function, don't set panel lights
-      // FIXME: This could be solved in a nicer way
-      if (disk.hasAutoPosition()) return;
-      const lightArray = this._lights;
-      const setPanels = (panels, index) => {
-        for (let i=0;i<5;i++) {
-          if (index >= i && !disk.hasAutoPosition()) {
-            lightArray.setIntensity(stripId, panels[i], this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY);
-            lightArray.setColor(stripId, panels[i], this.store.locationColor);
-          }
-          else {
-            lightArray.setIntensity(stripId, panels[i], this.gameConfig.CONTROL_PANEL_INTENSITY);
-            lightArray.setColor(stripId, panels[i], this.gameConfig.CONTROL_PANEL_COLOR);
-          }
-        }
+      const setPanels = (lightArray, panels, on) => {
+        panels.forEach((panel) => {
+          lightArray.setIntensity(stripId, panel, on ? this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY : this.gameConfig.CONTROL_PANEL_INTENSITY);
+          lightArray.setColor(stripId, panel, on ? this.store.locationColor : this.gameConfig.CONTROL_PANEL_COLOR);
+        });
       };
-      setPanels(positivePanels, sign > 0 ? positivePanel : -1);
-      setPanels(negativePanels, sign < 0 ? negativePanel : -1);
+      setPanels(this._lights, positivePanels, isPositiveActive);
+      setPanels(this._lights, negativePanels, isNegativeActive);
     }
   }
 

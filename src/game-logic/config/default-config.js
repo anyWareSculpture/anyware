@@ -127,7 +127,7 @@ export default class DefaultConfig {
     };
 
     this.DISK_GAME = {
-      SPEEDS: [6, 15, 21, 30, 72], // degrees/sec
+      SPEED: 21, // degrees/sec
       SINGLE_DISK_TOLERANCE: 10, // tolerance (in degrees) for locking a single disk into place
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_COLOR: COLORS.WHITE,
