@@ -366,16 +366,9 @@ export default class DiskGameLogic {
         const changedDisk = disksChanges[diskId];
         const changedDiskProps = disksProps[diskId];
 
-        // autoPosition and locked
-        if (!this.store.isMaster()) {
-          if (changedDisk.hasOwnProperty('autoPosition')) {
-            currDisk.setAutoPosition(changedDisk.autoPosition, changedDiskProps.autoPosition);
-            this.physicalDisks[diskId].autoPosition = changedDisk.autoPosition;
-          }
-
-          if (changedDisk.hasOwnProperty('locked')) {
-            currDisk.setLocked(changedDisk.locked, changedDiskProps.locked);
-          }
+        // Manage locked flag first
+        if (!this.store.isMaster() && changedDisk.hasOwnProperty('locked')) {
+          currDisk.setLocked(changedDisk.locked, changedDiskProps.locked);
         }
 
         // locked disks
@@ -386,6 +379,7 @@ export default class DiskGameLogic {
             if (!this.store.isMaster() || !currDisk.hasUser()) {
                 currDisk.setUser(changedDisk.user, changedDiskProps.user);
             }
+          }
             
           if (changedDisk.hasOwnProperty('targetSpeed')) {
             currDisk.setTargetSpeed(changedDisk.targetSpeed, changedDiskProps.targetSpeed);
@@ -402,7 +396,14 @@ export default class DiskGameLogic {
           }
         }
 
-        if (this.store.isMaster()) {
+        // Note: If we're merging multiple fields, we need to set autoPosition last as 
+        // this will implicitly change the speed of a physical disk.
+        if (!this.store.isMaster() && changedDisk.hasOwnProperty('autoPosition')) {
+          currDisk.setAutoPosition(changedDisk.autoPosition, changedDiskProps.autoPosition);
+          this.physicalDisks[diskId].autoPosition = changedDisk.autoPosition;
+        }
+
+        if (this.store.isMaster() && !currDisk.getLocked()) {
           const stripId = this._diskIdToStripId(diskId);
           const isAnyPanelActive = this._lights.get(stripId).panelIds.some((panelId) => this._lights.isActive(stripId, panelId));
           this._manageOwnership(isAnyPanelActive, stripId, currDisk);
@@ -424,15 +425,21 @@ export default class DiskGameLogic {
    * Called by master when it's time to start relinguishing ownership over a panel
    */
   _manageOwnership(hasOwner, stripId, disk) {
-    if (hasOwner && this._ownershipTimeouts[stripId]) {
-      clearTimeout(this._ownershipTimeouts[stripId]);
-      this._ownershipTimeouts[stripId] = null;
+    if (hasOwner) {
+      this._cancelTimeout(stripId);
     }
-    else if (!hasOwner && !this.tid) {
+    else if (!this._ownershipTimeouts[stripId]) {
       this._ownershipTimeouts[stripId] = setTimeout(() => {
         disk.setUser('');
         this.diskActions.sendOwnershipTimeout({stripId});
       }, this.gameConfig.OWNERSHIP_TIMEOUT);
+    }
+  }
+
+  _cancelTimeout(stripId) {
+    if (this._ownershipTimeouts[stripId]) {
+      clearTimeout(this._ownershipTimeouts[stripId]);
+      this._ownershipTimeouts[stripId] = null;
     }
   }
 
@@ -465,12 +472,15 @@ export default class DiskGameLogic {
   }
 
 
-  //
-  // FIXME: Since the actual lights are merged by sculpture-store, we may end up merging
-  // lights _after_ disks are locked if a slave presses a panel while the locked state is being
-  // propagated.
-  //
+  /**
+   * FIXME: Since the actual lights are merged by sculpture-store, we may end up merging
+   * lights _after_ disks are locked if a slave presses a panel while the locked state is being
+   * propagated.
+   * 
+   * Should only be called by master
+   */
   _lockDisk(diskId) {
+    this._cancelTimeout(this._diskIdToStripId(diskId));
     const disk = this._getDisk(diskId);
     disk.setLocked(true);
     disk.setAutoPosition(0);
