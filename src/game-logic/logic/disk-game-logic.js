@@ -481,7 +481,7 @@ export default class DiskGameLogic {
     const winningColor = this.config.getLocationColor(winningUser);
     for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
       if (this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK[stripId] === diskId) {
-        this._setStripColor(stripId, this.gameConfig.CONTROL_PANEL_INTENSITY, winningColor);
+        this._setStripColor(stripId, this.gameConfig.WON_CONTROL_PANEL_INTENSITY, winningColor);
       }
     }
     // Make sure changes are merged by all slaves

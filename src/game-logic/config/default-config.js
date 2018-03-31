@@ -134,6 +134,7 @@ export default class DefaultConfig {
       CONTROL_PANEL_COLOR: COLORS.WHITE,
       CONTROL_PANEL_INTENSITY: 10,
       ACTIVE_CONTROL_PANEL_INTENSITY: 100,
+      WON_CONTROL_PANEL_INTENSITY: 100,
       SHADOW_LIGHTS: {
         // stripId: [panelId..]
         [this.LIGHTS.ART_LIGHTS_STRIP]: ['0', '1', '2', '3']
