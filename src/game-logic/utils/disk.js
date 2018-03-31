@@ -34,11 +34,15 @@ export default class Disk extends TrackedData {
   setUser(user, props) {
     const lastUser = this.getUser();
     if (lastUser !== '') this.set('lastUser', lastUser, props);
-    this.set('user', user, props);
+    return this.set('user', user, props);
   }
 
   getUser() {
     return this.get('user');
+  }
+
+  hasUser() {
+    return this.get('user') !== '';
   }
 
   getLastUser() {

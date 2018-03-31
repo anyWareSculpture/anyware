@@ -385,7 +385,7 @@ export default class SculptureStore extends events.EventEmitter {
     // This is a reasonable default behaviour that can be overridden in
     // a game logic class if necessary.
     // FIXME: This is mostly for testing, and could/should be removed later
-    lightArray.setActive(stripId, panelId, pressed);
+//    lightArray.setActive(stripId, panelId, pressed);
 //    if (pressed) {
 //      lightArray.setColor(stripId, panelId, this.locationColor);
 //    }

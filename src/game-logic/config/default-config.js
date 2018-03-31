@@ -127,11 +127,12 @@ export default class DefaultConfig {
     };
 
     this.DISK_GAME = {
+      OWNERSHIP_TIMEOUT: 2000, // milliseconds
       SPEED: 21, // degrees/sec
       SINGLE_DISK_TOLERANCE: 10, // tolerance (in degrees) for locking a single disk into place
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_COLOR: COLORS.WHITE,
-      CONTROL_PANEL_INTENSITY: 50,
+      CONTROL_PANEL_INTENSITY: 10,
       ACTIVE_CONTROL_PANEL_INTENSITY: 100,
       SHADOW_LIGHTS: {
         // stripId: [panelId..]

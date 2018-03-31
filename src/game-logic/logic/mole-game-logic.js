@@ -149,6 +149,7 @@ export default class MoleGameLogic {
     if (this.store.iAmAlone()) return;
 
     let {stripId, panelId, pressed} = payload;
+    this._lights.setActive(stripId, panelId, pressed);
 
     const state = this.data.get('panels').getPanelState(stripId, panelId);
     if (state === TrackedPanels.STATE_OFF) {

@@ -3,6 +3,7 @@ import BaseActionCreator from './base-action-creator';
 export default class DisksActionCreator extends BaseActionCreator {
   // Action types
   static DISK_UPDATE = "disk-update";
+  static OWNERSHIP_TIMEOUT = "ownership-timeout";
 
   /**
    * Sends an action to the dispatcher representing when a disk position changes.
@@ -14,4 +15,12 @@ export default class DisksActionCreator extends BaseActionCreator {
       this._dispatch(DisksActionCreator.DISK_UPDATE, { position, diskId });
     }
   }
+
+  /**
+   * Signals the disk game that ownership of a strip is relinguished
+   */
+  sendOwnershipTimeout({stripId}) {
+    this._dispatch(DisksActionCreator.OWNERSHIP_TIMEOUT, { stripId });
+  }
+
 }

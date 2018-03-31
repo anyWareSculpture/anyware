@@ -42,6 +42,7 @@ export default class DiskGameLogic {
     this.store = store;
     this.config = config;
     this.gameConfig = config.DISK_GAME;
+    this._ownershipTimeouts = {};
 
     this.physicalDisks = {
       disk0: new DiskModel(),
@@ -195,6 +196,7 @@ export default class DiskGameLogic {
     const actionHandlers = {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this),
+      [DisksActionCreator.OWNERSHIP_TIMEOUT]: this._relinguishOwnership.bind(this),
       [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
     };
@@ -215,13 +217,13 @@ export default class DiskGameLogic {
   }
 
   /**
-   * Called on any change in panel state
+   * Called on any change in local panel state
    */
   _actionPanelPressed(payload) {
     // FIXME: Break up this method
     if (this.store.iAmAlone() || this._state !== DiskGameLogic.STATE_ACTIVE) return;
 
-    const {stripId, panelId} = payload;
+    const {stripId, panelId, pressed} = payload;
     
     const diskId = this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK[stripId];
     // The event doesn't concern us - use default behavior
@@ -230,22 +232,17 @@ export default class DiskGameLogic {
     const disk = this._getDisk(diskId);
 
     // Ignore non-owner interactions
-    if (disk.getUser() !== "" && disk.getUser() !== this.store.me) {
+    if (disk.getUser() !== '' && disk.getUser() !== this.store.me) {
       return;
     }
+
+    // Active flag only set by the owner
+    this._lights.setActive(stripId, panelId, pressed);
 
     // Ignore disks in autoPosition mode
     // FIXME: Instead of ignoring, we should deactivate and turn off (or otherwise highlight) these panels
     if (disk.hasAutoPosition()) return;
 
-
-    // For each strip change:
-    //   Find highest positive activated panel
-    //   Find highest negative activated panel
-    //   if both positive and negative:
-    //     Set conflict
-    //   else 
-    //     set target speed, or 0 if no panels are active
 
     const lightArray = this._lights;
     const panels = lightArray.get(stripId).get('panels');
@@ -257,20 +254,21 @@ export default class DiskGameLogic {
     let speed = 0;
     if (isPositiveActive ^ isNegativeActive) {
       speed = (isNegativeActive ? -1 : 1) * this.gameConfig.SPEED;
+      // Manage ownership
+      if (!disk.hasAutoPosition()) {
+        disk.setUser(this.store.me);
+      }
+    }
+    // Manage ownership
+    if (this.store.isMaster()) {
+        this._manageOwnership(isPositiveActive || isNegativeActive, stripId, disk);
     }
 
     // Check win condition if master
     if (this.store.isMaster() && this.store.isReady) {
       // FIXME: We need to also check win condition whenever a disk updates as deceleration after the user lets go may move it close enough
+      console.log(`_checkWinConditions() from actionPanelPressed(${JSON.stringify(payload)})`);
       this._checkWinConditions();
-    }
-
-    // Manage ownership
-    if (speed !== 0 && !disk.hasAutoPosition()) {
-      disk.setUser(this.store.me);
-    }
-    else {
-      disk.setUser('');
     }
 
     if (!disk.hasAutoPosition()) {
@@ -285,6 +283,10 @@ export default class DiskGameLogic {
     // FIXME: This could be solved in a nicer way
     if (disk.hasAutoPosition()) return;
 
+    this._updatePanels(stripId, disk.getUser() !== '', conflict, isPositiveActive, isNegativeActive);
+  }
+
+  _updatePanels(stripId, hasOwner, conflict, isPositiveActive, isNegativeActive) {
     if (conflict) {
       // On conflict, set the entire strip to the location color
       this._setStripColor(stripId, this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY, this.store.locationColor);
@@ -293,7 +295,7 @@ export default class DiskGameLogic {
       const setPanels = (lightArray, panels, on) => {
         panels.forEach((panel) => {
           lightArray.setIntensity(stripId, panel, on ? this.gameConfig.ACTIVE_CONTROL_PANEL_INTENSITY : this.gameConfig.CONTROL_PANEL_INTENSITY);
-          lightArray.setColor(stripId, panel, on ? this.store.locationColor : this.gameConfig.CONTROL_PANEL_COLOR);
+          lightArray.setColor(stripId, panel, hasOwner ? this.store.locationColor : this.gameConfig.CONTROL_PANEL_COLOR);
         });
       };
       setPanels(this._lights, positivePanels, isPositiveActive);
@@ -312,6 +314,10 @@ export default class DiskGameLogic {
 //    if (this.store.isMaster() && this.store.isReady) {
 //      this._checkWinConditions();
 //    }
+  }
+
+  _relinguishOwnership(payload) {
+    this._updatePanels(payload.stripId, false, false, false, false);
   }
 
   /*!
@@ -344,9 +350,10 @@ export default class DiskGameLogic {
 
     if (!diskChanges.disks) return;
 
-    // Master owns all fields if  this._state is not STATE_ACTIVE
+    // Master owns all disk fields if this._state is not STATE_ACTIVE
     // Master owns the disk fields: autoPosition and locked
     // Master owns all disk fields for disks that are locked
+    // Master owns the 'user' field if it's set
 
     // Master controls disk states, unless (STATE_ACTIVE && !locked)
     if (!this.store.isMaster() || this._state === DiskGameLogic.STATE_ACTIVE) {
@@ -375,7 +382,9 @@ export default class DiskGameLogic {
         const test = (!this.store.isMaster() || !currDisk.getLocked());
         if (!this.store.isMaster() || !currDisk.getLocked()) {
           if (changedDisk.hasOwnProperty('user')) {
-            currDisk.setUser(changedDisk.user, changedDiskProps.user);
+            const oldUser = currDisk.hasUser();
+            if (!this.store.isMaster() || !currDisk.hasUser()) {
+                currDisk.setUser(changedDisk.user, changedDiskProps.user);
             }
             
           if (changedDisk.hasOwnProperty('targetSpeed')) {
@@ -392,6 +401,12 @@ export default class DiskGameLogic {
             }
           }
         }
+
+        if (this.store.isMaster()) {
+          const stripId = this._diskIdToStripId(diskId);
+          const isAnyPanelActive = this._lights.get(stripId).panelIds.some((panelId) => this._lights.isActive(stripId, panelId));
+          this._manageOwnership(isAnyPanelActive, stripId, currDisk);
+        }
       }
     }
     else {
@@ -402,6 +417,22 @@ export default class DiskGameLogic {
         this.physicalDisks[diskId].targetSpeed = disk.getTargetSpeed();
         disk.setUser(disk.getUser());
       });
+    }
+  }
+
+  /**
+   * Called by master when it's time to start relinguishing ownership over a panel
+   */
+  _manageOwnership(hasOwner, stripId, disk) {
+    if (hasOwner && this._ownershipTimeouts[stripId]) {
+      clearTimeout(this._ownershipTimeouts[stripId]);
+      this._ownershipTimeouts[stripId] = null;
+    }
+    else if (!hasOwner && !this.tid) {
+      this._ownershipTimeouts[stripId] = setTimeout(() => {
+        disk.setUser('');
+        this.diskActions.sendOwnershipTimeout({stripId});
+      }, this.gameConfig.OWNERSHIP_TIMEOUT);
     }
   }
 
@@ -650,6 +681,10 @@ export default class DiskGameLogic {
 
   _getDisk(diskId) {
     return this.data.get('disks').get(diskId);
+  }
+
+  _diskIdToStripId(diskId) {
+    return Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK).find((key) => this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK[key] === diskId);
   }
 
 }
