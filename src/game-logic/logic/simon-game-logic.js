@@ -148,6 +148,7 @@ export default class SimonGameLogic {
     if (this.isComplete() || !this.store.isReady) return;
 
     const {stripId, panelId, pressed} = payload;
+    this.lights.setActive(stripId, panelId, pressed);
 
     // Presses on current strip stays on, other strips are free play
     if (pressed) {
