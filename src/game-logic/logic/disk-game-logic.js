@@ -197,7 +197,6 @@ export default class DiskGameLogic {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this),
       [DisksActionCreator.OWNERSHIP_TIMEOUT]: this._relinguishOwnership.bind(this),
-      [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
     };
 
@@ -232,7 +231,7 @@ export default class DiskGameLogic {
     const disk = this._getDisk(diskId);
 
     // Ignore non-owner interactions
-    if (disk.getUser() !== '' && disk.getUser() !== this.store.me) {
+    if (disk.hasUser() && disk.getUser() !== this.store.me) {
       return;
     }
 
@@ -440,12 +439,6 @@ export default class DiskGameLogic {
     if (this._ownershipTimeouts[stripId]) {
       clearTimeout(this._ownershipTimeouts[stripId]);
       this._ownershipTimeouts[stripId] = null;
-    }
-  }
-
-  _actionFinishStatusAnimation() {
-    if (this._state === DiskGameLogic.STATE_COMPLETE) {
-      setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 4000);
     }
   }
 

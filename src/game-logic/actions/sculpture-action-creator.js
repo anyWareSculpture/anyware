@@ -1,5 +1,4 @@
 import BaseActionCreator from './base-action-creator';
-import GAMES from '../constants/games';
 
 export default class SculptureActionCreator extends BaseActionCreator {
   // Action types
@@ -10,7 +9,6 @@ export default class SculptureActionCreator extends BaseActionCreator {
   static RESET_GAME = "reset-game";
   static RESTORE_STATUS = "restore-status";
   static ANIMATION_FRAME = "animation-frame";
-  static FINISH_STATUS_ANIMATION = "finish-status-animation";
   static HANDSHAKE_ACTION = "handshake-action";
 
   sendLogin(sculptureId) {
@@ -50,10 +48,6 @@ export default class SculptureActionCreator extends BaseActionCreator {
 
   sendAnimationFrame(callback) {
     this._dispatch(SculptureActionCreator.ANIMATION_FRAME, { callback });
-  }
-
-  sendFinishStatusAnimation() {
-    this._dispatch(SculptureActionCreator.FINISH_STATUS_ANIMATION);
   }
 
   sendHandshakeAction(sculptureId, state) {

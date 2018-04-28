@@ -317,7 +317,6 @@ export default class SculptureStore extends events.EventEmitter {
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
       [SculptureActionCreator.RESTORE_STATUS]: this._actionRestoreStatus.bind(this),
       [SculptureActionCreator.ANIMATION_FRAME]: this._actionAnimationFrame.bind(this),
-      [SculptureActionCreator.FINISH_STATUS_ANIMATION]: this._actionFinishStatusAnimation.bind(this),
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this),
     };
@@ -378,10 +377,6 @@ export default class SculptureStore extends events.EventEmitter {
     const {callback} = payload;
 
     callback();
-  }
-
-  _actionFinishStatusAnimation() {
-    this.restoreStatus();
   }
 
   _actionPanelPressed(payload) {
