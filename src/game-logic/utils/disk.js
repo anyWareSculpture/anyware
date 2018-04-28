@@ -42,7 +42,7 @@ export default class Disk extends TrackedData {
   }
 
   hasUser() {
-    return this.get('user') !== '';
+    return this.getUser() !== '';
   }
 
   getLastUser() {
