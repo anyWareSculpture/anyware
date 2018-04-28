@@ -307,19 +307,20 @@ export default class AudioView {
 
   _handleSimonGame(changes) {
     const simonChanges = changes.simon;
-
     const simongame = this.store.currentGameLogic;
-    if (changes.status === SculptureStore.STATUS_SUCCESS) {
-      if (simongame.isComplete()) this.sounds.simon.show.play();
-      else this.sounds.simon.success.play();
-    }
-    if (changes.status === SculptureStore.STATUS_FAILURE) {
-      this.sounds.simon.failure.play();
-    }
 
     if (simonChanges) {
       if (simonChanges.state === SimonGameLogic.STATE_INTRO) {
         this.sounds.simon.intro.play();
+      }
+      else if (simonChanges.state === SimonGameLogic.STATE_FAILING) {
+        this.sounds.simon.failure.play();
+      }
+      else if (simonChanges.state === SimonGameLogic.STATE_WINNING) {
+        this.sounds.simon.success.play();
+      }
+      else if (simonChanges.state === SimonGameLogic.STATE_COMPLETE) {
+        this.sounds.simon.show.play();
       }
     }
 
