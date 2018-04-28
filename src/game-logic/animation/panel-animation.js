@@ -1,40 +1,49 @@
 import SculptureActionCreator from '../actions/sculpture-action-creator';
 
 export default class PanelAnimation {
-  static STOPPED = "stopped";
+  static NONE = "none";
   static RUNNING = "running";
+  static CANCELLED = "cancelled";
+  static COMPLETED = "completed";
 
   constructor(frames, completeCallback) {
     this.frames = frames;
-    this.completeCallback = completeCallback;
-    this.state = PanelAnimation.STOPPED;
+    if (completeCallback) {
+      this.completeCallback = completeCallback;
+      this.runCompleteCallback = true;
+    }
+    this.state = PanelAnimation.NONE;
   }
 
   /**
    * @returns {Boolean} If the animation is currently running
    */
-  get isRunning() {
+  isRunning() {
     return this.state === PanelAnimation.RUNNING;
   }
 
   /**
    * @returns {Boolean} If the animation is currently stopped
    */
-  get isStopped() {
-    return this.state === PanelAnimation.STOPPED;
+  isCancelled() {
+    return this.state === PanelAnimation.CANCELLED;
   }
 
   /**
-   * Stops the animation wherever it is
+   * Cancels the animation wherever it is, will take effect on the next frame.
+   * If runCompletionCallback is true, the complete callback will still be called
+   * (with its cancelled argument set to true).
    */
-  stop() {
-    this.state = PanelAnimation.STOPPED;
+  cancel(runCompletionCallback) {
+    this.state = PanelAnimation.CANCELLED;
+    this.runCompleteCallback = runCompletionCallback;
   }
 
   /**
    * Any setup work before the animation begins
    */
   before() {
+    this.state = PanelAnimation.RUNNING;
   }
 
   /**
@@ -44,7 +53,6 @@ export default class PanelAnimation {
    */
   play(dispatcher) {
     this.before();
-    this.state = PanelAnimation.RUNNING;
     this.currentFrame = -1;
     this.sculptureActionCreator = new SculptureActionCreator(dispatcher);
 
@@ -56,8 +64,9 @@ export default class PanelAnimation {
    * By default this sets state to stopped and calls the complete callback
    */
   after() {
-    this.stop();
-    if (this.completeCallback) this.completeCallback();
+    const wasCancelled = this.isCancelled()
+    if (!wasCancelled) this.state = PanelAnimation.COMPLETED;
+    if (this.runCompleteCallback) this.completeCallback(wasCancelled);
   }
 
   /**
@@ -67,13 +76,13 @@ export default class PanelAnimation {
   playNextFrame() {
     this.currentFrame = this.currentFrame + 1;
 
-    if (this.currentFrame >= this.frames.length || this.isStopped) {
+    if (this.currentFrame >= this.frames.length || this.isCancelled()) {
       this.executeAsAction(() => this.after());
     }
     else {
       const frame = this.frames[this.currentFrame];
       setTimeout(() => {
-        this.executeAsAction(() => frame.run());
+        if (this.isRunning()) this.executeAsAction(() => frame.run());
         this.playNextFrame();
       }, frame.timeOffset);
     }
@@ -83,4 +92,3 @@ export default class PanelAnimation {
     this.sculptureActionCreator.sendAnimationFrame(callback);
   }
 }
-

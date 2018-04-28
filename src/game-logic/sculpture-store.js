@@ -136,9 +136,8 @@ export default class SculptureStore extends events.EventEmitter {
   /**
    * @returns {Boolean} Returns whether a panel animation is running
    */
-  get isPanelAnimationRunning() {
-    const panelAnimation = this.panelAnimation;
-    return panelAnimation ? panelAnimation.isRunning : false;
+  isPanelAnimationRunning() {
+    return this.panelAnimation ? this.panelAnimation.isRunning() : false;
   }
 
   getStatus() {
@@ -197,11 +196,21 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   /**
-   * Plays the given animation
+   * Plays the given animation. Will cancel any existing animation
    */
   playAnimation(animation) {
+    this.cancelAnimations();
     this.panelAnimation = animation;
     animation.play(this.dispatcher);
+  }
+
+  /**
+   * Will cancel any existing animation and not call their completion function
+   */
+  cancelAnimations() {
+    if (this.isPanelAnimationRunning()) {
+      this.panelAnimation.cancel();
+    }
   }
 
   _startGame(game) {
