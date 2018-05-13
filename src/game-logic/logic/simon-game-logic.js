@@ -122,6 +122,14 @@ export default class SimonGameLogic {
     }
   }
 
+  isFreePlayAllowed() {
+    const state = this.data.get('state');
+    return(state === SimonGameLogic.STATE_PLAYING ||
+           state === SimonGameLogic.STATE_FAILING ||
+           state === SimonGameLogic.STATE_WINNING ||
+           state === SimonGameLogic.STATE_COMPLETE);
+  }
+
   isPlaying() {
     return this.data.get('state') === SimonGameLogic.STATE_PLAYING;
   }
@@ -167,7 +175,7 @@ export default class SimonGameLogic {
     const {stripId, panelId, pressed} = payload;
     this.lights.setActive(stripId, panelId, pressed);
 
-    if (!this.isPlaying() || !this.store.isReady) return;
+    if (!this.isFreePlayAllowed() || !this.store.isReady) return;
 
     //
     // Handle non-current strip actions: Free play
@@ -183,6 +191,9 @@ export default class SimonGameLogic {
       }
       return;
     }
+
+    // From here on only handle the PLAYING state
+    if (!this.isPlaying()) return;
 
     //
     // Handle current strip actions
@@ -256,7 +267,6 @@ export default class SimonGameLogic {
    */
   _handlePanelPress(stripId, panelId) {
     const {stripId: targetStripId, panelSequences} = this.getCurrentLevelData();
-    const panelSequence = panelSequences[this.getPattern()];
 
     // Only handle current game strips from here on
     if (targetStripId !== stripId) return;
@@ -270,6 +280,7 @@ export default class SimonGameLogic {
       this._resetInputTimer();
     }
 
+    const panelSequence = panelSequences[this.getPattern()];
     if (this.getTargetPanel() !== panelId) {
       // Lock already solved panels
       if ([...Array(this._targetSequenceIndex).keys()].some((idx) => panelId === panelSequence[idx])) {
@@ -385,7 +396,7 @@ export default class SimonGameLogic {
 
     const successFrames = [
       new Frame(() => {
-        this.lights.deactivateAll();
+        this.lights.deactivateAll(stripId);
         this.lights.setIntensity(stripId, null, 50);
         this.lights.setColor(stripId, null, winningColor);
         this.data.set(`strip${stripId}Color`, winningColor);
