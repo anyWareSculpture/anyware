@@ -1,6 +1,6 @@
 {
   "name": "anyware",
-  "version": "1.2.1",
+  "version": "1.6.5",
   "description": "The generic anyWare sculpture library for creating anyWare sculpture applications",
   "main": "index.js",
   "scripts": {
