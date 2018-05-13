@@ -278,7 +278,6 @@ export default class SimonGameLogic {
     if (!this._receivedInput) {
       this._replayCount = 0;
       this._receivedInput = true;
-      this._resetInputTimer();
     }
 
     const panelSequence = panelSequences[this.getPattern()];
@@ -290,6 +289,7 @@ export default class SimonGameLogic {
       return this._handleFailure();
     }
 
+    this._resetInputTimer();
     this._targetSequenceIndex += 1;
 
     if (this._targetSequenceIndex >= panelSequence.length) {
