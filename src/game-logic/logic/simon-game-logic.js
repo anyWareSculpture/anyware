@@ -44,7 +44,7 @@ export default class SimonGameLogic {
     this.simonGameActionCreator = new SimonGameActionCreator(this.store.dispatcher);
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
 
-    this._targetSequenceIndex = 0;
+    this._targetSequenceIndex = 0; // Our current position in the sequence
     this._receivedInput = false;
 
     this._inputTimeout = null;
@@ -234,22 +234,23 @@ export default class SimonGameLogic {
   _resetColor(stripId, panelId) {
     const {stripId: targetStripId, panelSequences} = this.getCurrentLevelData();
     const panelSequence = panelSequences[this.getPattern()];
-    for (const panelIdx in panelSequence) {
-      if (panelId == panelSequence[panelIdx]) {
-        let color, intensity;
-        if (panelIdx >= this._targetSequenceIndex) {
-            color = this.gameConfig.DEFAULT_SIMON_PANEL_COLOR;
-        }
-        else {
-            color = this.config.getLocationColor(this.getUser());
-        }
-        this.lights.setColor(stripId, panelId, color);
-        this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
-        return;
-      }
+    const panelIdx = panelSequence.indexOf(panelId);
+    if (panelIdx < 0) {
+        this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
+        this.lights.setIntensity(stripId, panelId, 0);
     }
-    this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
-    this.lights.setIntensity(stripId, panelId, 0);
+    else {
+      const targetSequenceIndex = panelSequence.indexOf(this.getTargetPanel());
+      let color;
+      if (panelIdx >= targetSequenceIndex) {
+        color = this.gameConfig.DEFAULT_SIMON_PANEL_COLOR;
+      }
+      else {
+        color = this.config.getLocationColor(this.getUser());
+      }
+      this.lights.setColor(stripId, panelId, color);
+      this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
+    }
   }
 
   /**
