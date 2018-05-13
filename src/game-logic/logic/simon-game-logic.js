@@ -165,7 +165,9 @@ export default class SimonGameLogic {
     }
   }
 
+  // master only
   _actionReplaySimonPattern() {
+    // FIXME: This check may be unnecessary
     if (this.isPlaying()) this._playCurrentSequence();
   }
 
@@ -282,7 +284,7 @@ export default class SimonGameLogic {
 
     const panelSequence = panelSequences[this.getPattern()];
     if (this.getTargetPanel() !== panelId) {
-      // Lock already solved panels
+      // Ignore touches on already solved panels
       if ([...Array(this._targetSequenceIndex).keys()].some((idx) => panelId === panelSequence[idx])) {
         return;
       }
@@ -293,7 +295,9 @@ export default class SimonGameLogic {
     this._targetSequenceIndex += 1;
 
     if (this._targetSequenceIndex >= panelSequence.length) {
-      // FIXME: If we hit the last panel twice, we trigger sendLevelWon() twice, skipping a level
+      // FIXME: If we hit the last panel multiple times before the first animation frame is triggered,
+      // we may call trigger _actionLevelWon() multiple times, restarting the animation.
+      // This may be harmless, but would be nice to fix.
       this._actionLevelWon();
     }
     else {
@@ -379,6 +383,7 @@ export default class SimonGameLogic {
     }, this.gameConfig.INPUT_TIMEOUT);
   }
 
+  // master only
   _discardInput() {
     this._targetSequenceIndex = 0;
     this.setTargetPanel(null);
@@ -418,6 +423,7 @@ export default class SimonGameLogic {
       }, 200),
       new Frame(() => {
         if (this.isComplete()) {
+          // FIXME: Should we set the state to STATE_OFF? We'll need another animation frame or smth.
           setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
         }
         else {
@@ -431,6 +437,7 @@ export default class SimonGameLogic {
     this.store.playAnimation(successAnimation);
   }
 
+  // master only
   _playCurrentSequence() {
     const {stripId, panelSequences, frameDelay} = this.getCurrentLevelData();
     const panelSequence = panelSequences[this.getPattern()];
@@ -439,6 +446,7 @@ export default class SimonGameLogic {
     this.setTargetPanel(panelSequence[this._targetSequenceIndex]);
   }
 
+  // master only
   _playSequence(stripId, panelSequence, frameDelay) {
     this._discardInput();
 
@@ -458,6 +466,7 @@ export default class SimonGameLogic {
     this.store.playAnimation(animation);
   }
 
+  // master only
   _finishPlaySequence() {
     clearTimeout(this._replayTimeout);
     this._replayCount += 1;
@@ -497,10 +506,12 @@ export default class SimonGameLogic {
     return this.gameConfig.PATTERN_LEVELS[this.getLevel()].panelSequences.length;
   }
 
+  // Get the pattern index (index into the panelSequences array)
   getPattern() {
     return this.data.get('pattern');
   }
 
+  // Set the pattern index (index into the panelSequences array)
   setPattern(pattern) {
     this.store.reassertChanges(); // Make sure changes are merged by all slaves
     return this.data.set('pattern', pattern);
