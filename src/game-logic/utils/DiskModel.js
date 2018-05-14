@@ -131,6 +131,7 @@ export default class DiskModel extends events.EventEmitter {
    * Positive values is clockwise speed, negative values is counter-clockwise speed
    */
   set targetSpeed(targetSpeed) {
+    console.log(`DiskModel: set targetSpeed(${targetSpeed})`);
     this._targetSpeed = targetSpeed;
     this.acceleration = targetSpeed === this.speed ? 0 : targetSpeed > this.speed ? MAX_ACCEL : -MAX_DECEL;
   }

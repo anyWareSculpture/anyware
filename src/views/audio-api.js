@@ -96,14 +96,14 @@ export class Sound {
       this.gain.gain.linearRampToValueAtTime(0, context.currentTime + volume*params.fadeOut);
       this.gain.gain.setValueAtTime(1, context.currentTime + volume*params.fadeOut);
       if (this.source) {
-          this.source.stop(context.currentTime + volume*params.fadeOut);
-          delete this.source;
+        this.source.stop(context.currentTime + volume*params.fadeOut);
+        delete this.source;
       }
     }
     else {
       if (this.source) {
-          this.source.stop();
-          delete this.source;
+        this.source.stop();
+        delete this.source;
       }
     }
   }

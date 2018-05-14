@@ -64,7 +64,7 @@ export default class PanelAnimation {
    * By default this sets state to stopped and calls the complete callback
    */
   after() {
-    const wasCancelled = this.isCancelled()
+    const wasCancelled = this.isCancelled();
     if (!wasCancelled) this.state = PanelAnimation.COMPLETED;
     if (this.runCompleteCallback) this.completeCallback(wasCancelled);
   }

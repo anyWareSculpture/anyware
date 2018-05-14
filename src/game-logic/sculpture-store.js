@@ -209,8 +209,10 @@ export default class SculptureStore extends events.EventEmitter {
    */
   cancelAnimations() {
     if (this.isPanelAnimationRunning()) {
+      console.log('Cancelling existing animation');
       this.panelAnimation.cancel();
     }
+    else console.log('cancelAnimations(): No animations running');
   }
 
   _startGame(game) {
@@ -427,7 +429,6 @@ export default class SculptureStore extends events.EventEmitter {
 
   _mergeLights(changedLights, props) {
     const lights = this.data.get('lights');
-
     for (let stripId of Object.keys(changedLights)) {
       const changedPanels = changedLights[stripId].panels;
       for (let panelId of Object.keys(changedPanels)) {

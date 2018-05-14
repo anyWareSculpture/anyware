@@ -81,6 +81,7 @@ export default class HandshakeGameLogic {
       }
       // If we are locally alone, resume local game
       else if (this.getMyHandshakeState() === HandshakeGameLogic.HANDSHAKE_OFF) {
+        // FIXME:  (reactivate panels, reset sound volume, turn off pulse)
       }
     }
 
@@ -100,6 +101,7 @@ export default class HandshakeGameLogic {
         }
       }
       else {
+        // FIXME: Enter local alone mode; deactivate all inputs (except handshake), mute all sounds
       }
     }
   }

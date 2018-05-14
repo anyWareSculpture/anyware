@@ -101,6 +101,7 @@ export default class SimonGameLogic {
    * Only master should call this function.
    */
   reset() {
+    console.log(`simon.reset()`);
     const lights = this.store.data.get('lights');
     this._discardInput();
     lights.deactivateAll();
@@ -174,6 +175,7 @@ export default class SimonGameLogic {
   _actionPanelPressed(payload) {
     if (this.store.iAmAlone()) return;
 
+    console.log(`_actionPanelPressed(${JSON.stringify(payload)})`);
     const {stripId, panelId, pressed} = payload;
     this.lights.setActive(stripId, panelId, pressed);
 
@@ -238,8 +240,8 @@ export default class SimonGameLogic {
     const panelSequence = panelSequences[this.getPattern()];
     const panelIdx = panelSequence.indexOf(panelId);
     if (panelIdx < 0) {
-        this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
-        this.lights.setIntensity(stripId, panelId, 0);
+      this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
+      this.lights.setIntensity(stripId, panelId, 0);
     }
     else {
       const targetSequenceIndex = panelSequence.indexOf(this.getTargetPanel());
@@ -262,13 +264,14 @@ export default class SimonGameLogic {
   _isOwner(stripId, panelId) {
     const user = this.getUser();
     const color = this.lights.getColor(stripId, panelId);
-    return this.config.getLocationColor(user) == color;
+    return this.config.getLocationColor(user) === color;
   }
 
   /**
    * Handle panel press (locally or through merge) - master only
    */
   _handlePanelPress(stripId, panelId) {
+    console.log(`handlePanelPress(${stripId}, ${panelId})`);
     const {stripId: targetStripId, panelSequences} = this.getCurrentLevelData();
 
     // Only handle current game strips from here on
@@ -308,6 +311,7 @@ export default class SimonGameLogic {
   }
 
   _handleFailure() {
+    console.log(`_handleFailure()`);
     clearTimeout(this._replayTimeout);
     this._replayTimeout = null;
     clearTimeout(this._inputTimeout);
@@ -346,10 +350,11 @@ export default class SimonGameLogic {
   _mergeSimon(simonChanges, props) {
     // Master owns all local fields, except user if it hasn't been set
     if (!this.store.isMaster()) {
-      this._mergeFields(['level', 'pattern', 'targetPanel', 'state',
-                         'strip0Color', 'strip0Intensity',
-                         'strip1Color', 'strip1Intensity',
-                         'strip2Color', 'strip2Intensity'], simonChanges, props);
+      this._mergeFields([
+        'level', 'pattern', 'targetPanel', 'state',
+        'strip0Color', 'strip0Intensity',
+        'strip1Color', 'strip1Intensity',
+        'strip2Color', 'strip2Intensity'], simonChanges, props);
     }
     if (simonChanges.hasOwnProperty('user')) {
       if (!this.store.isMaster() || !this.hasUser()) {
@@ -368,7 +373,10 @@ export default class SimonGameLogic {
           const panelProps = props[stripId].panels[panelId];
           if (changedPanel.hasOwnProperty("active") && changedPanel.active) {
             const panel = this.lights.getPanel(stripId, panelId);
+            console.log(changedPanel);
+            console.log(panel._changes);
             // Simon-specific merge on panel activity changes
+            console.log(`should handlePanelPress(${stripId}, ${panelId})`);
             if (!this.isPlaying() || !this.store.isReady) return;
             this._handlePanelPress(stripId, panelId);
           }
@@ -407,6 +415,7 @@ export default class SimonGameLogic {
     // Set UI indicators to location color
     const winningUser = this.getUser();
     const winningColor = this.config.getLocationColor(winningUser);
+    console.log(`_actionLevelWon(): stripId=${stripId}, winningUser=${winningUser}`);
 
     const successFrames = [
       new Frame(() => {
@@ -453,7 +462,7 @@ export default class SimonGameLogic {
     this._playSequence(stripId, panelSequence, frameDelay);
     this.setTargetPanel(panelSequence[this._targetSequenceIndex]);
   }
-
+ 
   // master only
   _playSequence(stripId, panelSequence, frameDelay) {
     this._discardInput();
