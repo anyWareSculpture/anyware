@@ -111,7 +111,7 @@ export default class AudioView {
   _handleHandshakeGame(changes) {
     if (changes.handshake && changes.handshake.handshakes) {
       // Any handshake: play handshake sound
-      const isActivating = (handshake) => handshake == HandshakeGameLogic.HANDSHAKE_ACTIVATING;
+      const isActivating = (handshake) => handshake === HandshakeGameLogic.HANDSHAKE_ACTIVATING;
       if (Object.values(changes.handshake.handshakes).some(isActivating)) {
         this.sounds.alone.handshake.play();
       }
