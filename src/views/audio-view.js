@@ -110,10 +110,15 @@ export default class AudioView {
 
   _handleHandshakeGame(changes) {
     if (changes.handshake && changes.handshake.handshakes) {
-      // Local handshake: Stop ambient and play activation sound
-      if (changes.handshake.handshakes[this.store.me] === HandshakeGameLogic.HANDSHAKE_ACTIVATING) {
-        this.sounds.alone.ambient.stop();
+      // Any handshake: play handshake sound
+      const isActivating = (handshake) => handshake == HandshakeGameLogic.HANDSHAKE_ACTIVATING;
+      if (Object.values(changes.handshake.handshakes).some(isActivating)) {
         this.sounds.alone.handshake.play();
+      }
+      // Local handshake: Stop ambient sound
+      if (changes.handshake.handshakes.hasOwnProperty(this.store.me) &&
+          changes.handshake.handshakes[this.store.me] !== HandshakeGameLogic.HANDSHAKE_OFF) {
+        this.sounds.alone.ambient.stop();
       }
       // Local timeout: Start ambient
       else if (changes.handshake.handshakes[this.store.me] === HandshakeGameLogic.HANDSHAKE_OFF) {
