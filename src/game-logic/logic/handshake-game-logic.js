@@ -8,6 +8,7 @@ export default class HandshakeGameLogic {
   static GLOBAL_PRESENCE = "presence";
 
   static HANDSHAKE_OFF = "off";
+  static HANDSHAKE_ACTIVATING = "activating";
   static HANDSHAKE_ACTIVE = "active";
   static HANDSHAKE_PRESENT = "present";
 
@@ -68,9 +69,16 @@ export default class HandshakeGameLogic {
    */
   _actionHandshakeAction(payload) {
     const {sculptureId, state} = payload;
+    let logicState = state;
 
     // On handshake
-    if (payload.state === HandshakeGameLogic.HANDSHAKE_ACTIVE) {
+    if (state === HandshakeGameLogic.HANDSHAKE_ACTIVE) {
+      // If we were locally alone, set state to ACTIVATING. This allows us to
+      // trigger sound only on the first handshake
+      if (this.getMyHandshakeState() === HandshakeGameLogic.HANDSHAKE_OFF) {
+        logicState = HandshakeGameLogic.HANDSHAKE_ACTIVATING;
+      }
+
       // If we were globally alone, start game
       if (this._isGlobalAloneMode()) {
         this.data.set('state', HandshakeGameLogic.GLOBAL_PRESENCE);
@@ -86,7 +94,7 @@ export default class HandshakeGameLogic {
     }
 
     // Persist handshakes
-    this.data.get('handshakes').set(sculptureId, state);
+    this.data.get('handshakes').set(sculptureId, logicState);
 
     // On handshake timeout
     if (state === HandshakeGameLogic.HANDSHAKE_OFF) {
