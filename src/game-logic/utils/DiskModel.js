@@ -134,7 +134,13 @@ export default class DiskModel extends events.EventEmitter {
   set targetSpeed(targetSpeed) {
     console.log(`DiskModel: set targetSpeed(${targetSpeed})`);
     this._targetSpeed = targetSpeed;
-    this.acceleration = targetSpeed === this.speed ? 0 : targetSpeed > this.speed ? MAX_ACCEL : -MAX_DECEL;
+    if (targetSpeed === this.speed) {
+      this.acceleration = 0;
+    }
+    else {
+      const direction = Math.sign(targetSpeed - this.speed);
+      this.acceleration = direction * (targetSpeed === 0 ? MAX_DECEL : MAX_ACCEL);
+    }
   }
 
   get targetSpeed() {
