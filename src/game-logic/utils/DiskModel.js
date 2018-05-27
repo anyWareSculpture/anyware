@@ -66,26 +66,27 @@ export default class DiskModel extends events.EventEmitter {
       
       // With acceleration
       
-      // ds = v0 * t + 1/2 * a * t^2
-      newpos = this._pos + this.speed * dt + 0.5 * this.acceleration * dt*dt;
+      // v = v0 + a * t
+      const oldspeed = this.speed;
+      const newspeed = this.speed + this.acceleration * dt;
+        
+      // Clamp on overshoot
+      if (between(this._targetSpeed, this.speed, newspeed)) {
+        this.speed = this._targetSpeed;
+        this.acceleration = 0;
+      }
+      else {
+        this.speed = newspeed;
+      }
+
+      // ds = v0 * t + 1/2 * dv * dt
+      newpos = this._pos + this.speed * dt + 0.5 * (this.speed - oldspeed) * dt;
+
       if (this._autoPos !== false && isAngleBetween(this._autoPos, this._pos, newpos)) {
         newpos = this._autoPos;
         this._autoPos = false;
         this.stop();
         this.emit('autoPositionReached', newpos);
-      }
-      else {
-        // v = v0 + a * t
-        const newspeed = this.speed + this.acceleration * dt;
-        
-        // Clamp on overshoot
-        if (between(this._targetSpeed, this.speed, newspeed)) {
-          this.speed = this._targetSpeed;
-          this.acceleration = 0;
-        }
-        else {
-          this.speed = newspeed;
-        }
       }
     }
 
