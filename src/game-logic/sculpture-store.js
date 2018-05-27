@@ -77,7 +77,7 @@ export default class SculptureStore extends events.EventEmitter {
     this.sculptureActionCreator = new SculptureActionCreator(this.dispatcher);
   }
 
-  // Synchronous init. Needs to be run on all sculpture to establish a common start state.
+  // Synchronous init. Needs to be run on all sculptures to establish a common start state.
   init() {
     const game = this._getNextGame();
     this._setCurrentGame(game);
