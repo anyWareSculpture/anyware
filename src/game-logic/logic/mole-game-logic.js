@@ -111,8 +111,6 @@ export default class MoleGameLogic {
    * We're _not_ allowed to dispatch actions synchronously.
    */
   handleActionPayload(payload) {
-    if (this.data.get('state') !== MoleGameLogic.STATE_NORMAL) return;
-
     const actionHandlers = {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [MoleGameActionCreator.AVAIL_PANEL]: this._actionAvailPanel.bind(this),
@@ -128,6 +126,7 @@ export default class MoleGameLogic {
    * Asynchronous panel activation
    */
   _actionAvailPanel(panel) {
+    if (this.data.get('state') !== MoleGameLogic.STATE_NORMAL) return;
     this._availPanel(panel);
   }
 
@@ -135,6 +134,7 @@ export default class MoleGameLogic {
    * Asynchronous panel deactivation
    */
   _actionDeavailPanel(panel) {
+    if (this.data.get('state') !== MoleGameLogic.STATE_NORMAL) return;
     this._deavailPanel(panel);
   }
 
@@ -148,7 +148,9 @@ export default class MoleGameLogic {
    * 4) increase/decrease # of simulaneously active panels
    */
   _actionPanelPressed(payload) {
-    if (this.store.iAmAlone()) return;
+    if (this.store.iAmAlone() || this.data.get('state') !== MoleGameLogic.STATE_NORMAL) {
+        return;
+    }
 
     let {stripId, panelId, pressed} = payload;
     this._lights.setActive(stripId, panelId, pressed);
@@ -218,8 +220,8 @@ export default class MoleGameLogic {
       }, 4500),
     // 2) Turn off all remaining colors and start next game
       new Frame(() => {
-        this._turnOffAllGameStrips();
         this.data.set('state', MoleGameLogic.STATE_COMPLETE);
+        this._turnOffAllGameStrips();
         setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 3000);
       }, 5000),
     ];
@@ -248,6 +250,14 @@ export default class MoleGameLogic {
     }
   }
 
+  _mergeFields(fieldNames, changes, props) {
+    for (const fieldName of fieldNames) {
+      if (changes.hasOwnProperty(fieldName)) {
+        this.data.set(fieldName, changes[fieldName], props[fieldName]);
+      }
+    }
+  }
+
   /*!
    * Remote action
    * If we're master, we're responsible for correctly advancing the game
@@ -259,11 +269,9 @@ export default class MoleGameLogic {
     const moleChanges = payload.mole;
     const moleProps = payload.metadata.props.mole;
 
-    // Master owns the panelCount field
+    // Master owns the panelCount and state fields
     if (!this.store.isMaster()) {
-      if (moleChanges.hasOwnProperty('panelCount')) {
-        moleData.set('panelCount', moleChanges.panelCount, moleProps.panelCount);
-      }
+      this._mergeFields(['panelCount', 'state'], moleChanges, moleProps);
     }
 
     // Iterate over changed panel states
