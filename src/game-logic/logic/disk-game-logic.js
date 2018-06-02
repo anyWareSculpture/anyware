@@ -145,7 +145,10 @@ export default class DiskGameLogic {
 
   activateLevel() {
     this._state = DiskGameLogic.STATE_ACTIVE;
-    this._forEachDisk((disk) => disk.setAutoPosition(false));
+    this._forEachDisk((disk, diskId) => {
+      disk.setAutoPosition(false);
+      disk.setPosition(this._levelConfig.disks[diskId]);
+    });
     console.log('STATE_ACTIVE');
   }
 
