@@ -121,8 +121,8 @@ export default class DiskGameLogic {
     console.log(`disk.reset()`);
     this._level = 0;
     this._state = DiskGameLogic.STATE_OFF;
+    this.resetDisks();
     console.log('STATE_FADE_OFF');
-    setTimeout(() => this.resetDisks(), 0);
   }
 
   fadeInLevel() {
