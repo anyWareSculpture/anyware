@@ -244,7 +244,7 @@ export default class SimonGameLogic {
     if (panelIdx < 0) {
       if (this.hasUser()) {
         this.lights.setColor(stripId, panelId, this.config.getLocationColor(this.getUser()));
-        this.lights.setIntensity(stripId, panelId, 10);
+        this.lights.setIntensity(stripId, panelId, this.gameConfig.INDICATOR_PANEL_INTENSITY);
       }
       else {
         this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
@@ -562,7 +562,7 @@ export default class SimonGameLogic {
     for (let panelId=0;panelId<10;panelId++) {
       if (this.lights.getIntensity(stripId, `${panelId}`) === 0) {
         this.lights.setColor(stripId, `${panelId}`, this.store.locationColor);
-        this.lights.setIntensity(stripId, `${panelId}`, 10);
+        this.lights.setIntensity(stripId, `${panelId}`, this.gameConfig.INDICATOR_PANEL_INTENSITY);
       }
     }
   }
