@@ -2,6 +2,7 @@ import React from 'react';
 import SculptureStore from '../game-logic/sculpture-store';
 import DiskGameLogic from '../game-logic/logic/disk-game-logic';
 import Graphics from './svg/disk-game.svg';
+import ScreenSaver from './svg/disk-screensaver.svg';
 
 const diskConfig = {
   level0: {
@@ -74,6 +75,7 @@ export default class DiskView extends React.Component {
       active: false,
       showCircle: false,
       showPuzzle: false,
+      showSpots: false,
     };
   }
 
@@ -105,10 +107,20 @@ export default class DiskView extends React.Component {
       this.setState({showCircle: this.lightArray.getIntensity(this.props.config.LIGHTS.ART_LIGHTS_STRIP, '3') > 0});
     }
     if (changes.disk) {
-      // Show puzzle when active
+      // Handle puzzle and screen saver
       if (changes.disk.state) {
+        const showPuzzle = [DiskGameLogic.STATE_FADE_IN, DiskGameLogic.STATE_SHUFFLE, DiskGameLogic.STATE_ACTIVE, DiskGameLogic.STATE_LOCKING, DiskGameLogic.STATE_WINNING].includes(changes.disk.state);
+        const showSpots = changes.disk.state === DiskGameLogic.STATE_ALONE;
+        const circleCouldChange = changes.disk.state === DiskGameLogic.STATE_ALONE ||
+          changes.disk.state === DiskGameLogic.STATE_OFF;
+        if (circleCouldChange) {
+            this.setState({
+                showCircle: !showSpots,
+            });
+        }
         this.setState({
-          showPuzzle: [DiskGameLogic.STATE_FADE_IN, DiskGameLogic.STATE_SHUFFLE, DiskGameLogic.STATE_ACTIVE, DiskGameLogic.STATE_LOCKING, DiskGameLogic.STATE_WINNING].includes(changes.disk.state)
+          showPuzzle,
+          showSpots,
         });
       }
       // Handle level changes
@@ -150,8 +162,14 @@ export default class DiskView extends React.Component {
       top: 0,
     }}>
       <g display="none"><Graphics/></g>
+      <g display="none"><ScreenSaver/></g>
       <g className="transformOrigin" style={{transform: `translate(${this.props.translate[0]}px, ${this.props.translate[1]}px) scale(${this.props.scale}) rotate(${this.props.rotate}deg)`}}>
           {this.state.showCircle && <use xlinkHref="#circle"/>}
+          <use xlinkHref="#spots"
+               style={{
+                 opacity: this.state.showSpots ? 1 : 0,
+                 transition: "opacity 2s ease-in",
+               }}/>
           <use xlinkHref={`#level${this.state.level}`}
                style={{
                  opacity: this.state.showPuzzle ? 1 : 0,

@@ -14,20 +14,21 @@ const negativePanels = ['4','3','2','1','0'];
  * Handles both the Shadow State (transitions) and the Disk Game Logic
  */
 export default class DiskGameLogic {
-  static STATE_OFF = "off";               // Not playing
-  static STATE_INIT = "init";             // (currently not in use)
-  static STATE_FADE_IN = "fade-in";       // Level is fading in
-  static STATE_SHUFFLE = "shuffle";       // DISKS MOVEMENT STARTS. Level is shuffling. 
-  static STATE_ACTIVE = "active";         // User interaction is available
-  static STATE_LOCKING = "locking";       // Locking final disk
-  static STATE_WINNING = "winning";       // DISKS MOVEMENT STOPS. Level is won, pause before starting win animation.
-  static STATE_POST_LEVEL = "post-level"; // Playing end-of-level animation, then go back to FADE_IN next level
-  static STATE_COMPLETE = "complete";     // Game is complete
+  static STATE_NONE = 'none';             // Initial state: start of transition
+  static STATE_OFF = 'off';               // In art state but not playing
+  static STATE_ALONE = 'alone';           // Alone mode: Art state + screen saver
+  static STATE_FADE_IN = 'fade-in';       // Level is fading in
+  static STATE_SHUFFLE = 'shuffle';       // DISKS MOVEMENT STARTS. Level is shuffling. 
+  static STATE_ACTIVE = 'active';         // User interaction is available
+  static STATE_LOCKING = 'locking';       // Locking final disk
+  static STATE_WINNING = 'winning';       // DISKS MOVEMENT STOPS. Level is won, pause before starting win animation.
+  static STATE_POST_LEVEL = 'post-level'; // Playing end-of-level animation, then go back to FADE_IN next level
+  static STATE_COMPLETE = 'complete';     // Game is complete
 
   // These are automatically added to the sculpture store
   static trackedProperties = {
     level: 0,
-    state: DiskGameLogic.STATE_OFF,
+    state: DiskGameLogic.STATE_NONE,
     disks: new TrackedData({
       disk0: new Disk(),
       disk1: new Disk(),
@@ -36,7 +37,6 @@ export default class DiskGameLogic {
   };
 
   /*
-   * The constructor manages transition _into_ the Shadow State
    */
   constructor(store, config) {
     this.store = store;
@@ -81,6 +81,7 @@ export default class DiskGameLogic {
 
   /**
    * Transitions into this game. Calls callback when done.
+   * Called by SculptureStore
    */
   transition(callback) {
     const lightArray = this._lights;
@@ -104,9 +105,10 @@ export default class DiskGameLogic {
   }
 
   /*!
-   * Called by SculptureStore immediately after becoming master, to start the game
+   * Called by SculptureStore immediately after transitioning into the game
    */
   start() {
+    this._state = DiskGameLogic.STATE_OFF;
     this._level = 0;
     // FIXME: Needed to be able to start the disk game without transition
     this._lights.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, null, this.gameConfig.SHADOW_LIGHT_INTENSITY);
@@ -118,11 +120,9 @@ export default class DiskGameLogic {
    * Only master should call this function.
    */
   reset() {
-    console.log(`disk.reset()`);
     this._level = 0;
-    this._state = DiskGameLogic.STATE_OFF;
+    this._state = DiskGameLogic.STATE_ALONE;
     this.resetDisks();
-    console.log('STATE_FADE_OFF');
   }
 
   fadeInLevel() {
