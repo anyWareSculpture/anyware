@@ -75,20 +75,11 @@ export default class MoleGameLogic {
    * Only master should call this function.
    */
   reset() {
-    console.log('mole.reset()');
-    this._turnOffAllGameStrips();
-    for (const panelkey of Object.keys(this._panels)) {
-      this._removeTimeout(panelkey);
-      const panel = this._panels[panelkey];
-      if (panel.moveDelay !== undefined) {
-        clearTimeout(panel.moveDelay);
-        delete panel.moveDelay;
-      }
-    }
+    this.turnOffEverything();
   }
 
-  _turnOffAllGameStrips() {
-    this.config.GAME_STRIPS.forEach(stripId => this._lights.setIntensity(stripId, null, 0));
+  end() {
+    this.turnOffEverything();
   }
 
   /**
@@ -100,9 +91,22 @@ export default class MoleGameLogic {
     Object.keys(this._panels).forEach((panelkey) => this._remainingPanels.add(panelkey));
   }
 
-  end() {
-    this.reset();
-    this.config.GAME_STRIPS.forEach(stripId => this._lights.deactivateAll(stripId));
+  /**
+   * Turn off all lights
+   */
+  turnOffEverything() {
+    this.config.GAME_STRIPS.forEach((stripId) => {
+      this._lights.setIntensity(stripId, null, 0);
+      this._lights.deactivateAll(stripId);
+    });
+    for (const panelkey of Object.keys(this._panels)) {
+      this._removeTimeout(panelkey);
+      const panel = this._panels[panelkey];
+      if (panel.moveDelay !== undefined) {
+        clearTimeout(panel.moveDelay);
+        delete panel.moveDelay;
+      }
+    }
   }
 
   /**
