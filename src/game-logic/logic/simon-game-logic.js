@@ -120,7 +120,7 @@ export default class SimonGameLogic {
   }
 
   /**
-   * End game - only run by master
+   * Turn off all lights
    */
   turnOffEverything() {
     this.lights.deactivateAll();
