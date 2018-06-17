@@ -7,6 +7,9 @@ import ScreenSaver from './svg/disk-screensaver.svg';
 const diskConfig = {
   level0: {
     stroke: "none",
+    staticStroke: "none",
+    highlightStrokeWidth: 5,
+    aestheticHighlightStrokeWidth: 1,
     disk0: [513.32, 444.145],
     disk1: [186.945, 444.14],
     disk2: [350.33, 161.9],
@@ -16,6 +19,9 @@ const diskConfig = {
   },
   level1: {
     stroke: "none",
+    staticStroke: "none",
+    highlightStrokeWidth: 5,
+    aestheticHighlightStrokeWidth: 1,
     disk0: [513.32, 444.145],
     disk1: [186.945, 444.14],
     disk2: [350.33, 161.9],
@@ -25,6 +31,9 @@ const diskConfig = {
   },
   level2: {
     stroke: "#000000",
+    staticStroke: "#000000",
+    highlightStrokeWidth: 5,
+    aestheticHighlightStrokeWidth: 5,
     disk0: [143.104,231.203],
     disk1: [569.5, 232.184],
     disk2: [350, 587.797],
@@ -134,11 +143,12 @@ export default class DiskView extends React.Component {
         let color = diskConfig[`level${this.state.level}`].stroke;
         let stroke = 1;
         const userId = this.disks.get(diskId).getUser();
+        const locked = this.disks.get(diskId).isLocked();
         if (userId) {
           const colorId = this.props.config.getLocationColor(userId);
           if (colorId) {
             color = this.props.config.getWebColor(colorId);
-            stroke = 5;
+            stroke = diskConfig[`level${this.state.level}`].highlightStrokeWidth;
           }
         }
         this.setState({ [`${diskId}Color`]: color, [`${diskId}Stroke`]: stroke });
@@ -171,12 +181,25 @@ export default class DiskView extends React.Component {
                  transition: "opacity 2s ease-in",
                }}/>
       { ['disk0', 'disk1', 'disk2'].map((diskId) => {
+        const staticStyle = this.disks.get(diskId).isLocked() ? {
+          stroke: this.state[`${diskId}Color`],
+          strokeWidth: this.state[`${diskId}Stroke`],
+        } : {
+          stroke: diskConfig[`level${this.state.level}`].staticStroke,
+        };
+        const aestheticStyle = this.disks.get(diskId).isLocked() ? {
+          stroke: this.state[`${diskId}Color`],
+          strokeWidth: diskConfig[`level${this.state.level}`].aestheticHighlightStrokeWidth,
+        } : {
+          stroke: 'black',
+        };
         return [
           <use key={`level${this.state.level}-${diskId}-static`}
             xlinkHref={`#level${this.state.level}-${diskId}-static`}
             style={{
                 opacity: this.state.showPuzzle ? 1 : 0,
                 transition: "opacity 2s ease-in",
+                ...staticStyle,
             }}/>,
           <use key={`level${this.state.level}-${diskId}`}
             xlinkHref={`#level${this.state.level}-${diskId}`}
@@ -195,8 +218,7 @@ export default class DiskView extends React.Component {
                 transform: `rotate(${-this.state[diskId]}deg)`,
                 opacity: this.state.showPuzzle ? 1 : 0,
                 transition: "opacity 2s ease-in",
-                stroke: 'black',
-                strokeWidth: 1,
+                ...aestheticStyle,
             }}/>
         ];
       }) }

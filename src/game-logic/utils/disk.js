@@ -66,7 +66,7 @@ export default class Disk extends TrackedData {
     return this.set('locked', locked, props);
   }
 
-  getLocked() {
+  isLocked() {
     return this.get('locked');
   }
 
