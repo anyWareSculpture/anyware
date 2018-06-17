@@ -147,8 +147,9 @@ export default class SimonGameLogic {
     return this.data.get('state') === SimonGameLogic.STATE_COMPLETE;
   }
 
+  // Returns the current strip, or undefined if there isn't a current level
   getCurrentStrip() {
-    const {stripId} = this.getCurrentLevelData();
+    const {stripId} = this.getCurrentLevelData() || {};
     return stripId;
   }
 
@@ -203,9 +204,6 @@ export default class SimonGameLogic {
     // Handle current strip actions
     //
 
-    // Master owns the 'user' field only if it has been set
-    if (pressed && !this.hasUser()) this.setUser(this.store.me);
-
     // Ignore non-owner interactions
     if (this.hasUser() && this.getUser() !== this.store.me) {
       if (pressed) {
@@ -217,6 +215,12 @@ export default class SimonGameLogic {
       }
       return;
     }
+    // Ignore one-off touches
+    if (!this.hasUser() || this.getUser() === this.store.me) {
+      if (panelId !== this.getTargetPanel() && this._shouldBeIgnored(panelId)) {
+        return;
+      }
+    }
 
     if (pressed) {
       // Owner presses on current strip -> use location color
@@ -225,10 +229,8 @@ export default class SimonGameLogic {
 
       // Master owns the 'user' field only if it has been set
       if (!this.hasUser()) {
-        const {stripId: targetStripId} = this.getCurrentLevelData();
-        if (targetStripId === stripId) {
-          this.setUser(this.store.me);
-        }
+        this.setUser(this.store.me);
+        this._setOwnerColor(stripId);
       }
       // Master owns all other fields
       if (this.store.isMaster()) this._handlePanelPress(stripId, panelId);
@@ -240,8 +242,14 @@ export default class SimonGameLogic {
     const panelSequence = panelSequences[this.getPattern()];
     const panelIdx = panelSequence.indexOf(panelId);
     if (panelIdx < 0) {
-      this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
-      this.lights.setIntensity(stripId, panelId, 0);
+      if (this.hasUser()) {
+        this.lights.setColor(stripId, panelId, this.config.getLocationColor(this.getUser()));
+        this.lights.setIntensity(stripId, panelId, 10);
+      }
+      else {
+        this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
+        this.lights.setIntensity(stripId, panelId, 0);
+      }
     }
     else {
       const targetSequenceIndex = panelSequence.indexOf(this.getTargetPanel());
@@ -291,6 +299,10 @@ export default class SimonGameLogic {
     if (this.getTargetPanel() !== panelId) {
       // Ignore touches on already solved panels
       if ([...Array(this._targetSequenceIndex).keys()].some((idx) => panelId === panelSequence[idx])) {
+        return;
+      }
+      // Ignore one-off touches
+      if (this._shouldBeIgnored(panelId)) {
         return;
       }
       return this._handleFailure();
@@ -541,6 +553,28 @@ export default class SimonGameLogic {
   setTargetPanel(value) {
     this.store.reassertChanges(); // Make sure changes are merged by all slaves
     return this.data.set('targetPanel', value);
+  }
+
+  /**
+   * Make all "off" panels the owner color
+   */
+  _setOwnerColor(stripId) {
+    for (let panelId=0;panelId<10;panelId++) {
+      if (this.lights.getIntensity(stripId, `${panelId}`) === 0) {
+        this.lights.setColor(stripId, `${panelId}`, this.store.locationColor);
+        this.lights.setIntensity(stripId, `${panelId}`, 10);
+      }
+    }
+  }
+
+  _shouldBeIgnored(panelId) {
+    const {panelSequences} = this.getCurrentLevelData();
+    const panelSequence = panelSequences[this.getPattern()];
+    const targetSequenceIndex = panelSequence.indexOf(this.getTargetPanel());
+    const ignores = [this.getTargetPanel()];
+    if (targetSequenceIndex > 0) ignores.push(panelSequence[targetSequenceIndex-1]);
+    if (ignores.some((ignoredPanelId) => Math.abs(panelId - ignoredPanelId) === 1)) return true;
+    return false;
   }
 
   setUser(user, props) {
