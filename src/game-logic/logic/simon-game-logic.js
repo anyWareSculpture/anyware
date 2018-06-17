@@ -14,9 +14,11 @@ export default class SimonGameLogic {
   static STATE_INTRO = 'intro';       // Intro: Turn on colors and play intro sound
   static STATE_OFF = 'off';           // In art state, but not playing
   static STATE_PLAYING = 'playing';   // Normal game play logic
-  static STATE_FAILING = 'failing';   // Failure state
-  static STATE_WINNING = 'winning';   // Level won
-  static STATE_COMPLETE = 'complete'; // End of game
+  static STATE_FAILING = 'failing';   // Failure state: Sad sound
+  static STATE_WINNING = 'winning';   // Level won: Happy sound
+  static STATE_GAMEWON = 'gamewon';   // Game won: Very happy sound
+  static STATE_COMPLETE = 'complete'; // End of game state: projector color
+  static STATE_DONE = 'done';         // Game done, turn off lights and play exit sound
 
   // These are automatically added to the sculpture store
   static trackedProperties = {
@@ -115,11 +117,16 @@ export default class SimonGameLogic {
    * End game - only run by master
    */
   end() {
-    const lights = this.store.data.get('lights');
-    lights.deactivateAll();
-    this.config.GAME_STRIPS.forEach((id) => lights.setIntensity(id, null, 0));
+  }
+
+  /**
+   * End game - only run by master
+   */
+  turnOffEverything() {
+    this.lights.deactivateAll();
+    this.config.GAME_STRIPS.forEach((stripId) => this.lights.setIntensity(stripId, null, 0));
     if (this.gameConfig.RGB_STRIP) {
-      lights.setIntensity(this.gameConfig.RGB_STRIP, null, 0);
+      this.lights.setIntensity(this.gameConfig.RGB_STRIP, null, 0);
     }
   }
 
@@ -128,6 +135,7 @@ export default class SimonGameLogic {
     return(state === SimonGameLogic.STATE_PLAYING ||
            state === SimonGameLogic.STATE_FAILING ||
            state === SimonGameLogic.STATE_WINNING ||
+           state === SimonGameLogic.STATE_GAMEWON ||
            state === SimonGameLogic.STATE_COMPLETE);
   }
 
@@ -139,12 +147,8 @@ export default class SimonGameLogic {
     return this.data.get('state') === SimonGameLogic.STATE_WINNING;
   }
 
-  isFailing() {
-    return this.data.get('state') === SimonGameLogic.STATE_FAILING;
-  }
-
-  isComplete() {
-    return this.data.get('state') === SimonGameLogic.STATE_COMPLETE;
+  isWinningGame() {
+    return this.data.get('state') === SimonGameLogic.STATE_GAMEWON;
   }
 
   // Returns the current strip, or undefined if there isn't a current level
@@ -429,41 +433,48 @@ export default class SimonGameLogic {
     const winningColor = this.config.getLocationColor(winningUser);
     console.log(`_actionLevelWon(): stripId=${stripId}, winningUser=${winningUser}`);
 
+    this.lights.deactivateAll(stripId);
+    this.lights.setIntensity(stripId, null, 50);
+    this.lights.setColor(stripId, null, winningColor);
+    this.data.set(`strip${stripId}Color`, winningColor);
+    this.data.set(`strip${stripId}Intensity`, 50);
+
+    this.clearUser();
+    const level = this.getLevel() + 1;
+    if (level >= this.getNumLevels()) {
+      this.data.set('state', SimonGameLogic.STATE_GAMEWON);
+    }
+    else {
+      this.data.set('state', SimonGameLogic.STATE_WINNING);
+    }
+    this.setLevel(level);
+    this.setPattern(0);
+    // Make sure changes are merged by all slaves
+    this.store.reassertChanges();
+
+    this._playTransition();
+  }
+
+  _playTransition() {
     const successFrames = [
       new Frame(() => {
-        this.lights.deactivateAll(stripId);
-        this.lights.setIntensity(stripId, null, 50);
-        this.lights.setColor(stripId, null, winningColor);
-        this.data.set(`strip${stripId}Color`, winningColor);
-        this.data.set(`strip${stripId}Intensity`, 50);
-
-        this.clearUser();
-        const level = this.getLevel() + 1;
-        if (level >= this.getNumLevels()) {
-          this.data.set('state', SimonGameLogic.STATE_COMPLETE);
-        }
-        else {
-          this.data.set('state', SimonGameLogic.STATE_WINNING);
-        }
-        this.setLevel(level);
-        this.setPattern(0);
-        // Make sure changes are merged by all slaves
-        this.store.reassertChanges();
-      }, 200),
-      new Frame(() => {
-        if (this.isComplete()) {
-          // FIXME: Should we set the state to STATE_OFF? We'll need another animation frame or smth.
-          setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
-        }
-        else {
-          this.data.set('state', SimonGameLogic.STATE_PLAYING);
-          this._playCurrentSequence();
-        }
-      }, 2000),
+        this.data.set('state', SimonGameLogic.STATE_PLAYING);
+        this._playCurrentSequence();
+      }, 3000),
     ];
 
-    const successAnimation = new PanelAnimation(successFrames);
-    this.store.playAnimation(successAnimation);
+    const transitionFrames = [
+      new Frame(() => {
+        this.data.set('state', SimonGameLogic.STATE_COMPLETE);
+      }, 3000),
+      new Frame(() => {
+        this.turnOffEverything();
+        this.data.set('state', SimonGameLogic.STATE_DONE);
+        setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
+      }, 10000),
+    ];
+
+    this.store.playAnimation(new PanelAnimation(this.isWinningGame() ? transitionFrames : successFrames));
   }
 
   // master only

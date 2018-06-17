@@ -315,7 +315,8 @@ export default class AudioView {
     const simongame = this.store.currentGameLogic;
 
     if (simonChanges) {
-      if (simonChanges.state === SimonGameLogic.STATE_INTRO) {
+      if (simonChanges.state === SimonGameLogic.STATE_INTRO ||
+          simonChanges.state === SimonGameLogic.STATE_DONE) {
         this.sounds.simon.intro.play();
       }
       else if (simonChanges.state === SimonGameLogic.STATE_FAILING) {
@@ -324,7 +325,7 @@ export default class AudioView {
       else if (simonChanges.state === SimonGameLogic.STATE_WINNING) {
         this.sounds.simon.success.play();
       }
-      else if (simonChanges.state === SimonGameLogic.STATE_COMPLETE) {
+      else if (simonChanges.state === SimonGameLogic.STATE_GAMEWON) {
         this.sounds.simon.show.play();
       }
     }

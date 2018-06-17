@@ -211,8 +211,8 @@ export default class DefaultConfig {
       INPUT_TIMEOUT: 10000,
       // The default color to set the panels to when
       DEFAULT_SIMON_PANEL_COLOR: COLORS.WHITE,
-      // Wait while playing final sound
-      TRANSITION_OUT_TIME: 13000
+      // Wait before starting next game
+      TRANSITION_OUT_TIME: 10000
     };
   }
 
