@@ -38,8 +38,10 @@ export default class DefaultConfig {
       console: false,    // Console debug output
     };
 
-    // Will enter alone mode after this numner of seconds
+    // Will enter alone mode after this number of seconds
     this.ALONE_MODE_SECONDS = 60;
+    // Space between games (in black/off state)
+    this.SPACE_BETWEEN_GAMES_SECONDS = 10;
 
     // A mapping between sculpture IDs and the colors that represent them
     this.COLORS = {
@@ -211,8 +213,6 @@ export default class DefaultConfig {
       INPUT_TIMEOUT: 10000,
       // The default color to set the panels to when
       DEFAULT_SIMON_PANEL_COLOR: COLORS.WHITE,
-      // Wait before starting next game
-      TRANSITION_OUT_TIME: 10000
     };
   }
 

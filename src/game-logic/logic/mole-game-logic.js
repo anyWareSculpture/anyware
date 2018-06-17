@@ -222,7 +222,7 @@ export default class MoleGameLogic {
       new Frame(() => {
         this.data.set('state', MoleGameLogic.STATE_COMPLETE);
         this._turnOffAllGameStrips();
-        setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 3000);
+        setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.config.SPACE_BETWEEN_GAMES_SECONDS * 1000);
       }, 5000),
     ];
 

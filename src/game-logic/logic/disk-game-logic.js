@@ -644,6 +644,7 @@ export default class DiskGameLogic {
           console.log('STATE_COMPLETE');
           for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
             for (let i=0;i<10;i++) {
+              // FIXME: This looks wrong
               this._lights.setIntensity(stripId, positivePanels[i], 0);
             }
           }
@@ -653,7 +654,7 @@ export default class DiskGameLogic {
         }, 2000),
         new Frame(() => {
           setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), 0);
-        }, 5000),
+        }, this.config.SPACE_BETWEEN_GAMES_SECONDS * 1000),
       ];
     }
     else {

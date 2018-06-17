@@ -470,7 +470,7 @@ export default class SimonGameLogic {
       new Frame(() => {
         this.turnOffEverything();
         this.data.set('state', SimonGameLogic.STATE_DONE);
-        setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.gameConfig.TRANSITION_OUT_TIME);
+        setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.config.SPACE_BETWEEN_GAMES_SECONDS * 1000);
       }, 10000),
     ];
 
