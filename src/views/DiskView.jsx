@@ -170,32 +170,35 @@ export default class DiskView extends React.Component {
                  opacity: this.state.showSpots ? 1 : 0,
                  transition: "opacity 2s ease-in",
                }}/>
-          <use xlinkHref={`#level${this.state.level}`}
-               style={{
-                 opacity: this.state.showPuzzle ? 1 : 0,
-                 transition: "opacity 2s ease-in",
-               }}/>
       { ['disk0', 'disk1', 'disk2'].map((diskId) => {
-        return <use key={diskId}
-                    xlinkHref={`#level${this.state.level}-${diskId}`}
-                    style={{
-                      transformOrigin: diskConfig[`level${this.state.level}`][diskId].map((c) => `${c}px`).join(' '),
-                      transform: `rotate(${this.state[diskId]}deg)`,
-                      opacity: this.state.showPuzzle ? 1 : 0,
-                      transition: "opacity 2s ease-in",
-                      stroke: this.state[`${diskId}Color`],
-                      strokeWidth: this.state[`${diskId}Stroke`],
-                    }}/>;
-      }) }
-      { ['disk0', 'disk1', 'disk2'].map((diskId) => {
-        return <use key={diskId}
-                    xlinkHref={`#level${this.state.level}-${diskId}-aesthetic`}
-                    style={{
-                      transformOrigin: diskConfig[`level${this.state.level}`][`${diskId}Aesthetic`].map((c) => `${c}px`).join(' '),
-                      transform: `rotate(${-this.state[diskId]}deg)`,
-                      opacity: this.state.showPuzzle ? 1 : 0,
-                      transition: "opacity 2s ease-in",
-                    }}/>;
+        return [
+          <use key={`level${this.state.level}-${diskId}-static`}
+            xlinkHref={`#level${this.state.level}-${diskId}-static`}
+            style={{
+                opacity: this.state.showPuzzle ? 1 : 0,
+                transition: "opacity 2s ease-in",
+            }}/>,
+          <use key={`level${this.state.level}-${diskId}`}
+            xlinkHref={`#level${this.state.level}-${diskId}`}
+            style={{
+                transformOrigin: diskConfig[`level${this.state.level}`][diskId].map((c) => `${c}px`).join(' '),
+                transform: `rotate(${this.state[diskId]}deg)`,
+                opacity: this.state.showPuzzle ? 1 : 0,
+                transition: "opacity 2s ease-in",
+                stroke: this.state[`${diskId}Color`],
+                strokeWidth: this.state[`${diskId}Stroke`],
+            }}/>,
+          <use key={`level${this.state.level}-${diskId}-aesthetic`}
+            xlinkHref={`#level${this.state.level}-${diskId}-aesthetic`}
+            style={{
+                transformOrigin: diskConfig[`level${this.state.level}`][`${diskId}Aesthetic`].map((c) => `${c}px`).join(' '),
+                transform: `rotate(${-this.state[diskId]}deg)`,
+                opacity: this.state.showPuzzle ? 1 : 0,
+                transition: "opacity 2s ease-in",
+                stroke: 'black',
+                strokeWidth: 1,
+            }}/>
+        ];
       }) }
       </g>
     </svg>;
