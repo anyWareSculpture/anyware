@@ -6,9 +6,7 @@ import ScreenSaver from './svg/disk-screensaver.svg';
 
 const diskConfig = {
   level0: {
-    stroke: "none",
-    staticStroke: "none",
-    highlightStrokeWidth: 5,
+    highlightStrokeWidth: 3,
     aestheticHighlightStrokeWidth: 1,
     disk0: [513.32, 444.145],
     disk1: [186.945, 444.14],
@@ -18,9 +16,7 @@ const diskConfig = {
     disk2Aesthetic: [350.33, 161.9],
   },
   level1: {
-    stroke: "none",
-    staticStroke: "none",
-    highlightStrokeWidth: 5,
+    highlightStrokeWidth: 3,
     aestheticHighlightStrokeWidth: 1,
     disk0: [513.32, 444.145],
     disk1: [186.945, 444.14],
@@ -30,13 +26,11 @@ const diskConfig = {
     disk2Aesthetic: [350.33, 161.9],
   },
   level2: {
-    stroke: "#000000",
-    staticStroke: "#000000",
-    highlightStrokeWidth: 5,
-    aestheticHighlightStrokeWidth: 5,
-    disk0: [143.104,231.203],
-    disk1: [569.5, 232.184],
-    disk2: [350, 587.797],
+    highlightStrokeWidth: 3,
+    aestheticHighlightStrokeWidth: 3,
+    disk0: [167.516,242.448],
+    disk1: [534.796,242.029],
+    disk2: [348.152,564.847],
     disk0Aesthetic: [453.1, 409.205],
     disk1Aesthetic: [245.366, 410.247],
     disk2Aesthetic: [350,230.165],
@@ -140,7 +134,7 @@ export default class DiskView extends React.Component {
       // FIXME: Solve this in a better way:
       if (this.state.level >= 3) return;
       for (const diskId of this.disks) {
-        let color = diskConfig[`level${this.state.level}`].stroke;
+        let color = "none";
         let stroke = 1;
         const userId = this.disks.get(diskId).getUser();
         const locked = this.disks.get(diskId).isLocked();
@@ -184,15 +178,11 @@ export default class DiskView extends React.Component {
         const staticStyle = this.disks.get(diskId).isLocked() ? {
           stroke: this.state[`${diskId}Color`],
           strokeWidth: this.state[`${diskId}Stroke`],
-        } : {
-          stroke: diskConfig[`level${this.state.level}`].staticStroke,
-        };
+        } : undefined;
         const aestheticStyle = this.disks.get(diskId).isLocked() ? {
           stroke: this.state[`${diskId}Color`],
           strokeWidth: diskConfig[`level${this.state.level}`].aestheticHighlightStrokeWidth,
-        } : {
-          stroke: 'black',
-        };
+        } : undefined;
         return [
           <use key={`level${this.state.level}-${diskId}-static`}
             xlinkHref={`#level${this.state.level}-${diskId}-static`}
@@ -200,6 +190,15 @@ export default class DiskView extends React.Component {
                 opacity: this.state.showPuzzle ? 1 : 0,
                 transition: "opacity 2s ease-in",
                 ...staticStyle,
+            }}/>,
+          <use key={`level${this.state.level}-${diskId}-aesthetic`}
+            xlinkHref={`#level${this.state.level}-${diskId}-aesthetic`}
+            style={{
+                transformOrigin: diskConfig[`level${this.state.level}`][`${diskId}Aesthetic`].map((c) => `${c}px`).join(' '),
+                transform: `rotate(${-this.state[diskId]}deg)`,
+                opacity: this.state.showPuzzle ? 1 : 0,
+                transition: "opacity 2s ease-in",
+                ...aestheticStyle,
             }}/>,
           <use key={`level${this.state.level}-${diskId}`}
             xlinkHref={`#level${this.state.level}-${diskId}`}
@@ -211,15 +210,6 @@ export default class DiskView extends React.Component {
                 stroke: this.state[`${diskId}Color`],
                 strokeWidth: this.state[`${diskId}Stroke`],
             }}/>,
-          <use key={`level${this.state.level}-${diskId}-aesthetic`}
-            xlinkHref={`#level${this.state.level}-${diskId}-aesthetic`}
-            style={{
-                transformOrigin: diskConfig[`level${this.state.level}`][`${diskId}Aesthetic`].map((c) => `${c}px`).join(' '),
-                transform: `rotate(${-this.state[diskId]}deg)`,
-                opacity: this.state.showPuzzle ? 1 : 0,
-                transition: "opacity 2s ease-in",
-                ...aestheticStyle,
-            }}/>
         ];
       }) }
       </g>
