@@ -503,7 +503,7 @@ export default class DiskGameLogic {
     disk.setAutoPosition(0);
     this.physicalDisks[diskId].autoPosition = 0;
     // Set UI indicators to location color
-    const winningUser = disk.getLastUser() || disk.getUser();
+    const winningUser = disk.getUser() || disk.getLastUser();
     const winningColor = this.config.getLocationColor(winningUser);
     for (const stripId of Object.keys(this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK)) {
       if (this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK[stripId] === diskId) {
