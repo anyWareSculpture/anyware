@@ -27,7 +27,7 @@ export class Sound {
     this.name = name;
     this.gain = context.createGain();
     this.head = this.gain;
-    if (!isNode) this.gain.connect(context.destination);
+    if (!isNode) this.gain.connect(context.gain);
   }
 
   /**
@@ -82,7 +82,7 @@ export class Sound {
     if (params.loop) this.source.loopEnd = params.loopFreq === 0 ? 0 : 1/params.loopFreq;
     this.gain.gain.value = params.gain;
     this.source.connect(this.head);
-    if (isNode) this.gain.connect(context.destination);
+    if (isNode) this.gain.connect(context.gain);
     this.source.start(context.currentTime);
   }
 
@@ -175,6 +175,13 @@ export class VCFSound extends Sound {
   }
 }
 
+/**
+ * volume should be between 0.0 and 1.0
+ */
+export function setMasterVolume(volume) {
+  context.gain.gain.setValueAtTime(volume, context.currentTime);
+}
+
 export function init() {
   if (typeof AudioContext !== "undefined") {
     context = new AudioContext();
@@ -186,5 +193,8 @@ export function init() {
   else {
     throw new Error('AudioContext not supported. :(');
   }
+  context.gain = context.createGain();
+  context.gain.connect(context.destination);
+
   return context;
 }
