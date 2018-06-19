@@ -51,6 +51,10 @@ export default class DiskGameLogic {
     };
     this.physicalDisksEnabled = false;
 
+    this.data.set('level', 0);
+    this.data.set('state', DiskGameLogic.STATE_NONE);
+    this.resetDisks();
+
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
     this.diskActions = new DisksActionCreator(this.store.dispatcher);
 
