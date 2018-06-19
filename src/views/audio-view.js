@@ -16,6 +16,7 @@ export default class AudioView {
     this.store = store;
     this.config = config;
     AudioAPI.init();
+    AudioAPI.setMasterVolume(this.config.ALONE_MODE_VOLUME);
   }
 
   /**
@@ -109,20 +110,24 @@ export default class AudioView {
   }
 
   _handleHandshakeGame(changes) {
-    if (changes.handshake && changes.handshake.handshakes) {
-      // Any handshake: play handshake sound
-      const isActivating = (handshake) => handshake === HandshakeGameLogic.HANDSHAKE_ACTIVATING;
-      if (Object.values(changes.handshake.handshakes).some(isActivating)) {
-        this.sounds.alone.handshake.play();
-      }
-      // Local handshake: Stop ambient sound
-      if (changes.handshake.handshakes.hasOwnProperty(this.store.me) &&
-          changes.handshake.handshakes[this.store.me] !== HandshakeGameLogic.HANDSHAKE_OFF) {
-        this.sounds.alone.ambient.stop();
-      }
-      // Local timeout: Start ambient
-      else if (changes.handshake.handshakes[this.store.me] === HandshakeGameLogic.HANDSHAKE_OFF) {
-        this.sounds.alone.ambient.play();
+    if (changes.handshake) {
+      if (changes.handshake.handshakes) {
+        // Any handshake: play handshake sound
+        const isActivating = (handshake) => handshake === HandshakeGameLogic.HANDSHAKE_ACTIVATING;
+        if (Object.values(changes.handshake.handshakes).some(isActivating)) {
+          this.sounds.alone.handshake.play();
+        }
+        // Local handshake: Stop ambient sound
+        if (changes.handshake.handshakes.hasOwnProperty(this.store.me) &&
+            changes.handshake.handshakes[this.store.me] !== HandshakeGameLogic.HANDSHAKE_OFF) {
+          this.sounds.alone.ambient.stop();
+          AudioAPI.setMasterVolume(1.0);
+        }
+        // Local timeout: Start ambient
+        else if (changes.handshake.handshakes[this.store.me] === HandshakeGameLogic.HANDSHAKE_OFF) {
+          this.sounds.alone.ambient.play();
+          AudioAPI.setMasterVolume(this.config.ALONE_MODE_VOLUME);
+        }
       }
     }
   }
