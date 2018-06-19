@@ -29,6 +29,9 @@ export default class MoleGameLogic {
     this.store = store;
     this.config = config;
     this.gameConfig = config.MOLE_GAME;
+
+    this.initTrackedProperties();
+
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
     this.moleGameActionCreator = new MoleGameActionCreator(this.store.dispatcher);
 
@@ -45,6 +48,12 @@ export default class MoleGameLogic {
     // FIXME: This is a temporary fix for a firmware bug not respecting intensity
     this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, null, COLORS.BLACK);
     this._turnOffAllGameStrips();
+  }
+
+  initTrackedProperties() {
+    this.data.set('panelCount', 0);
+    this.data.set('state', MoleGameLogic.STATE_NORMAL);
+    this.data.get('panels').clear();
   }
 
   get data() {
@@ -64,9 +73,7 @@ export default class MoleGameLogic {
   start() {
     console.log('mole.start()');
     this._initRemainingPanels();
-    this.data.set('state', MoleGameLogic.STATE_NORMAL);
-    this.data.set('panelCount', 0);
-    this.data.get('panels').clear();
+    this.initTrackedProperties();
     this._registerMoveDelay(0); // Request a new active panel immediately
   }
 

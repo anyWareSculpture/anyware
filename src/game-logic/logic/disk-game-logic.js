@@ -51,9 +51,7 @@ export default class DiskGameLogic {
     };
     this.physicalDisksEnabled = false;
 
-    this.data.set('level', 0);
-    this.data.set('state', DiskGameLogic.STATE_NONE);
-    this.resetDisks();
+    this.initTrackedProperties();
 
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
     this.diskActions = new DisksActionCreator(this.store.dispatcher);
@@ -73,6 +71,12 @@ export default class DiskGameLogic {
         this.activateLevel();
       }, 3000),
     ];
+  }
+
+  initTrackedProperties() {
+    this.data.set('level', 0);
+    this.data.set('state', DiskGameLogic.STATE_NONE);
+    this.resetDisks();
   }
 
   get data() {
@@ -112,8 +116,8 @@ export default class DiskGameLogic {
    * Called by SculptureStore immediately after transitioning into the game
    */
   start() {
+    this.initTrackedProperties();
     this._state = DiskGameLogic.STATE_OFF;
-    this._level = 0;
     // FIXME: Needed to be able to start the disk game without transition
     this._lights.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, null, this.gameConfig.SHADOW_LIGHT_INTENSITY);
     this.store.playAnimation(new PanelAnimation(this._initLevelFrames));

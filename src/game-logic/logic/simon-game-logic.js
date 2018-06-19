@@ -43,6 +43,8 @@ export default class SimonGameLogic {
     this.config = config;
     this.gameConfig = this.config.SIMON_GAME;
 
+    this.initTrackedProperties();
+
     this.simonGameActionCreator = new SimonGameActionCreator(this.store.dispatcher);
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
 
@@ -52,6 +54,20 @@ export default class SimonGameLogic {
     this._inputTimeout = null;
     this._replayTimeout = null;
     this._replayCount = 0;
+  }
+
+  initTrackedProperties() {
+    this.data.set('level', 0);
+    this.data.set('pattern', 0);
+    this.data.set('targetPanel', null);
+    this.data.set('state', SimonGameLogic.STATE_NONE);
+    this.data.set('user', '');
+    this.data.set('strip0Color', COLORS.BLACK);
+    this.data.set('strip0Intensity', 0);
+    this.data.set('strip1Color', COLORS.BLACK);
+    this.data.set('strip1Intensity', 0);
+    this.data.set('strip2Color', COLORS.BLACK);
+    this.data.set('strip2Intensity', 0);
   }
 
   get data() {
@@ -88,13 +104,8 @@ export default class SimonGameLogic {
    * Start game - only run by master
    */
   start() {
+    this.initTrackedProperties();
     this.data.set('state', SimonGameLogic.STATE_PLAYING);
-    this.data.set('level', 0);
-    this.data.set('pattern', 0);
-    for (let i=0;i<3;i++) {
-      this.data.set(`strip${i}Color`, COLORS.BLACK);
-      this.data.set(`strip${i}Intensity`, 0);
-    }
     this._playCurrentSequence();
   }
 
