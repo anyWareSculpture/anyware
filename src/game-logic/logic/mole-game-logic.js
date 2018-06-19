@@ -47,7 +47,7 @@ export default class MoleGameLogic {
     // Force RGB strips to black.
     // FIXME: This is a temporary fix for a firmware bug not respecting intensity
     this._lights.setColor(this.config.LIGHTS.RGB_STRIPS, null, COLORS.BLACK);
-    this._turnOffAllGameStrips();
+    this.turnOffEverything();
   }
 
   initTrackedProperties() {
@@ -232,7 +232,7 @@ export default class MoleGameLogic {
     // 2) Turn off all remaining colors and start next game
       new Frame(() => {
         this.data.set('state', MoleGameLogic.STATE_COMPLETE);
-        this._turnOffAllGameStrips();
+        this.turnOffEverything();
         setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.config.SPACE_BETWEEN_GAMES_SECONDS * 1000);
       }, 5000),
     ];
