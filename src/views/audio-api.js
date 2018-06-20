@@ -179,7 +179,7 @@ export class VCFSound extends Sound {
  * volume should be between 0.0 and 1.0
  */
 export function setMasterVolume(volume) {
-  context.gain.gain.setValueAtTime(volume, context.currentTime);
+  context.gain.gain.value = volume;
 }
 
 export function init() {

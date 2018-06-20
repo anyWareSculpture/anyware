@@ -40,6 +40,9 @@ export default class DefaultConfig {
 
     // Will enter alone mode after this number of seconds
     this.ALONE_MODE_SECONDS = 60;
+    // Alone mode volume (0-1)
+    this.ALONE_MODE_VOLUME = 0.15;
+
     // Space between games (in black/off state)
     this.SPACE_BETWEEN_GAMES_SECONDS = 10;
 

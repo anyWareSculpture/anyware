@@ -125,8 +125,8 @@ export default class AudioView {
         }
         // Local timeout: Start ambient
         else if (changes.handshake.handshakes[this.store.me] === HandshakeGameLogic.HANDSHAKE_OFF) {
-          this.sounds.alone.ambient.play();
           AudioAPI.setMasterVolume(this.config.ALONE_MODE_VOLUME);
+          this.sounds.alone.ambient.play();
         }
       }
     }
