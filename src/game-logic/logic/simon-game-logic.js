@@ -503,6 +503,7 @@ export default class SimonGameLogic {
   _playSequence(stripId, panelSequence, frameDelay) {
     this._discardInput();
 
+    const delay = frameDelay !== undefined ? frameDelay : this.gameConfig.SEQUENCE_ANIMATION_FRAME_DELAY;
     const frames = [
       new NormalizeStripFrame(this.lights, stripId,
                               this.gameConfig.DEFAULT_SIMON_PANEL_COLOR,
@@ -511,8 +512,10 @@ export default class SimonGameLogic {
         return new Frame(() => {
           this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
           this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
-        }, frameDelay !== undefined ? frameDelay : this.gameConfig.SEQUENCE_ANIMATION_FRAME_DELAY);
+        }, delay);
       }),
+      new Frame(() => {
+      }, 2 * delay),
     ];
     const animation = new PanelAnimation(frames, this._finishPlaySequence.bind(this));
 
