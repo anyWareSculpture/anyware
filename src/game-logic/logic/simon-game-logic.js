@@ -14,6 +14,7 @@ export default class SimonGameLogic {
   static STATE_INTRO = 'intro';       // Intro: Turn on colors and play intro sound
   static STATE_OFF = 'off';           // In art state, but not playing
   static STATE_PLAYING = 'playing';   // Normal game play logic
+  static STATE_CALLING = 'calling';   // Call pattern is playing
   static STATE_FAILING = 'failing';   // Failure state: Sad sound
   static STATE_WINNING = 'winning';   // Level won: Happy sound
   static STATE_GAMEWON = 'gamewon';   // Game won: Very happy sound
@@ -105,7 +106,6 @@ export default class SimonGameLogic {
    */
   start() {
     this.initTrackedProperties();
-    this.data.set('state', SimonGameLogic.STATE_PLAYING);
     this._playCurrentSequence();
   }
 
@@ -184,8 +184,7 @@ export default class SimonGameLogic {
 
   // master only
   _actionReplaySimonPattern() {
-    // FIXME: This check may be unnecessary
-    if (this.isPlaying()) this._playCurrentSequence();
+      this._playCurrentSequence();
   }
 
   _actionPanelPressed(payload) {
@@ -346,10 +345,8 @@ export default class SimonGameLogic {
     const failureFrames = [
       new Frame(() => {
         this.data.set('state', SimonGameLogic.STATE_FAILING);
-        this.clearUser();
       }, 0),
       new Frame(() => {
-        this.data.set('state', SimonGameLogic.STATE_PLAYING);
         this._playCurrentSequence();
       }, 2000),
     ];
@@ -472,7 +469,6 @@ export default class SimonGameLogic {
   _playTransition() {
     const successFrames = [
       new Frame(() => {
-        this.data.set('state', SimonGameLogic.STATE_PLAYING);
         this._playCurrentSequence();
       }, 3000),
     ];
@@ -493,9 +489,11 @@ export default class SimonGameLogic {
 
   // master only
   _playCurrentSequence() {
+    this.clearUser();
     const {stripId, panelSequences, frameDelay} = this.getCurrentLevelData();
     const panelSequence = panelSequences[this.getPattern()];
 
+    this.data.set('state', SimonGameLogic.STATE_CALLING);
     this._playSequence(stripId, panelSequence, frameDelay);
     this.setTargetPanel(panelSequence[this._targetSequenceIndex]);
   }
@@ -529,14 +527,13 @@ export default class SimonGameLogic {
       this._replayCount = 0;
     }
 
-    if (this.isPlaying()) {
-      const level = this.getLevel();
-      this._replayTimeout = setTimeout(() => {
-        if (this.isPlaying() && this.getLevel() === level) {
-          this.simonGameActionCreator.sendReplaySimonPattern();
-        }
-      }, this.gameConfig.DELAY_BETWEEN_PLAYS);
-    }
+    this.data.set('state', SimonGameLogic.STATE_PLAYING);
+    const level = this.getLevel();
+    this._replayTimeout = setTimeout(() => {
+      if (this.isPlaying() && this.getLevel() === level) {
+        this.simonGameActionCreator.sendReplaySimonPattern();
+      }
+    }, this.gameConfig.DELAY_BETWEEN_PLAYS);
   }
 
   getCurrentLevelData() {
