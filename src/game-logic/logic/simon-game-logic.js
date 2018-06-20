@@ -392,21 +392,24 @@ export default class SimonGameLogic {
 
   _mergeLights(lightsChanges, props) {
     // Master is responsible for merging panel actions
-    if (this.store.isMaster()) {
-      for (let stripId of Object.keys(lightsChanges)) {
-        const changedPanels = lightsChanges[stripId].panels;
-        for (let panelId of Object.keys(changedPanels)) {
-          const changedPanel = changedPanels[panelId];
-          const panelProps = props[stripId].panels[panelId];
-          if (changedPanel.hasOwnProperty("active") && changedPanel.active) {
-            const panel = this.lights.getPanel(stripId, panelId);
-            console.log(changedPanel);
-            console.log(panel._changes);
-            // Simon-specific merge on panel activity changes
-            console.log(`should handlePanelPress(${stripId}, ${panelId})`);
-            if (!this.isPlaying() || !this.store.isReady) return;
-            this._handlePanelPress(stripId, panelId);
-          }
+    if (!this.store.isMaster()) return;
+
+    for (const stripId of Object.keys(lightsChanges)) {
+      const changedPanels = lightsChanges[stripId].panels;
+      for (const panelId of Object.keys(changedPanels)) {
+        const changedPanel = changedPanels[panelId];
+        const panelProps = props[stripId].panels[panelId];
+        const panel = this.lights.getPanel(stripId, panelId);
+        // Note: Checking for existing active state allows touches while an opponent
+        // is holding a panel, so an owner doesn't get locked out
+        if (this.lights.isActive(stripId, panelId)) {
+          console.log(changedPanel);
+          console.log(panel._changes);
+          // Simon-specific merge on panel activity changes
+          console.log(`should handlePanelPress(${stripId}, ${panelId})`);
+          if (!this.isPlaying() || !this.store.isReady) return;
+            
+          this._handlePanelPress(stripId, panelId);
         }
       }
     }
