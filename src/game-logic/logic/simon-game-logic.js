@@ -143,7 +143,8 @@ export default class SimonGameLogic {
 
   isFreePlayAllowed() {
     const state = this.data.get('state');
-    return(state === SimonGameLogic.STATE_PLAYING ||
+    return(state === SimonGameLogic.STATE_CALLING ||
+           state === SimonGameLogic.STATE_PLAYING ||
            state === SimonGameLogic.STATE_FAILING ||
            state === SimonGameLogic.STATE_WINNING ||
            state === SimonGameLogic.STATE_GAMEWON ||
