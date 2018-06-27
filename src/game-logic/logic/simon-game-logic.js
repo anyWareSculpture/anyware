@@ -504,17 +504,28 @@ export default class SimonGameLogic {
     this._discardInput();
 
     const delay = frameDelay !== undefined ? frameDelay : this.gameConfig.SEQUENCE_ANIMATION_FRAME_DELAY;
+
+    const sequenceFrames = [].concat(...panelSequence.map((panelId) => {
+        return [
+            new Frame(() => {
+                this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
+                this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
+            }, delay-500),
+            new Frame(() => {
+                this.lights.setIntensity(stripId, panelId, 0);
+            }, 500)
+        ];
+    }));
+
     const frames = [
       new NormalizeStripFrame(this.lights, stripId,
                               this.gameConfig.DEFAULT_SIMON_PANEL_COLOR,
                               0),
-      ...panelSequence.map((panelId) => {
-        return new Frame(() => {
-          this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
-          this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
-        }, delay);
-      }),
+      ...sequenceFrames,
       new Frame(() => {
+          panelSequence.forEach((panelId) => {
+              this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY - 1);
+          });
       }, 2 * delay),
     ];
     const animation = new PanelAnimation(frames, this._finishPlaySequence.bind(this));

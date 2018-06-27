@@ -343,7 +343,7 @@ export default class AudioView {
       if (this.config.GAME_STRIPS.includes(stripId)) {
         for (let panelId in lightChanges[stripId].panels) {
           const panelChange = lightChanges[stripId].panels[panelId];
-          if (panelChange.active || panelChange.intensity > 90) {
+          if (panelChange.active || panelChange.intensity >= this.config.SIMON_GAME.TARGET_PANEL_INTENSITY) {
             this.sounds.simon.panels[stripId][panelId].play({gain: (stripId === simongame.currentStrip) ? 1 : 0.1});
           }
         }
