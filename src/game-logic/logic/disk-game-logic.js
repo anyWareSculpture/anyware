@@ -274,25 +274,21 @@ export default class DiskGameLogic {
       speed = (isNegativeActive ? -1 : 1) * this.gameConfig.SPEED;
       // Manage ownership
       if (!disk.hasAutoPosition()) {
-        console.log(`${diskId}.setUser(${this.store.me}) from actionPanelPressed(${JSON.stringify(payload)})`);
         disk.setUser(this.store.me);
       }
     }
     // Manage ownership
     if (this.store.isMaster()) {
-      console.log(`Local: _manageOwnership()`);
       this._manageOwnership(isPositiveActive || isNegativeActive, stripId, disk);
     }
 
     // Check win condition if master
     if (this.store.isMaster() && this.store.isReady) {
       // FIXME: We need to also check win condition whenever a disk updates as deceleration after the user lets go may move it close enough
-      console.log(`_checkWinConditions() from actionPanelPressed(${JSON.stringify(payload)})`);
       this._checkWinConditions();
     }
 
     if (!disk.hasAutoPosition()) {
-      console.log(`disk.setTargetSpeed(${speed}) (no auto position)`);
       disk.setTargetSpeed(speed);
       this.physicalDisks[diskId].targetSpeed = speed;
     }
@@ -383,7 +379,6 @@ export default class DiskGameLogic {
       const disksChanges = diskChanges.disks;
       const disksProps = diskProps.disks;
   
-      console.log(`normal merge: ${JSON.stringify(disksChanges)}`);
       for (let diskId of Object.keys(disksChanges)) {
         const currDisk = this._getDisk(diskId);
         const changedDisk = disksChanges[diskId];
@@ -400,24 +395,20 @@ export default class DiskGameLogic {
           if (changedDisk.hasOwnProperty('user')) {
             const oldUser = currDisk.hasUser();
             if (!this.store.isMaster() || !currDisk.hasUser()) {
-              console.log(`${diskId}: user = ${changedDisk.user}`);
               currDisk.setUser(changedDisk.user, changedDiskProps.user);
             }
           }
             
           if (changedDisk.hasOwnProperty('targetSpeed')) {
-            console.log(`${diskId}: targetSpeed = ${changedDisk.targetSpeed} (merge)`);
             currDisk.setTargetSpeed(changedDisk.targetSpeed, changedDiskProps.targetSpeed);
             this.physicalDisks[diskId].targetSpeed = changedDisk.targetSpeed;
           }
 
           if (changedDisk.hasOwnProperty('position')) {
-            console.log(`${diskId}: pos = ${changedDisk.position}`);
             currDisk.setPosition(changedDisk.position, changedDiskProps.position);
             // Locked disks cannot have target positions as they're either stopped or having an autoPosition
             if (!currDisk.isLocked()) this.physicalDisks[diskId].targetPosition = changedDisk.position;
             if (this.store.isMaster() && this.store.isReady) {
-              console.log(`_checkWinConditions() from actionMergeState(${JSON.stringify(payload)})`);
               this._checkWinConditions();
             }
           }
@@ -426,13 +417,11 @@ export default class DiskGameLogic {
         // Note: If we're merging multiple fields, we need to set autoPosition last as 
         // this will implicitly change the speed of a physical disk.
         if (!this.store.isMaster() && changedDisk.hasOwnProperty('autoPosition')) {
-          console.log(`${diskId}: autoPosition = ${changedDisk.autoPosition}`);
           currDisk.setAutoPosition(changedDisk.autoPosition, changedDiskProps.autoPosition);
           this.physicalDisks[diskId].autoPosition = changedDisk.autoPosition;
         }
 
         if (this.store.isMaster() && !currDisk.isLocked()) {
-          console.log(`Merge: _manageOwnership()`);
           const stripId = this._diskIdToStripId(diskId);
           const isAnyPanelActive = this._lights.get(stripId).panelIds.some((panelId) => this._lights.isActive(stripId, panelId));
           this._manageOwnership(isAnyPanelActive, stripId, currDisk);
@@ -504,7 +493,7 @@ export default class DiskGameLogic {
    * Should only be called by master
    */
   _lockDisk(diskId) {
-    console.log('_lockDisk()');
+    console.log(`_lockDisk(${diskId})`);
     this._cancelTimeout(this._diskIdToStripId(diskId));
     const disk = this._getDisk(diskId);
     disk.setLocked(true);
@@ -646,10 +635,8 @@ export default class DiskGameLogic {
 
 
     let nextLevelFrames;
-    console.log(`Increasing level...`);
     let level = this._level + 1;
     if (level === this._levels) {
-      console.log(`Game complete`);
       nextLevelFrames = [
         new Frame(() => {
           this._level = level;

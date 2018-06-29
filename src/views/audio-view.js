@@ -193,14 +193,12 @@ export default class AudioView {
       case DiskGameLogic.STATE_ACTIVE:
         // Start disk sounds in silent mode
         // FIXME: Add failsafe to avoid starting sounds multiple times (due to loop)
-        console.log('disk: Start disk sounds');
         for (const diskId of ['disk0', 'disk1', 'disk2']) this.sounds.disk[diskId].play({gain: 0});
         break;
       case DiskGameLogic.STATE_POST_LEVEL:
         this.sounds.disk.radiate.play();
         break;
       case DiskGameLogic.STATE_WINNING:
-        console.log('disk: Stop disk sounds');
         for (const diskId of ['disk0', 'disk1', 'disk2']) this.sounds.disk[diskId].stop();
         // End of game
         if (this.store.data.get('disk').get('level') >= this.config.DISK_GAME.LEVELS.length) {
@@ -228,18 +226,15 @@ export default class AudioView {
             const isLocking = diskChanges.hasOwnProperty('autoPosition') && diskChanges.autoPosition !== false;
 
             if (currentState === DiskGameLogic.STATE_ACTIVE && isLocking) {
-              console.log('disk: Lock + fade out');
               this.sounds.disk.lock.play();
               this.sounds.disk[diskId].fadeOut();
             }
             else {
               if (diskChanges.hasOwnProperty('targetSpeed')) {
                 if (diskChanges.targetSpeed === 0) {
-                  console.log('disk: Fade out disk sounds');
                   this.sounds.disk[diskId].fadeOut();
                 }
                 else if (!isLocking) {
-                  console.log('disk: Fade in disk sounds');
                   this.sounds.disk[diskId].fadeIn();
                 }
               }
