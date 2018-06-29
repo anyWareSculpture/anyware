@@ -30,6 +30,8 @@ export default class SculptureStore extends events.EventEmitter {
   static EVENT_CHANGE = "change";
   static EVENT_LOCAL_CHANGE = "local-change";
 
+  static STATUS_NONE = "none"; // This is the constructor state. Will be changed to init once all subsystems are up
+  static STATUS_INIT = "init"; // This is the bootup state. Can be reset to this state by dispatching the RESTART action
   static STATUS_READY = "ready";
   static STATUS_LOCKED = "locked";
   static STATUS_SUCCESS = "success";
@@ -45,7 +47,7 @@ export default class SculptureStore extends events.EventEmitter {
     this.panelAnimation = null;
     this.handshakeLogic = new HandshakeGameLogic(this, this.config);
     this.data = new TrackedData({
-      status: SculptureStore.STATUS_READY,
+      status: SculptureStore.STATUS_NONE,
       currentGame: null,
       lights: new LightArray({
         // stripId : number of panels
@@ -175,10 +177,24 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   /**
-   * Returns whether the sculpture's current status is ready
+   * Returns whether the sculpture's current status is READY
    */
   get isReady() {
     return this.data.get('status') === SculptureStore.STATUS_READY;
+  }
+
+  /**
+   * Returns whether the sculpture's current status is INIT
+   */
+  get isInit() {
+    return this.data.get('status') === SculptureStore.STATUS_INIT;
+  }
+
+  /**
+   * Returns whether the sculpture's current status is NONE
+   */
+  get isNone() {
+    return this.data.get('status') === SculptureStore.STATUS_NONE;
   }
 
   /**
@@ -316,6 +332,8 @@ export default class SculptureStore extends events.EventEmitter {
       [SculptureActionCreator.START_GAME]: this._actionStartGame.bind(this),
       [SculptureActionCreator.START_NEXT_GAME]: this._actionStartNextGame.bind(this),
       [SculptureActionCreator.RESET_GAME]: this._actionResetGame.bind(this),
+      [SculptureActionCreator.RESTART]: this._actionRestart.bind(this),
+      [SculptureActionCreator.RESTARTED]: this._actionRestarted.bind(this),
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
       [SculptureActionCreator.RESTORE_STATUS]: this._actionRestoreStatus.bind(this),
       [SculptureActionCreator.ANIMATION_FRAME]: this._actionAnimationFrame.bind(this),
@@ -352,6 +370,20 @@ export default class SculptureStore extends events.EventEmitter {
       this.currentGameLogic.reset();
     }
     this.setMaster(false);
+  }
+
+  _actionRestart() {
+    // FIXME: Make configurable
+    if (chrome && chrome.runtime) {
+      chrome.runtime.reload();
+    }
+    else {
+      window.location.reload();
+    }
+  }
+
+  _actionRestarted() {
+    this.data.set('status', SculptureStore.STATUS_INIT);
   }
 
   _actionMergeState(payload) {
@@ -411,7 +443,13 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _mergeStatus(status, props) {
-    if (!this.isMaster()) {
+    if (status === SculptureStore.STATUS_INIT) {
+      // If one sculpture enters the INIT status, all sculptures must enter this status
+      if (!this.isInit && !this.isNone) {
+        setTimeout(() => this.sculptureActionCreator.sendRestart(), 0);
+      }
+    }
+    else if (!this.isMaster()) {
       this.data.set('status', status, props);
     }
   }

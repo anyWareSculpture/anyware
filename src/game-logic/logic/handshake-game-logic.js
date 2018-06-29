@@ -83,6 +83,8 @@ export default class HandshakeGameLogic {
 
     // On handshake
     if (state === HandshakeGameLogic.HANDSHAKE_ACTIVE) {
+        this.store.restoreStatus();
+
       // If we were locally alone, set state to ACTIVATING. This allows us to
       // trigger sound only on the first handshake
       if (this.getMyHandshakeState() === HandshakeGameLogic.HANDSHAKE_OFF) {

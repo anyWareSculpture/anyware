@@ -6,6 +6,8 @@ export default class SculptureActionCreator extends BaseActionCreator {
   static MERGE_STATE = "merge-state";
   static START_GAME = "start-game";
   static START_NEXT_GAME = "start-next-game";
+  static RESTARTED = "restarted";
+  static RESTART = "restart";
   static RESET_GAME = "reset-game";
   static RESTORE_STATUS = "restore-status";
   static ANIMATION_FRAME = "animation-frame";
@@ -33,6 +35,20 @@ export default class SculptureActionCreator extends BaseActionCreator {
 
   sendStartNextGame() {
     this._dispatch(SculptureActionCreator.START_NEXT_GAME);
+  }
+
+  /**
+   * Sends an action asking sculptures to restart to the initial state (to synchronize)
+   */
+  sendRestart() {
+    this._dispatch(SculptureActionCreator.RESTART);
+  }
+
+  /**
+   * The local sculpture just restarted. This should move us to the INIT status
+   */
+  sendRestarted() {
+    this._dispatch(SculptureActionCreator.RESTARTED);
   }
 
   /**
