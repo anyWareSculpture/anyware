@@ -71,7 +71,6 @@ export default class MoleGameLogic {
    * Starts the game logic. Only the master should call this method.
    */
   start() {
-    console.log('mole.start()');
     this._initRemainingPanels();
     this.initTrackedProperties();
     this._registerMoveDelay(0); // Request a new active panel immediately
@@ -209,7 +208,6 @@ export default class MoleGameLogic {
 
     // Determine winning color
     const winningColor = Object.entries(colorCount).reduce((a, b) => a[1] > b[1] ? a : b)[0];
-    console.log(`Winning color: ${winningColor}`);
 
     // Transition animation: 
     const transitionFrames = [
@@ -419,14 +417,12 @@ export default class MoleGameLogic {
    */
   _panelTimeout(oldPanel) {
     const key = this._getPanelKey(oldPanel);
-    console.log(`mole._panelTimeout(${key})`);
     delete this._panels[key].timeout;
     this.moleGameActionCreator.sendDeavailPanel(oldPanel);
     this._registerMoveDelay(this.gameConfig.PANEL_MOVE_DELAY, key);
   }
 
   _requestPanel(oldPanelKey = null) {
-    console.log(`mole._requestPanel(${oldPanelKey})`);
     if (oldPanelKey) delete this._panels[oldPanelKey].moveDelay;
     const {panelkey, lifetime} = this._nextActivePanel(this.data.get('panelCount'));
     if (!panelkey) {
@@ -437,7 +433,6 @@ export default class MoleGameLogic {
   }
 
   _registerMoveDelay(delay, panelKey = null) {
-    console.log(`mole._registerMoveDelay(${panelKey})`);
     const tid = setTimeout(this._requestPanel.bind(this, panelKey), delay);
     if (panelKey) this._panels[panelKey].moveDelay = tid;
   }
