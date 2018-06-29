@@ -373,9 +373,13 @@ export default class SculptureStore extends events.EventEmitter {
   }
 
   _actionRestart() {
-    // FIXME: Make configurable
-    if (chrome && chrome.runtime) {
-      chrome.runtime.reload();
+    if (this.config.SYNCHRONIZED_RESTART) {
+        if (chrome && chrome.runtime) {
+            chrome.runtime.reload();
+        }
+        else {
+            window.location.reload();
+        }
     }
     else {
       window.location.reload();

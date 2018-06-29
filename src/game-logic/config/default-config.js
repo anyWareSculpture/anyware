@@ -38,6 +38,9 @@ export default class DefaultConfig {
       console: false,    // Console debug output
     };
 
+    // Set this to true to enable synchronized restart
+    this.SYNCHRONIZED_RESTART = true;
+
     // Will enter alone mode after this number of seconds
     this.ALONE_MODE_SECONDS = 60;
     // Alone mode volume (0-1)
