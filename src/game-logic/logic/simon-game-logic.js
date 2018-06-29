@@ -96,7 +96,7 @@ export default class SimonGameLogic {
       }, 0),
       new Frame(() => {
         this.data.set('state', SimonGameLogic.STATE_OFF);
-      }, 5000),
+      }, this.config.ART_STATE_SPACE_SECONDS * 1000),
     ];
     this.store.playAnimation(new PanelAnimation(initFrames, callback));
   }

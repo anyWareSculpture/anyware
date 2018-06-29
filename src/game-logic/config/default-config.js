@@ -47,7 +47,9 @@ export default class DefaultConfig {
     this.ALONE_MODE_VOLUME = 0.15;
 
     // Space between games (in black/off state)
-    this.SPACE_BETWEEN_GAMES_SECONDS = 10;
+    this.SPACE_BETWEEN_GAMES_SECONDS = 5;
+    // Space after transitioning into art state
+    this.ART_STATE_SPACE_SECONDS = 10;
 
     // A mapping between sculpture IDs and the colors that represent them
     this.COLORS = {

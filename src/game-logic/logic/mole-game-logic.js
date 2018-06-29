@@ -64,7 +64,12 @@ export default class MoleGameLogic {
    * Transitions into this game. Calls callback when done.
    */
   transition(callback) {
-    if (callback) callback();
+    const initFrames = [
+      new Frame(() => {
+      }, this.config.ART_STATE_SPACE_SECONDS * 1000),
+    ];
+
+    this.store.playAnimation(new PanelAnimation(initFrames, callback));
   }
 
   /*!
