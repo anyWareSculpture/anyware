@@ -32,6 +32,16 @@ export default class HandshakeGameLogic {
     this.sculptureActionCreator = new SculptureActionCreator(this.store.dispatcher);
   }
 
+  reset() {
+      this.data.set('state', HandshakeGameLogic.GLOBAL_ALONE);
+      const handshakes = this.data.get('handshakes');
+      Array.from(handshakes).forEach((sculptureId) => handshakes.set(sculptureId, HandshakeGameLogic.HANDSHAKE_OFF));
+      if (this.transitionTimeout) {
+          clearTimeout(this.transitionTimeout);
+          this.transitionTimeout = null;
+      }
+  }
+
   get data() {
     return this.store.data.get('handshake');
   }
