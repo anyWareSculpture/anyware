@@ -226,7 +226,7 @@ export default class StreamingClient extends events.EventEmitter {
     this._client.subscribe({
       // topic : MQTT Quality of Service Level
       [this._groupStateUpdatesTopic]: 0,
-      [this._groupCommandTopic]: 0,
+      [this._groupCommandsTopic]: 0,
       [`u/${this._username}/${MQTT_TOPIC_STATE_UPDATES}`]: 0,
       [`u/${this._username}/${MQTT_TOPIC_COMMANDS}`]: 0,
       [`u/${this._username}/${MQTT_TOPIC_STATUS}`]: 0
