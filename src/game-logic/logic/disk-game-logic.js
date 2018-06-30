@@ -241,6 +241,8 @@ export default class DiskGameLogic {
       disk.setPosition(0);
       this.physicalDisks[diskId].stop();
       this.physicalDisks[diskId].targetPosition = 0;
+      disk.setUser('');
+      disk.setLocked(false);
     });
   }
 
