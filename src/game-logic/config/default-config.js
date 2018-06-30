@@ -49,7 +49,7 @@ export default class DefaultConfig {
     // Space between games (in black/off state)
     this.SPACE_BETWEEN_GAMES_SECONDS = 5;
     // Space after transitioning into art state
-    this.ART_STATE_SPACE_SECONDS = 10;
+    this.ART_STATE_SPACE_SECONDS = 5;
 
     // A mapping between sculpture IDs and the colors that represent them
     this.COLORS = {
@@ -138,8 +138,9 @@ export default class DefaultConfig {
 
     this.DISK_GAME = {
       OWNERSHIP_TIMEOUT: 2000, // milliseconds
+      TAP_TIMEOUT: 1500, // milliseconds
       SPEED: 21, // degrees/sec
-      SINGLE_DISK_TOLERANCE: 10, // tolerance (in degrees) for locking a single disk into place
+      SINGLE_DISK_TOLERANCE: 15, // tolerance (in degrees) for locking a single disk into place
       // The intensity of the panels that the user can use to play the sequence
       CONTROL_PANEL_COLOR: COLORS.WHITE,
       CONTROL_PANEL_INTENSITY: 10,
