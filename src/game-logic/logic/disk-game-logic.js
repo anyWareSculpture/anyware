@@ -42,7 +42,16 @@ export default class DiskGameLogic {
     this.store = store;
     this.config = config;
     this.gameConfig = config.DISK_GAME;
+
+    // Managed by master
     this._ownershipTimeouts = {};
+
+    // Managed locally on each sculpture
+    this._tapTimeouts = {
+        [this.config.LIGHTS.STRIP_A]: null,
+        [this.config.LIGHTS.STRIP_B]: null,
+        [this.config.LIGHTS.STRIP_C]: null,
+    };
 
     this.physicalDisks = {
       disk0: new DiskModel(),
@@ -216,6 +225,7 @@ export default class DiskGameLogic {
       [PanelsActionCreator.PANEL_PRESSED]: this._actionPanelPressed.bind(this),
       [DisksActionCreator.DISK_UPDATE]: this._actionDiskUpdate.bind(this),
       [DisksActionCreator.OWNERSHIP_TIMEOUT]: this._relinguishOwnership.bind(this),
+      [DisksActionCreator.TAP_TIMEOUT]: this._tapTimeout.bind(this),
       [SculptureActionCreator.MERGE_STATE]: this._actionMergeState.bind(this),
     };
 
@@ -261,6 +271,29 @@ export default class DiskGameLogic {
     // FIXME: Instead of ignoring, we should deactivate and turn off (or otherwise highlight) these panels
     if (disk.hasAutoPosition()) return;
 
+    // Ignore strips that have a tap timeout
+    if (this._tapTimeouts[stripId]) {
+        // FIXME: Should we refresh the timeout?
+        return;
+    }
+    if (pressed) {
+        // Create timeout on new presses
+        // FIXME:
+        // * When can this timeout happen, and are there places it will do damage?
+        // * Where should we safely kill these timeouts?
+        // * Should we refresh ownership timeouts (NB! managed by master) while this timeout is active?
+        //    -> How would master even know?
+        this._tapTimeouts[stripId] = setTimeout(() => {
+            this._tapTimeouts[stripId] = null;
+            this.diskActions.sendTapTimeout({stripId, panelId});
+        }, this.gameConfig.TAP_TIMEOUT);
+    }
+    this._handleLogicalPanelPress(stripId, panelId, pressed);
+  }
+
+  _handleLogicalPanelPress(stripId, panelId, pressed) {
+    const diskId = this.gameConfig.CONTROL_MAPPINGS.STRIP_TO_DISK[stripId];
+    const disk = this._getDisk(diskId);
 
     const lightArray = this._lights;
     const panels = lightArray.get(stripId).get('panels');
@@ -337,6 +370,12 @@ export default class DiskGameLogic {
     this._updatePanels(payload.stripId, false, false, false, false);
   }
 
+  _tapTimeout(payload) {
+    const { stripId, panelId } = payload;
+//    this._handleLogicalPanelPress(stripId, panelId, false);
+    this._actionPanelPressed({ stripId, panelId, pressed: this._lights.isActive(stripId, panelId) });
+  }
+
   /*!
    * Merge remote state
    */
@@ -396,6 +435,7 @@ export default class DiskGameLogic {
             const oldUser = currDisk.hasUser();
             if (!this.store.isMaster() || !currDisk.hasUser()) {
               currDisk.setUser(changedDisk.user, changedDiskProps.user);
+              // FIXME: If changedDisk.user is '' and disk is still moving at this point, we need to stop it.
             }
           }
             
@@ -444,21 +484,28 @@ export default class DiskGameLogic {
    */
   _manageOwnership(hasOwner, stripId, disk) {
     if (hasOwner) {
-      this._cancelTimeout(stripId);
+      this._cancelOwnershipTimeout(stripId);
     }
     else if (!this._ownershipTimeouts[stripId]) {
       this._ownershipTimeouts[stripId] = setTimeout(() => {
-        console.log(`Disk ownership timeout`);
+        console.log(`Disk ownership timeout ${stripId}`);
         disk.setUser('');
         this.diskActions.sendOwnershipTimeout({stripId});
       }, this.gameConfig.OWNERSHIP_TIMEOUT);
     }
   }
 
-  _cancelTimeout(stripId) {
+  _cancelOwnershipTimeout(stripId) {
     if (this._ownershipTimeouts[stripId]) {
       clearTimeout(this._ownershipTimeouts[stripId]);
       this._ownershipTimeouts[stripId] = null;
+    }
+  }
+
+  _cancelTapTimeout(stripId) {
+    if (this._tapTimeouts[stripId]) {
+      clearTimeout(this._tapTimeouts[stripId]);
+      this._tapTimeouts[stripId] = null;
     }
   }
 
@@ -494,7 +541,9 @@ export default class DiskGameLogic {
    */
   _lockDisk(diskId) {
     console.log(`_lockDisk(${diskId})`);
-    this._cancelTimeout(this._diskIdToStripId(diskId));
+    const stripId = this._diskIdToStripId(diskId);
+    this._cancelOwnershipTimeout(stripId);
+    this._cancelTapTimeout(stripId);
     const disk = this._getDisk(diskId);
     disk.setLocked(true);
     disk.setAutoPosition(0);
