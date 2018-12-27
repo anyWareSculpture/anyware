@@ -15,8 +15,15 @@ export default class AudioView {
   constructor(store, config) {
     this.store = store;
     this.config = config;
-    AudioAPI.init();
+    this.context = AudioAPI.init();
     AudioAPI.setMasterVolume(this.config.ALONE_MODE_VOLUME);
+  }
+
+  /**
+   * Resumes sounds. Should be called after first user interaction on desktop browsers
+   */
+  resume() {
+    this.context.resume();
   }
 
   /**
