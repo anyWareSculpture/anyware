@@ -336,7 +336,7 @@ export default class AudioView {
       else if (simonChanges.state === SimonGameLogic.STATE_FAILING) {
         this.sounds.simon.failure.play();
       }
-      else if (simonChanges.state === SimonGameLogic.STATE_WINNING) {
+      else if (simonChanges.state === SimonGameLogic.STATE_LEVELWON) {
         this.sounds.simon.success.play();
       }
       else if (simonChanges.state === SimonGameLogic.STATE_GAMEWON) {

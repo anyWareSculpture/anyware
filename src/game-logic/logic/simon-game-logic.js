@@ -16,7 +16,8 @@ export default class SimonGameLogic {
   static STATE_PLAYING = 'playing';   // Normal game play logic
   static STATE_CALLING = 'calling';   // Call pattern is playing
   static STATE_FAILING = 'failing';   // Failure state: Sad sound
-  static STATE_WINNING = 'winning';   // Level won: Happy sound
+  static STATE_WINNING = 'winning';   // Pause before winning game or level
+  static STATE_LEVELWON = 'levelwon'; // Level won: Happy sound
   static STATE_GAMEWON = 'gamewon';   // Game won: Very happy sound
   static STATE_COMPLETE = 'complete'; // End of game state: projector color
   static STATE_DONE = 'done';         // Game done, turn off lights and play exit sound
@@ -147,6 +148,7 @@ export default class SimonGameLogic {
            state === SimonGameLogic.STATE_PLAYING ||
            state === SimonGameLogic.STATE_FAILING ||
            state === SimonGameLogic.STATE_WINNING ||
+           state === SimonGameLogic.STATE_LEVELWON ||
            state === SimonGameLogic.STATE_GAMEWON ||
            state === SimonGameLogic.STATE_COMPLETE);
   }
@@ -155,11 +157,11 @@ export default class SimonGameLogic {
     return this.data.get('state') === SimonGameLogic.STATE_PLAYING;
   }
 
-  isWinning() {
-    return this.data.get('state') === SimonGameLogic.STATE_WINNING;
+  didWinLevel() {
+    return this.data.get('state') === SimonGameLogic.STATE_LEVELWON;
   }
 
-  isWinningGame() {
+  didWinGame() {
     return this.data.get('state') === SimonGameLogic.STATE_GAMEWON;
   }
 
@@ -328,9 +330,9 @@ export default class SimonGameLogic {
 
     if (this._targetSequenceIndex >= panelSequence.length) {
       // FIXME: If we hit the last panel multiple times before the first animation frame is triggered,
-      // we may call trigger _actionLevelWon() multiple times, restarting the animation.
+      // we may call trigger _actionLevelWinning() multiple times, restarting the animation.
       // This may be harmless, but would be nice to fix.
-      this._actionLevelWon();
+      this._actionLevelWinning();
     }
     else {
       this.setTargetPanel(panelSequence[this._targetSequenceIndex]);
@@ -435,6 +437,14 @@ export default class SimonGameLogic {
   }
 
   /**
+   * Add a short timeout between hitting the last panel and the success sound
+   * Master only.
+   */
+  _actionLevelWinning() {
+      setTimeout(() => this.simonGameActionCreator.sendLevelWon(), 1000);
+  }
+
+  /**
    * Master only
    */
   _actionLevelWon() {
@@ -457,7 +467,7 @@ export default class SimonGameLogic {
       this.data.set('state', SimonGameLogic.STATE_GAMEWON);
     }
     else {
-      this.data.set('state', SimonGameLogic.STATE_WINNING);
+      this.data.set('state', SimonGameLogic.STATE_LEVELWON);
     }
     this.setLevel(level);
     this.setPattern(0);
@@ -485,7 +495,7 @@ export default class SimonGameLogic {
       }, 10000),
     ];
 
-    this.store.playAnimation(new PanelAnimation(this.isWinningGame() ? transitionFrames : successFrames));
+    this.store.playAnimation(new PanelAnimation(this.didWinGame() ? transitionFrames : successFrames));
   }
 
   // master only
