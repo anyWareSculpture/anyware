@@ -266,6 +266,11 @@ export default class DiskGameLogic {
       return;
     }
 
+    // Ignore locked disks
+    if (disk.isLocked()) {
+      return;
+    }
+
     // Active flag only set by the owner
     this._lights.setActive(stripId, panelId, pressed);
 
