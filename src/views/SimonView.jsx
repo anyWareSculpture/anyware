@@ -1,15 +1,16 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import SculptureStore from '../game-logic/sculpture-store';
 import SimonGameLogic from '../game-logic/logic/simon-game-logic';
 import Graphics from './svg/simon-game.svg';
 
 export default class SimonView extends React.Component {
   static propTypes = {
-    store: React.PropTypes.object.isRequired,
-    config: React.PropTypes.object.isRequired,
-    scale: React.PropTypes.number,
-    translate: React.PropTypes.arrayOf(React.PropTypes.number),
-    rotate: React.PropTypes.number,
+    store: PropTypes.object.isRequired,
+    config: PropTypes.object.isRequired,
+    scale: PropTypes.number,
+    translate: PropTypes.arrayOf(PropTypes.number),
+    rotate: PropTypes.number,
   };
   static defaultProps = {
     scale: 1,
