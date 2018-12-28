@@ -157,6 +157,10 @@ export default class SimonGameLogic {
     return this.data.get('state') === SimonGameLogic.STATE_PLAYING;
   }
 
+  isWinning() {
+    return this.data.get('state') === SimonGameLogic.STATE_WINNING;
+  }
+
   didWinLevel() {
     return this.data.get('state') === SimonGameLogic.STATE_LEVELWON;
   }
@@ -441,6 +445,7 @@ export default class SimonGameLogic {
    * Master only.
    */
   _actionLevelWinning() {
+      this.data.set('state', SimonGameLogic.STATE_WINNING);
       setTimeout(() => this.simonGameActionCreator.sendLevelWon(), 1000);
   }
 
@@ -615,6 +620,8 @@ export default class SimonGameLogic {
   }
 
   _shouldBeIgnored(panelId) {
+    if (this.isWinning() || this.didWinLevel() || this.didWinGame()) return true;
+
     const {panelSequences} = this.getCurrentLevelData();
     const panelSequence = panelSequences[this.getPattern()];
     const targetSequenceIndex = panelSequence.indexOf(this.getTargetPanel());
