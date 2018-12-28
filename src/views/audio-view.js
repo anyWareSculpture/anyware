@@ -27,6 +27,13 @@ export default class AudioView {
   }
 
   /**
+   * Returns the state of the audio context as a string
+   */
+  state() {
+    return this.context.state;
+  }
+
+  /**
    * Loads all sounds.
    * @param {function(err)} callback Called when done
    */
