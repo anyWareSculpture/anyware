@@ -47,7 +47,7 @@ export default class AudioView {
     // Maps logical sound identifiers to filenames. We'll load these sounds next.
     this.sounds = {
       alone: {
-        ambient: new VCFSound({url: 'sounds/Alone_Mode/Pulse_Amb_Loop.wav', lfoFreq, fadeIn: 3, gain: 0.8}),
+        ambient: new VCFSound({url: 'sounds/Alone_Mode/Pulse_Amb_Loop.wav', lfoFreq, fadeIn: 3, gain: 0.4}),
         handshake: new Sound({url: 'sounds/Alone_Mode/Hand_Shake_01.wav'})
       },
       mole: {
