@@ -144,13 +144,7 @@ export default class SimonGameLogic {
 
   isFreePlayAllowed() {
     const state = this.data.get('state');
-    return(state === SimonGameLogic.STATE_CALLING ||
-           state === SimonGameLogic.STATE_PLAYING ||
-           state === SimonGameLogic.STATE_FAILING ||
-           state === SimonGameLogic.STATE_WINNING ||
-           state === SimonGameLogic.STATE_LEVELWON ||
-           state === SimonGameLogic.STATE_GAMEWON ||
-           state === SimonGameLogic.STATE_COMPLETE);
+    return state === SimonGameLogic.STATE_COMPLETE;
   }
 
   isPlaying() {
@@ -195,18 +189,16 @@ export default class SimonGameLogic {
   }
 
   _actionPanelPressed(payload) {
-    if (this.store.iAmAlone()) return;
+    if (this.store.iAmAlone() || !this.store.isReady) return;
 
     console.log(`_actionPanelPressed(${JSON.stringify(payload)})`);
     const {stripId, panelId, pressed} = payload;
     this.lights.setActive(stripId, panelId, pressed);
 
-    if (!this.isFreePlayAllowed() || !this.store.isReady) return;
-
     //
-    // Handle non-current strip actions: Free play
+    // Handle free play
     //
-    if (stripId !== this.getCurrentStrip()) {
+    if (this.isFreePlayAllowed()) {
       if (pressed) {
         this.lights.setColor(stripId, panelId, this.store.locationColor);
         this.lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.ACTIVE_INTENSITY);
@@ -215,7 +207,6 @@ export default class SimonGameLogic {
         this.lights.setColor(stripId, panelId, this.data.get(`strip${stripId}Color`));
         this.lights.setIntensity(stripId, panelId, this.data.get(`strip${stripId}Intensity`));
       }
-      return;
     }
 
     // From here on only handle the PLAYING state
@@ -224,18 +215,11 @@ export default class SimonGameLogic {
     //
     // Handle current strip actions
     //
+    if (stripId !== this.getCurrentStrip()) return;
 
     // Ignore non-owner interactions
-    if (this.hasUser() && this.getUser() !== this.store.me) {
-      if (pressed) {
-        this.lights.setColor(stripId, panelId, this.store.locationColor);
-        this.lights.setIntensity(stripId, panelId, this.config.PANEL_DEFAULTS.ACTIVE_INTENSITY);
-      }
-      else {
-        this._resetColor(stripId, panelId);
-      }
-      return;
-    }
+    if (this.hasUser() && this.getUser() !== this.store.me) return;
+
     // Ignore one-off touches
     if (!this.hasUser() || this.getUser() === this.store.me) {
       if (panelId !== this.getTargetPanel() && this._shouldBeIgnored(panelId)) {
@@ -300,7 +284,7 @@ export default class SimonGameLogic {
    * Handle panel press (locally or through merge) - master only
    */
   _handlePanelPress(stripId, panelId) {
-    console.log(`handlePanelPress(${stripId}, ${panelId})`);
+    console.log(`_handlePanelPress(${stripId}, ${panelId})`);
     const {stripId: targetStripId, panelSequences} = this.getCurrentLevelData();
 
     // Only handle current game strips from here on
@@ -497,7 +481,7 @@ export default class SimonGameLogic {
         this.turnOffEverything();
         this.data.set('state', SimonGameLogic.STATE_DONE);
         setTimeout(() => this.sculptureActionCreator.sendStartNextGame(), this.config.SPACE_BETWEEN_GAMES_SECONDS * 1000);
-      }, 10000),
+      }, this.gameConfig.FREEPLAY_TIMEOUT),
     ];
 
     this.store.playAnimation(new PanelAnimation(this.didWinGame() ? transitionFrames : successFrames));

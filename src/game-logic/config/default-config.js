@@ -222,6 +222,8 @@ export default class DefaultConfig {
       INPUT_TIMEOUT: 10000,
       // The default color to set the panels to when
       DEFAULT_SIMON_PANEL_COLOR: COLORS.WHITE,
+      // How long the free play period will last
+      FREEPLAY_TIMEOUT: 120000,
     };
   }
 
