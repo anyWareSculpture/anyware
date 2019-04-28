@@ -277,7 +277,9 @@ export default class SimonGameLogic {
   _isOwner(stripId, panelId) {
     const user = this.getUser();
     const color = this.lights.getColor(stripId, panelId);
-    return this.config.getLocationColor(user) === color;
+    const intensity = this.lights.getIntensity(stripId, panelId);
+    return color === this.config.getLocationColor(user) &&
+           intensity === this.config.PANEL_DEFAULTS.ACTIVE_INTENSITY;
   }
 
   /**
