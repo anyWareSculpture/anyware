@@ -197,10 +197,10 @@ export function init() {
   context.gain.connect(context.destination);
 
   context.onstatechange = () => {
-      if (context.state === 'suspended') {
-          console.error(`AudioContext was suspended. Resuming..`);
-          context.resume();
-      }
+    if (context.state === 'suspended') {
+      console.error(`AudioContext was suspended. Resuming..`);
+      context.resume();
+    }
   };
 
   return context;

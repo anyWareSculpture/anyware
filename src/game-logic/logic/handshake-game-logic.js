@@ -33,13 +33,13 @@ export default class HandshakeGameLogic {
   }
 
   reset() {
-      this.data.set('state', HandshakeGameLogic.GLOBAL_ALONE);
-      const handshakes = this.data.get('handshakes');
-      Array.from(handshakes).forEach((sculptureId) => handshakes.set(sculptureId, HandshakeGameLogic.HANDSHAKE_OFF));
-      if (this.transitionTimeout) {
-          clearTimeout(this.transitionTimeout);
-          this.transitionTimeout = null;
-      }
+    this.data.set('state', HandshakeGameLogic.GLOBAL_ALONE);
+    const handshakes = this.data.get('handshakes');
+    Array.from(handshakes).forEach((sculptureId) => handshakes.set(sculptureId, HandshakeGameLogic.HANDSHAKE_OFF));
+    if (this.transitionTimeout) {
+      clearTimeout(this.transitionTimeout);
+      this.transitionTimeout = null;
+    }
   }
 
   get data() {
@@ -83,7 +83,7 @@ export default class HandshakeGameLogic {
 
     // On handshake
     if (state === HandshakeGameLogic.HANDSHAKE_ACTIVE) {
-        this.store.restoreStatus();
+      this.store.restoreStatus();
 
       // If we were locally alone, set state to ACTIVATING. This allows us to
       // trigger sound only on the first handshake

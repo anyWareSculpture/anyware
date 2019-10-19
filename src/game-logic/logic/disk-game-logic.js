@@ -48,9 +48,9 @@ export default class DiskGameLogic {
 
     // Managed locally on each sculpture
     this._tapTimeouts = {
-        [this.config.LIGHTS.STRIP_A]: null,
-        [this.config.LIGHTS.STRIP_B]: null,
-        [this.config.LIGHTS.STRIP_C]: null,
+      [this.config.LIGHTS.STRIP_A]: null,
+      [this.config.LIGHTS.STRIP_B]: null,
+      [this.config.LIGHTS.STRIP_C]: null,
     };
 
     this.physicalDisks = {
@@ -280,20 +280,20 @@ export default class DiskGameLogic {
 
     // Ignore strips that have a tap timeout
     if (this._tapTimeouts[stripId]) {
-        // FIXME: Should we refresh the timeout?
-        return;
+      // FIXME: Should we refresh the timeout?
+      return;
     }
     if (pressed) {
-        // Create timeout on new presses
-        // FIXME:
-        // * When can this timeout happen, and are there places it will do damage?
-        // * Where should we safely kill these timeouts?
-        // * Should we refresh ownership timeouts (NB! managed by master) while this timeout is active?
-        //    -> How would master even know?
-        this._tapTimeouts[stripId] = setTimeout(() => {
-            this._tapTimeouts[stripId] = null;
-            this.diskActions.sendTapTimeout({stripId, panelId});
-        }, this.gameConfig.TAP_TIMEOUT);
+      // Create timeout on new presses
+      // FIXME:
+      // * When can this timeout happen, and are there places it will do damage?
+      // * Where should we safely kill these timeouts?
+      // * Should we refresh ownership timeouts (NB! managed by master) while this timeout is active?
+      //    -> How would master even know?
+      this._tapTimeouts[stripId] = setTimeout(() => {
+        this._tapTimeouts[stripId] = null;
+        this.diskActions.sendTapTimeout({stripId, panelId});
+      }, this.gameConfig.TAP_TIMEOUT);
     }
     this._handleLogicalPanelPress(stripId, panelId, pressed);
   }

@@ -355,8 +355,8 @@ export default class AudioView {
           const panelChange = lightChanges[stripId].panels[panelId];
           const intensity = lights.getIntensity(stripId, panelId);
           if (panelChange.intensity >= this.config.SIMON_GAME.TARGET_PANEL_INTENSITY ||
-              intensity >= this.config.SIMON_GAME.TARGET_PANEL_INTENSITY &&
-              panelChange.color == this.config.getLocationColor(this.store.data.get('simon').get('user'))) {
+            intensity >= this.config.SIMON_GAME.TARGET_PANEL_INTENSITY &&
+            panelChange.color === this.config.getLocationColor(this.store.data.get('simon').get('user'))) {
             this.sounds.simon.panels[stripId][panelId].play();
           }
         }

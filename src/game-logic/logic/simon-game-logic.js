@@ -185,7 +185,7 @@ export default class SimonGameLogic {
 
   // master only
   _actionReplaySimonPattern() {
-      this._playCurrentSequence();
+    this._playCurrentSequence();
   }
 
   _actionPanelPressed(payload) {
@@ -431,8 +431,8 @@ export default class SimonGameLogic {
    * Master only.
    */
   _actionLevelWinning() {
-      this.data.set('state', SimonGameLogic.STATE_WINNING);
-      setTimeout(() => this.simonGameActionCreator.sendLevelWon(), 1000);
+    this.data.set('state', SimonGameLogic.STATE_WINNING);
+    setTimeout(() => this.simonGameActionCreator.sendLevelWon(), 1000);
   }
 
   /**
@@ -507,15 +507,15 @@ export default class SimonGameLogic {
     const delay = frameDelay !== undefined ? frameDelay : this.gameConfig.SEQUENCE_ANIMATION_FRAME_DELAY;
 
     const sequenceFrames = [].concat(...panelSequence.map((panelId) => {
-        return [
-            new Frame(() => {
-                this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
-                this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
-            }, delay-500),
-            new Frame(() => {
-                this.lights.setIntensity(stripId, panelId, 0);
-            }, 500)
-        ];
+      return [
+        new Frame(() => {
+          this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY);
+          this.lights.setColor(stripId, panelId, this.gameConfig.DEFAULT_SIMON_PANEL_COLOR);
+        }, delay-500),
+        new Frame(() => {
+          this.lights.setIntensity(stripId, panelId, 0);
+        }, 500)
+      ];
     }));
 
     const frames = [
@@ -524,9 +524,9 @@ export default class SimonGameLogic {
                               0),
       ...sequenceFrames,
       new Frame(() => {
-          panelSequence.forEach((panelId) => {
-              this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY - 1);
-          });
+        panelSequence.forEach((panelId) => {
+          this.lights.setIntensity(stripId, panelId, this.gameConfig.TARGET_PANEL_INTENSITY - 1);
+        });
       }, 2 * delay),
     ];
     const animation = new PanelAnimation(frames, this._finishPlaySequence.bind(this));

@@ -164,7 +164,7 @@ export default class MoleGameLogic {
    */
   _actionPanelPressed(payload) {
     if (this.store.iAmAlone() || this.data.get('state') !== MoleGameLogic.STATE_NORMAL) {
-        return;
+      return;
     }
 
     let {stripId, panelId, pressed} = payload;

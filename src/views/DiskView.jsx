@@ -118,9 +118,9 @@ export default class DiskView extends React.Component {
         const circleCouldChange = changes.disk.state === DiskGameLogic.STATE_ALONE ||
           changes.disk.state === DiskGameLogic.STATE_OFF;
         if (circleCouldChange) {
-            this.setState({
-                showCircle: !showSpots,
-            });
+          this.setState({
+            showCircle: !showSpots,
+          });
         }
         this.setState({
           showPuzzle,
@@ -188,28 +188,28 @@ export default class DiskView extends React.Component {
           <use key={`level${this.state.level}-${diskId}-static`}
             xlinkHref={`#level${this.state.level}-${diskId}-static`}
             style={{
-                opacity: this.state.showPuzzle ? 1 : 0,
-                transition: "opacity 2s ease-in",
-                ...staticStyle,
+              opacity: this.state.showPuzzle ? 1 : 0,
+              transition: "opacity 2s ease-in",
+              ...staticStyle,
             }}/>,
           <use key={`level${this.state.level}-${diskId}-aesthetic`}
             xlinkHref={`#level${this.state.level}-${diskId}-aesthetic`}
             style={{
-                transformOrigin: diskConfig[`level${this.state.level}`][`${diskId}Aesthetic`].map((c) => `${c}px`).join(' '),
-                transform: `rotate(${-this.state[diskId]}deg)`,
-                opacity: this.state.showPuzzle ? 1 : 0,
-                transition: "opacity 2s ease-in",
-                ...aestheticStyle,
+              transformOrigin: diskConfig[`level${this.state.level}`][`${diskId}Aesthetic`].map((c) => `${c}px`).join(' '),
+              transform: `rotate(${-this.state[diskId]}deg)`,
+              opacity: this.state.showPuzzle ? 1 : 0,
+              transition: "opacity 2s ease-in",
+              ...aestheticStyle,
             }}/>,
           <use key={`level${this.state.level}-${diskId}`}
             xlinkHref={`#level${this.state.level}-${diskId}`}
             style={{
-                transformOrigin: diskConfig[`level${this.state.level}`][diskId].map((c) => `${c}px`).join(' '),
-                transform: `rotate(${this.state[diskId]}deg)`,
-                opacity: this.state.showPuzzle ? 1 : 0,
-                transition: "opacity 2s ease-in",
-                stroke: this.state[`${diskId}Color`],
-                strokeWidth: this.state[`${diskId}Stroke`],
+              transformOrigin: diskConfig[`level${this.state.level}`][diskId].map((c) => `${c}px`).join(' '),
+              transform: `rotate(${this.state[diskId]}deg)`,
+              opacity: this.state.showPuzzle ? 1 : 0,
+              transition: "opacity 2s ease-in",
+              stroke: this.state[`${diskId}Color`],
+              strokeWidth: this.state[`${diskId}Stroke`],
             }}/>,
         ];
       }) }
