@@ -13,10 +13,6 @@ This repository contains documentation.
 * [CODING_STANDARDS.md](CODING_STANDARDS.md) - Acts as a checklist to use for all code
 * [.eslintrc](.eslintrc) - A configuration for [eslint](http://eslint.org) which enforces the coding style
 
-## gulp-utils
-
-Shared gulp utilities
-
 ## src
 
 ### streaming-client
