@@ -114,7 +114,7 @@ export default class DiskGameLogic {
         lightArray.setIntensity(this.config.LIGHTS.ART_LIGHTS_STRIP, '3', this.gameConfig.SHADOW_LIGHT_INTENSITY);
       }, 1000),
       new Frame(() => {
-      }, this.config.ART_STATE_SPACE_SECONDS * 1000),
+      }, (this.config.ART_STATE_SPACE_SECONDS  - 2) * 1000),
     ];
 
     this.resetDisks();
