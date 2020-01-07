@@ -492,6 +492,13 @@ export default class SimonGameLogic {
   // master only
   _playCurrentSequence() {
     this.clearUser();
+
+    this._replayCount += 1;
+    if (this._replayCount > 3) {
+      this.setPattern((this.getPattern() + 1) % this.getNumPatterns());
+      this._replayCount = 0;
+    }
+
     const {stripId, panelSequences, frameDelay} = this.getCurrentLevelData();
     const panelSequence = panelSequences[this.getPattern()];
 
@@ -537,11 +544,6 @@ export default class SimonGameLogic {
   // master only
   _finishPlaySequence() {
     clearTimeout(this._replayTimeout);
-    this._replayCount += 1;
-    if (this._replayCount >= 3) {
-      this.setPattern((this.getPattern() + 1) % this.getNumPatterns());
-      this._replayCount = 0;
-    }
 
     this.data.set('state', SimonGameLogic.STATE_PLAYING);
     const level = this.getLevel();
