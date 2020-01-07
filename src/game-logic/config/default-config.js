@@ -46,6 +46,11 @@ export default class DefaultConfig {
     // Alone mode volume (0-1)
     this.ALONE_MODE_VOLUME = 0.15;
 
+    // Will enter sleep after this number of seconds (sleep == low-volume alone mode)
+    this.SLEEP_SECONDS = 120;
+    // Sleep volume (0-1)
+    this.SLEEP_VOLUME = 0.05;
+
     // Space between games (in black/off state)
     this.SPACE_BETWEEN_GAMES_SECONDS = 5;
     // Space after transitioning into art state
